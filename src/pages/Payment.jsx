@@ -636,7 +636,7 @@ const Payments = () => {
 
                       <td>{formatDate(payment.paymentDate)}</td>
 
-                      <td>
+                      <td className="payment-method-cell">
                         {paymentMethodStudent?._id === payment._id &&
                         payment.paymentStatus !== "paid" ? (
                           <select
@@ -654,7 +654,7 @@ const Payments = () => {
                             autoFocus
                           >
                             <option value="" disabled>
-                              Select method
+                              Method
                             </option>
                             <option value="cash">Cash</option>
                             <option value="bank">Bank</option>
