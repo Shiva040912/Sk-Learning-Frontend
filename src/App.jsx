@@ -11,16 +11,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Students from "./pages/Student";
 import Users from "./pages/Users";
-// import Payments from "./pages/Payments";
+import Payments from "./pages/Payment";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={<Login />}
-        />
+        <Route path="/" element={<Login />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
@@ -29,17 +26,20 @@ const App = () => {
               element={<Students />}
             />
 
-            {/* Payments page irundha uncomment pannu */}
-            {/*
             <Route
               path="/payments"
               element={<Payments />}
             />
-            */}
 
             <Route
               path="/users"
-              element={<Users />}
+              element={
+                <ProtectedRoute
+                  allowedRoles={["admin"]}
+                >
+                  <Users />
+                </ProtectedRoute>
+              }
             />
           </Route>
         </Route>

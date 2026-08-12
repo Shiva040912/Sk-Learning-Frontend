@@ -285,7 +285,7 @@ body {
 
   gap: 12px;
 
-  margin: 8px 0 10px;
+  margin: 14px 0 18px;
 
   color: #ffb800;
 }
@@ -338,9 +338,9 @@ body {
 .login-card {
   position: relative;
 
-  width: min(420px, 92vw);
+  width: min(390px, 90vw);
 
-  padding: 16px 24px 14px;
+  padding: 16px 22px 14px;
 
   overflow: hidden;
 
@@ -792,7 +792,7 @@ body {
   }
 
   .brand-divider {
-    margin: 5px 0 7px;
+    margin: 9px 0 13px;
   }
 
   .brand-divider-icon {
@@ -803,24 +803,24 @@ body {
   }
 
   .login-card {
-    width: 390px;
+    width: 365px;
 
     padding:
       13px
-      22px
+      20px
       12px;
   }
 
   .login-shield {
-    width: 43px;
-    height: 47px;
+    width: 42px;
+    height: 46px;
 
     margin-bottom: 5px;
   }
 
   .shield-icon {
-    width: 43px;
-    height: 47px;
+    width: 42px;
+    height: 46px;
   }
 
   .shield-cap {
@@ -895,11 +895,14 @@ body {
   }
 
   .brand-divider {
-    width: 96%;
+    width: 94%;
+
+    margin: 12px 0 16px;
   }
 
   .login-card {
-    max-width: 400px;
+    width: 88%;
+    max-width: 365px;
   }
 }
 
@@ -920,7 +923,7 @@ body {
   .login-container {
     justify-content: center;
 
-    padding: 14px 12px;
+    padding: 18px 14px 22px;
   }
 
   .classroom-board {
@@ -934,52 +937,52 @@ body {
   .brand-main {
     width: 100%;
 
-    gap: 8px;
+    gap: 9px;
   }
 
   .login-logo {
-    width: 50px;
-    height: 62px;
+    width: 48px;
+    height: 60px;
   }
 
   .brand-text h1 {
-    font-size: clamp(19px, 6.5vw, 25px);
+    font-size: clamp(19px, 6vw, 24px);
   }
 
   .brand-text h2 {
     margin-top: 5px;
 
-    font-size: clamp(7px, 2.5vw, 10px);
+    font-size: clamp(7px, 2.4vw, 9px);
 
-    letter-spacing: 1.2px;
+    letter-spacing: 1px;
   }
 
   .brand-text p {
     margin-top: 4px;
 
-    font-size: clamp(6px, 2.1vw, 8px);
+    font-size: clamp(6px, 2vw, 8px);
 
-    letter-spacing: 0.2px;
+    letter-spacing: 0.15px;
   }
 
   .brand-divider {
-    width: 100%;
+    width: 92%;
 
     gap: 7px;
 
-    margin: 7px 0 9px;
+    margin: 11px 0 16px;
   }
 
   .brand-divider-icon {
-    width: 31px;
+    width: 30px;
     height: 22px;
 
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .login-card {
-    width: 100%;
-    max-width: 350px;
+    width: calc(100% - 20px);
+    max-width: 325px;
 
     padding:
       15px
@@ -1010,13 +1013,13 @@ body {
   }
 
   .login-title-line {
-    width: 43px;
+    width: 42px;
 
-    margin: 6px auto 11px;
+    margin: 6px auto 12px;
   }
 
   .login-card form {
-    gap: 10px;
+    gap: 11px;
   }
 
   .form-group {
@@ -1028,7 +1031,7 @@ body {
   }
 
   .input-box input {
-    height: 39px;
+    height: 40px;
 
     padding:
       0
@@ -1048,10 +1051,14 @@ body {
   .eye-btn {
     right: 8px;
 
-    width: 27px;
-    height: 27px;
+    width: 28px;
+    height: 28px;
 
     font-size: 15px;
+  }
+
+  .login-options {
+    gap: 10px;
   }
 
   .remember,
@@ -1065,15 +1072,15 @@ body {
   }
 
   .login-btn {
-    height: 39px;
+    height: 40px;
 
     font-size: 12px;
   }
 
   .login-footer {
-    margin-top: 9px;
+    margin-top: 10px;
 
-    padding-top: 8px;
+    padding-top: 9px;
   }
 
   .login-footer h4 {
@@ -1092,8 +1099,9 @@ body {
 @media (max-width: 380px) {
   .login-container {
     padding:
+      14px
       10px
-      9px;
+      18px;
   }
 
   .brand-main {
@@ -1101,8 +1109,8 @@ body {
   }
 
   .login-logo {
-    width: 44px;
-    height: 54px;
+    width: 43px;
+    height: 53px;
   }
 
   .brand-text h1 {
@@ -1112,20 +1120,27 @@ body {
   .brand-text h2 {
     font-size: 7px;
 
-    letter-spacing: 0.8px;
+    letter-spacing: 0.7px;
   }
 
   .brand-text p {
     font-size: 6px;
   }
 
+  .brand-divider {
+    width: 94%;
+
+    margin: 9px 0 14px;
+  }
+
   .login-card {
-    max-width: 330px;
+    width: calc(100% - 14px);
+    max-width: 310px;
 
     padding:
-      13px
       14px
-      12px;
+      14px
+      13px;
   }
 
   .login-options {

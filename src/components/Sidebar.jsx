@@ -9,6 +9,13 @@ import {
 import logo from "../assets/sk-logo.png";
 
 const Sidebar = ({ isOpen, onClose }) => {
+  const user = JSON.parse(
+    localStorage.getItem("user") || "{}"
+  );
+
+  const isAdministrator =
+    user.role === "admin";
+
   return (
     <>
       {isOpen && (
@@ -19,7 +26,9 @@ const Sidebar = ({ isOpen, onClose }) => {
       )}
 
       <aside
-        className={`sidebar ${isOpen ? "sidebar-open" : ""}`}
+        className={`sidebar ${
+          isOpen ? "sidebar-open" : ""
+        }`}
       >
         <div className="sidebar-brand-area">
           <div className="sidebar-logo-wrap">
@@ -52,7 +61,9 @@ const Sidebar = ({ isOpen, onClose }) => {
           <NavLink
             to="/students"
             className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
+              `sidebar-link ${
+                isActive ? "active" : ""
+              }`
             }
             onClick={onClose}
           >
@@ -66,7 +77,9 @@ const Sidebar = ({ isOpen, onClose }) => {
           <NavLink
             to="/payments"
             className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
+              `sidebar-link ${
+                isActive ? "active" : ""
+              }`
             }
             onClick={onClose}
           >
@@ -77,19 +90,23 @@ const Sidebar = ({ isOpen, onClose }) => {
             <span>Payments</span>
           </NavLink>
 
-          <NavLink
-            to="/users"
-            className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
-            }
-            onClick={onClose}
-          >
-            <span className="sidebar-icon">
-              <FiUser />
-            </span>
+          {isAdministrator && (
+            <NavLink
+              to="/users"
+              className={({ isActive }) =>
+                `sidebar-link ${
+                  isActive ? "active" : ""
+                }`
+              }
+              onClick={onClose}
+            >
+              <span className="sidebar-icon">
+                <FiUser />
+              </span>
 
-            <span>Users</span>
-          </NavLink>
+              <span>Users</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="sidebar-bottom-line" />

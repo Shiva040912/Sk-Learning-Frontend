@@ -1306,3 +1306,1060 @@
     width: 100%;
   }
 }
+
+.users-page {
+  padding-top: 0;
+}
+
+.users-directory {
+  margin-top: 0;
+}
+
+.users-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 17px;
+}
+
+.users-search {
+  flex: 1;
+  max-width: 540px;
+}
+
+.users-toolbar .add-user-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.user-input-box input[type="password"],
+.user-input-box input[type="text"] {
+  padding-right: 42px;
+}
+
+.user-password-toggle {
+  position: absolute;
+  right: 8px;
+  z-index: 3;
+  width: 31px;
+  height: 31px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #7d8792;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.user-password-toggle:hover {
+  background: #fff7df;
+  color: #a97800;
+}
+
+@media (max-width: 700px) {
+  .users-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .users-search {
+    max-width: none;
+  }
+
+  .users-toolbar .add-user-btn {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Mobile compact table view */
+@media (max-width: 700px) {
+  .users-directory {
+    border-radius: 10px;
+  }
+
+  .users-toolbar {
+    align-items: center;
+    flex-direction: row;
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .users-search {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .users-search input {
+    height: 36px;
+    padding-left: 33px;
+    font-size: 9px;
+  }
+
+  .users-search svg {
+    left: 11px;
+    font-size: 12px;
+  }
+
+  .users-toolbar .add-user-btn {
+    width: auto;
+    min-width: 82px;
+    min-height: 36px;
+    margin-left: 0;
+    padding: 0 10px;
+    gap: 5px;
+    font-size: 9px;
+  }
+
+  .users-table-wrapper {
+    width: 100%;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .users-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .users-table thead {
+    display: table-header-group;
+  }
+
+  .users-table tbody {
+    display: table-row-group;
+  }
+
+  .users-table tr {
+    display: table-row;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #ffffff;
+  }
+
+  .users-table th,
+  .users-table td {
+    display: table-cell;
+    width: auto;
+  }
+
+  .users-table th {
+    height: 33px;
+    padding: 0 5px;
+    font-size: 6px;
+    letter-spacing: 0.25px;
+    white-space: nowrap;
+  }
+
+  .users-table td {
+    height: 48px;
+    min-height: 0;
+    padding: 6px 5px;
+    border-top: 1px solid #edf0f2;
+    font-size: 7.5px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .users-table td::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 31%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 32%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 17%;
+    text-align: center;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 20%;
+    text-align: center;
+  }
+
+  .user-cell {
+    justify-content: flex-start;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 8px;
+  }
+
+  .user-name {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 1px;
+  }
+
+  .user-name strong {
+    max-width: 100%;
+    font-size: 7.5px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .user-name span {
+    font-size: 5.8px;
+    line-height: 1.1;
+  }
+
+  .user-email-cell {
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .user-email-cell svg {
+    display: none;
+  }
+
+  .user-email-cell span {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    font-size: 6.8px;
+    line-height: 1.2;
+  }
+
+  .user-role-badge {
+    justify-content: center;
+    gap: 2px;
+    padding: 3px 4px;
+    font-size: 5.8px;
+    line-height: 1.1;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .user-role-badge svg {
+    display: none;
+  }
+
+  .user-actions {
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .user-actions button {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    font-size: 8px;
+  }
+
+  .user-modal-overlay {
+    padding: 7px;
+  }
+
+  .user-form-modal {
+    max-width: 360px;
+    max-height: calc(100dvh - 14px);
+    overflow-y: auto;
+  }
+
+  .user-modal-header {
+    padding: 11px 12px;
+  }
+
+  .user-modal-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .user-modal-title h2 {
+    font-size: 14px;
+  }
+
+  .user-modal-title p {
+    font-size: 7.5px;
+  }
+
+  .user-form {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .user-form-group {
+    gap: 4px;
+  }
+
+  .user-form-group label {
+    font-size: 9px;
+  }
+
+  .user-input-box input,
+  .user-input-box select {
+    height: 38px;
+    font-size: 9.5px;
+  }
+
+  .user-form-actions {
+    flex-direction: row;
+    gap: 7px;
+  }
+
+  .user-form-actions button {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    min-height: 37px;
+  }
+
+  .user-profile-modal {
+    width: min(360px, calc(100vw - 14px));
+  }
+
+  .user-profile-main {
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .user-profile-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    font-size: 20px;
+  }
+
+  .user-profile-main h2 {
+    font-size: 16px;
+  }
+
+  .user-profile-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 0 13px 12px;
+  }
+
+  .user-profile-detail {
+    padding: 8px;
+  }
+
+  .user-delete-modal {
+    width: min(340px, calc(100vw - 14px));
+    padding: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .users-toolbar {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .users-toolbar .add-user-btn {
+    min-width: 72px;
+    padding: 0 7px;
+    font-size: 8px;
+  }
+
+  .users-table th {
+    padding: 0 3px;
+    font-size: 5.5px;
+  }
+
+  .users-table td {
+    height: 46px;
+    padding: 5px 3px;
+    font-size: 7px;
+  }
+
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 29%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 33%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 17%;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 21%;
+  }
+
+  .user-avatar {
+    width: 21px;
+    height: 21px;
+    font-size: 7px;
+  }
+
+  .user-name strong {
+    font-size: 6.8px;
+  }
+
+  .user-name span {
+    display: none;
+  }
+
+  .user-email-cell span {
+    font-size: 6.2px;
+  }
+
+  .user-role-badge {
+    padding: 3px 2px;
+    font-size: 5.3px;
+  }
+
+  .user-actions button {
+    width: 18px;
+    height: 18px;
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 700px) {
+  .users-table-card,
+  .users-table-wrapper,
+  .users-table,
+  .users-table tbody {
+    margin: 0;
+    padding-bottom: 0;
+  }
+
+  .users-table-wrapper {
+    display: block;
+    line-height: normal;
+  }
+
+  .users-table {
+    margin-bottom: 0;
+  }
+
+  .users-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 30%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 36%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 16%;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 18%;
+  }
+
+  .user-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 1px;
+  }
+
+  .user-actions button {
+    flex: 0 0 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 29%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 37%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 16%;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 18%;
+  }
+
+  .user-actions button {
+    flex-basis: 18px;
+  }
+}
+
+@media (min-width: 701px) {
+  .users-page {
+    width: 100%;
+  }
+
+  .users-directory {
+    border-radius: 10px;
+  }
+
+  .users-toolbar {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .users-search {
+    max-width: 430px;
+  }
+
+  .users-search input {
+    height: 32px;
+    padding: 0 10px 0 31px;
+    border-radius: 6px;
+    font-size: 9px;
+  }
+
+  .users-search svg {
+    left: 10px;
+    font-size: 12px;
+  }
+
+  .users-toolbar .add-user-btn {
+    min-width: 86px;
+    min-height: 32px;
+    height: 32px;
+    gap: 5px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 9px;
+    box-shadow: 0 4px 12px rgba(255, 184, 0, 0.12);
+  }
+
+  .users-table-wrapper {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .users-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .users-table th {
+    height: 31px;
+    padding: 0 10px;
+    font-size: 6.5px;
+    letter-spacing: 0.45px;
+  }
+
+  .users-table td {
+    height: 46px;
+    padding: 6px 10px;
+    font-size: 8.5px;
+  }
+
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 28%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 36%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 17%;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 19%;
+  }
+
+  .user-cell {
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    font-size: 10px;
+  }
+
+  .user-name {
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .user-name strong {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 8.5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .user-name span {
+    font-size: 6.5px;
+  }
+
+  .user-email-cell {
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .user-email-cell svg {
+    font-size: 10px;
+  }
+
+  .user-email-cell span {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 8px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .user-role-badge {
+    gap: 3px;
+    padding: 4px 6px;
+    font-size: 6.5px;
+  }
+
+  .user-role-badge svg {
+    font-size: 8px;
+  }
+
+  .user-actions {
+    gap: 4px;
+  }
+
+  .user-actions button {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 10px;
+  }
+
+  .users-message {
+    min-height: 170px;
+  }
+
+  .users-message > svg {
+    font-size: 23px;
+  }
+
+  .users-message strong {
+    font-size: 10px;
+  }
+
+  .users-message span {
+    font-size: 8px;
+  }
+
+  .users-loader {
+    width: 22px;
+    height: 22px;
+  }
+
+  .user-form-modal {
+    max-width: 420px;
+  }
+
+  .user-modal-header {
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .user-modal-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    font-size: 13px;
+  }
+
+  .user-modal-title {
+    gap: 8px;
+  }
+
+  .user-modal-title h2 {
+    font-size: 14px;
+  }
+
+  .user-modal-title p {
+    margin-top: 2px;
+    font-size: 7.5px;
+  }
+
+  .user-modal-close {
+    width: 27px;
+    height: 27px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .user-form {
+    gap: 10px;
+    padding: 13px 14px 14px;
+  }
+
+  .user-form-group {
+    gap: 4px;
+  }
+
+  .user-form-group label {
+    font-size: 8.5px;
+  }
+
+  .user-input-box > svg {
+    left: 10px;
+    font-size: 12px;
+  }
+
+  .user-input-box input,
+  .user-input-box select {
+    height: 35px;
+    padding: 0 9px 0 32px;
+    border-radius: 6px;
+    font-size: 9px;
+  }
+
+  .user-input-box input[type="password"],
+  .user-input-box input[type="text"] {
+    padding-right: 36px;
+  }
+
+  .user-password-toggle {
+    right: 5px;
+    width: 27px;
+    height: 27px;
+    font-size: 12px;
+  }
+
+  .password-help {
+    font-size: 7px;
+  }
+
+  .user-form-actions {
+    gap: 7px;
+    margin-top: 2px;
+  }
+
+  .user-primary-btn,
+  .user-secondary-btn,
+  .user-confirm-delete {
+    min-width: 90px;
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 9px;
+  }
+
+  .user-profile-modal {
+    width: min(410px, 92vw);
+    border-radius: 12px;
+  }
+
+  .user-profile-close {
+    top: 10px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .user-profile-top {
+    min-height: 52px;
+    padding: 8px 45px 8px 14px;
+  }
+
+  .user-profile-top span {
+    font-size: 9px;
+  }
+
+  .user-profile-top small {
+    margin-top: 2px;
+    font-size: 5.5px;
+  }
+
+  .user-profile-main {
+    gap: 11px;
+    padding: 13px 14px;
+  }
+
+  .user-profile-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    font-size: 21px;
+  }
+
+  .user-profile-label {
+    font-size: 5.5px;
+  }
+
+  .user-profile-main h2 {
+    margin-top: 3px;
+    font-size: 16px;
+  }
+
+  .user-profile-role {
+    gap: 4px;
+    margin-top: 5px;
+    padding: 3px 6px;
+    font-size: 6.5px;
+  }
+
+  .user-profile-details {
+    gap: 6px;
+    padding: 0 14px 13px;
+  }
+
+  .user-profile-detail {
+    padding: 8px;
+    border-radius: 7px;
+  }
+
+  .user-profile-detail > div {
+    width: 23px;
+    height: 23px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    font-size: 9px;
+  }
+
+  .user-profile-detail span {
+    margin-bottom: 3px;
+    font-size: 5.5px;
+  }
+
+  .user-profile-detail strong {
+    font-size: 8px;
+  }
+
+  .user-profile-footer {
+    min-height: 29px;
+    padding: 0 14px;
+  }
+
+  .user-profile-footer span {
+    font-size: 4.5px;
+  }
+
+  .user-profile-footer strong {
+    font-size: 5.5px;
+  }
+
+  .user-delete-modal {
+    width: min(340px, 92vw);
+    padding: 18px;
+    border-radius: 11px;
+  }
+
+  .user-delete-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 9px;
+    border-radius: 9px;
+    font-size: 16px;
+  }
+
+  .user-delete-modal h2 {
+    font-size: 15px;
+  }
+
+  .user-delete-modal p {
+    margin-top: 7px;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .user-delete-actions {
+    gap: 7px;
+    margin-top: 14px;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .users-table-wrapper {
+    width: 100%;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .users-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .users-table th {
+    height: 38px;
+    padding: 0 8px;
+    font-size: 7px;
+    letter-spacing: 0.35px;
+    vertical-align: middle;
+  }
+
+  .users-table td {
+    height: 58px;
+    padding: 8px;
+    font-size: 8.5px;
+    vertical-align: middle;
+  }
+
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 29%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 37%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 14%;
+    text-align: center;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 20%;
+    text-align: center;
+  }
+
+  .user-cell {
+    gap: 7px;
+  }
+
+  .user-avatar {
+    width: 27px;
+    height: 27px;
+    font-size: 9px;
+  }
+
+  .user-name strong {
+    font-size: 8.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-email-cell span {
+    font-size: 7.5px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .user-role-badge {
+    padding: 4px 6px;
+    font-size: 6.5px;
+  }
+
+  .user-actions {
+    width: 100%;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .user-actions button {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 420px) {
+  .users-table th {
+    padding: 0 5px;
+    font-size: 6.3px;
+  }
+
+  .users-table td {
+    height: 54px;
+    padding: 7px 5px;
+    font-size: 8px;
+  }
+
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 28%;
+  }
+
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    width: 38%;
+  }
+
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 14%;
+  }
+
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 20%;
+  }
+
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+  }
+
+  .user-name strong {
+    font-size: 7.8px;
+  }
+
+  .user-email-cell span {
+    font-size: 6.9px;
+  }
+
+  .user-role-badge {
+    font-size: 6px;
+  }
+
+  .user-actions button {
+    width: 22px;
+    height: 22px;
+    font-size: 8px;
+  }
+}

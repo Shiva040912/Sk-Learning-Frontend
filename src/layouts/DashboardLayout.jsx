@@ -28,5 +28,3 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
-
-//name changed

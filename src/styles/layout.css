@@ -18,7 +18,7 @@
 
   --sk-border: #e4e8ee;
 
-  --sidebar-width: 250px;
+  --sidebar-width: 210px;
   --topbar-height: 72px;
 }
 
@@ -53,10 +53,6 @@ textarea {
   font: inherit;
 }
 
-/* ======================================================
-   MAIN LAYOUT
-====================================================== */
-
 .dashboard-layout {
   min-height: 100vh;
 
@@ -88,10 +84,6 @@ textarea {
     );
 }
 
-/* ======================================================
-   SIDEBAR
-====================================================== */
-
 .sidebar {
   position: fixed;
 
@@ -107,7 +99,7 @@ textarea {
   display: flex;
   flex-direction: column;
 
-  padding: 0 16px;
+  padding: 0 13px;
 
   background:
     linear-gradient(
@@ -123,10 +115,6 @@ textarea {
     6px 0 24px rgba(0, 0, 0, 0.08);
 }
 
-/* ======================================================
-   SIDEBAR BRAND
-====================================================== */
-
 .sidebar-brand-area {
   position: relative;
 
@@ -138,17 +126,17 @@ textarea {
 
   align-items: center;
 
-  gap: 10px;
+  gap: 7px;
 
-  padding: 0 3px;
+  padding: 0 2px;
 
   border-bottom:
     1px solid rgba(255, 255, 255, 0.07);
 }
 
 .sidebar-logo-wrap {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
 
   flex-shrink: 0;
 
@@ -159,8 +147,8 @@ textarea {
 }
 
 .sidebar-logo {
-  width: 44px;
-  height: 44px;
+  width: 39px;
+  height: 39px;
 
   object-fit: contain;
 }
@@ -174,12 +162,12 @@ textarea {
 
   color: #f4f5f6;
 
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
 
   line-height: 1.15;
 
-  letter-spacing: 0.3px;
+  letter-spacing: 0.15px;
 
   white-space: nowrap;
 }
@@ -193,19 +181,15 @@ textarea {
 
   color: #777e88;
 
-  font-size: 6.5px;
+  font-size: 5.5px;
   font-weight: 600;
 
-  letter-spacing: 0.85px;
+  letter-spacing: 0.6px;
 
   text-transform: uppercase;
 
   white-space: nowrap;
 }
-
-/* ======================================================
-   SIDEBAR NAV
-====================================================== */
 
 .sidebar-nav {
   flex: 1;
@@ -215,7 +199,7 @@ textarea {
 
   justify-content: center;
 
-  gap: 10px;
+  gap: 9px;
 
   padding-bottom: var(--topbar-height);
 }
@@ -223,15 +207,15 @@ textarea {
 .sidebar-link {
   position: relative;
 
-  min-height: 50px;
+  min-height: 47px;
 
   display: flex;
 
   align-items: center;
 
-  gap: 12px;
+  gap: 10px;
 
-  padding: 8px 13px;
+  padding: 7px 11px;
 
   border:
     1px solid transparent;
@@ -242,7 +226,7 @@ textarea {
 
   text-decoration: none;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 550;
 
   transition:
@@ -256,8 +240,8 @@ textarea {
 }
 
 .sidebar-icon {
-  width: 31px;
-  height: 31px;
+  width: 29px;
+  height: 29px;
 
   flex-shrink: 0;
 
@@ -273,7 +257,7 @@ textarea {
 
   color: #969da6;
 
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .sidebar-link.active {
@@ -303,10 +287,6 @@ textarea {
       #ffb800
     );
 }
-
-/* ======================================================
-   SIDEBAR CLOSE
-====================================================== */
 
 .sidebar-close {
   display: none;
@@ -339,10 +319,6 @@ textarea {
 
   cursor: pointer;
 }
-
-/* ======================================================
-   TOPBAR
-====================================================== */
 
 .topbar {
   position: sticky;
@@ -447,10 +423,6 @@ textarea {
   font-size: 9px;
 }
 
-/* ======================================================
-   TOPBAR RIGHT
-====================================================== */
-
 .topbar-right {
   display: flex;
 
@@ -461,44 +433,8 @@ textarea {
   margin-left: auto;
 }
 
-.topbar-logout {
-  min-height: 37px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 7px;
-
-  padding: 0 13px;
-
-  border:
-    1px solid rgba(255, 255, 255, 0.08);
-
-  border-radius: 9px;
-
-  background: #1a1e24;
-
-  color: #adb3ba;
-
-  font-size: 10px;
-  font-weight: 550;
-
-  cursor: pointer;
-
-  transition:
-    0.2s ease;
-}
-
-.topbar-logout:hover {
-  color: var(--sk-gold);
-
-  border-color:
-    rgba(255, 184, 0, 0.25);
-
-  background:
-    rgba(255, 184, 0, 0.055);
+.topbar-profile-wrapper {
+  position: relative;
 }
 
 .topbar-user {
@@ -510,7 +446,7 @@ textarea {
 
   gap: 9px;
 
-  padding: 4px 10px 4px 4px;
+  padding: 4px 9px 4px 4px;
 
   border:
     1px solid rgba(255, 255, 255, 0.07);
@@ -518,6 +454,19 @@ textarea {
   border-radius: 10px;
 
   background: #181c22;
+
+  color: inherit;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.topbar-user:hover {
+  border-color:
+    rgba(255, 184, 0, 0.18);
+
+  background: #1c2027;
 }
 
 .topbar-user-avatar {
@@ -549,6 +498,8 @@ textarea {
   display: flex;
 
   flex-direction: column;
+
+  text-align: left;
 }
 
 .topbar-user-info strong {
@@ -576,17 +527,152 @@ textarea {
   text-transform: capitalize;
 }
 
-/* ======================================================
-   OVERLAY
-====================================================== */
+.profile-chevron {
+  margin-left: 3px;
+
+  color: #777e87;
+
+  font-size: 14px;
+
+  transition: transform 0.2s ease;
+}
+
+.profile-chevron.open {
+  transform: rotate(180deg);
+}
+
+.profile-dropdown {
+  position: absolute;
+
+  top: calc(100% + 9px);
+  right: 0;
+
+  width: 205px;
+
+  padding: 9px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 11px;
+
+  background: #181c22;
+
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.25);
+
+  z-index: 1100;
+}
+
+.profile-dropdown-info {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 7px;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.07);
+}
+
+.profile-dropdown-avatar {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffd04b,
+      #ffb800
+    );
+
+  color: #111111;
+
+  font-size: 15px;
+}
+
+.profile-dropdown-info > div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-dropdown-info strong {
+  max-width: 125px;
+
+  overflow: hidden;
+
+  color: #f1f2f3;
+
+  font-size: 11px;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.profile-dropdown-info span {
+  margin-top: 2px;
+
+  color: #777e87;
+
+  font-size: 8px;
+
+  text-transform: capitalize;
+}
+
+.profile-logout {
+  width: 100%;
+  min-height: 38px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 6px;
+
+  padding: 0 10px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #adb3ba;
+
+  font-size: 10px;
+  font-weight: 550;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.profile-logout:hover {
+  color: var(--sk-gold);
+
+  background:
+    rgba(255, 184, 0, 0.07);
+}
 
 .sidebar-overlay {
   display: none;
 }
-
-/* ======================================================
-   TABLET / MOBILE
-====================================================== */
 
 @media (max-width: 900px) {
   .dashboard-main {
@@ -598,7 +684,7 @@ textarea {
   }
 
   .sidebar {
-    width: 240px;
+    width: 210px;
 
     transform: translateX(-100%);
 
@@ -652,23 +738,23 @@ textarea {
   }
 
   .sidebar {
-    width: 225px;
+    width: 210px;
 
     padding: 0 13px;
   }
 
   .sidebar-logo-wrap {
-    width: 41px;
-    height: 41px;
+    width: 38px;
+    height: 38px;
   }
 
   .sidebar-logo {
-    width: 39px;
-    height: 39px;
+    width: 37px;
+    height: 37px;
   }
 
   .sidebar-brand-text h1 {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .topbar {
@@ -683,18 +769,9 @@ textarea {
     display: none;
   }
 
-  .topbar-logout {
-    width: 34px;
+  .topbar-user {
     min-height: 34px;
 
-    padding: 0;
-  }
-
-  .topbar-logout span {
-    display: none;
-  }
-
-  .topbar-user {
     padding: 0;
 
     border: 0;
@@ -709,5 +786,15 @@ textarea {
 
   .topbar-user-info {
     display: none;
+  }
+
+  .profile-chevron {
+    display: none;
+  }
+
+  .profile-dropdown {
+    right: 0;
+
+    width: 190px;
   }
 }

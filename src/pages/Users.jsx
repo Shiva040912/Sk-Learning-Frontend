@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   FiEdit2,
-  FiEye,
   FiMail,
   FiPlus,
   FiSearch,
@@ -11,6 +10,8 @@ import {
   FiUsers,
   FiX,
   FiLock,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -21,7 +22,7 @@ const initialForm = {
   name: "",
   email: "",
   password: "",
-  role: "admin",
+  role: "trainer",
 };
 
 const Users = () => {
@@ -39,6 +40,7 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [formData, setFormData] = useState(initialForm);
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -80,6 +82,7 @@ const Users = () => {
   const openAddModal = () => {
     setEditingUser(null);
     setFormData(initialForm);
+    setShowPassword(false);
     setShowFormModal(true);
   };
 
@@ -90,9 +93,10 @@ const Users = () => {
       name: user.name || "",
       email: user.email || "",
       password: "",
-      role: user.role || "admin",
+      role: user.role || "trainer",
     });
 
+    setShowPassword(false);
     setShowFormModal(true);
   };
 
@@ -110,6 +114,7 @@ const Users = () => {
     setShowFormModal(false);
     setEditingUser(null);
     setFormData(initialForm);
+    setShowPassword(false);
   };
 
   const closeViewModal = () => {
@@ -249,83 +254,7 @@ const Users = () => {
 
   return (
     <div className="users-page">
-      {/* HEADER */}
-
-      <div className="users-header">
-        <div>
-          <span className="users-eyebrow">
-            USER MANAGEMENT
-          </span>
-
-          <h1>Users</h1>
-
-          <p>
-            Manage administrator accounts and portal
-            access
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="add-user-btn"
-          onClick={openAddModal}
-        >
-          <FiPlus />
-          <span>Add User</span>
-        </button>
-      </div>
-
-      {/* SUMMARY */}
-
-      <div className="users-summary-grid">
-        <div className="users-summary-card">
-          <div className="users-summary-icon">
-            <FiUsers />
-          </div>
-
-          <div>
-            <span>Total Users</span>
-            <strong>{users.length}</strong>
-            <small>Registered administrators</small>
-          </div>
-        </div>
-
-        <div className="users-summary-card">
-          <div className="users-summary-icon">
-            <FiShield />
-          </div>
-
-          <div>
-            <span>Administrators</span>
-            <strong>
-              {
-                users.filter(
-                  (user) => user.role === "admin"
-                ).length
-              }
-            </strong>
-            <small>Management portal users</small>
-          </div>
-        </div>
-      </div>
-
-      {/* DIRECTORY */}
-
-      <section className="users-directory">
-        <div className="users-directory-header">
-          <div>
-            <h2>User Directory</h2>
-
-            <p>
-              View and manage portal user accounts
-            </p>
-          </div>
-
-          <span className="users-record-count">
-            {filteredUsers.length} Records
-          </span>
-        </div>
-
+<section className="users-directory">
         <div className="users-toolbar">
           <div className="users-search">
             <FiSearch />
@@ -339,6 +268,15 @@ const Users = () => {
               }
             />
           </div>
+
+          <button
+            type="button"
+            className="add-user-btn"
+            onClick={openAddModal}
+          >
+            <FiPlus />
+            <span>Add User</span>
+          </button>
         </div>
 
         <div className="users-table-card">
@@ -386,7 +324,7 @@ const Users = () => {
                             </strong>
 
                             <span>
-                              Portal Administrator
+                              {formatRole(user.role)}
                             </span>
                           </div>
                         </div>
@@ -449,10 +387,7 @@ const Users = () => {
           )}
         </div>
       </section>
-
-      {/* ADD / EDIT */}
-
-      {showFormModal && (
+{showFormModal && (
         <div className="user-modal-overlay">
           <div className="user-modal user-form-modal">
             <div className="user-modal-header">
@@ -470,8 +405,8 @@ const Users = () => {
 
                   <p>
                     {editingUser
-                      ? "Update administrator account details"
-                      : "Create a new administrator account"}
+                      ? "Update user account details"
+                      : "Create a new portal user account"}
                   </p>
                 </div>
               </div>
@@ -532,7 +467,7 @@ const Users = () => {
                   <FiLock />
 
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder={
                       editingUser
@@ -542,6 +477,21 @@ const Users = () => {
                     value={formData.password}
                     onChange={handleChange}
                   />
+
+                  <button
+                    type="button"
+                    className="user-password-toggle"
+                    onClick={() =>
+                      setShowPassword((current) => !current)
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
                 </div>
 
                 {editingUser && (
@@ -565,6 +515,10 @@ const Users = () => {
                   >
                     <option value="admin">
                       Administrator
+                    </option>
+
+                    <option value="trainer">
+                     Trainer
                     </option>
                   </select>
                 </div>
@@ -595,10 +549,7 @@ const Users = () => {
           </div>
         </div>
       )}
-
-      {/* VIEW USER */}
-
-      {showViewModal && selectedUser && (
+{showViewModal && selectedUser && (
         <div className="user-modal-overlay">
           <div className="user-profile-modal">
             <button
@@ -613,7 +564,7 @@ const Users = () => {
               <span>THE SK LEARNINGS</span>
 
               <small>
-                ADMINISTRATOR PROFILE
+                {formatRole(selectedUser.role).toUpperCase()} PROFILE
               </small>
             </div>
 
@@ -679,10 +630,7 @@ const Users = () => {
           </div>
         </div>
       )}
-
-      {/* DELETE */}
-
-      {showDeleteModal && selectedUser && (
+{showDeleteModal && selectedUser && (
         <div className="user-modal-overlay">
           <div className="user-delete-modal">
             <div className="user-delete-icon">

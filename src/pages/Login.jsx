@@ -81,8 +81,7 @@ const Login = () => {
       <div className="login-dark-overlay" />
 
       <div className="login-container">
-        {/* ================= BRAND ================= */}
-
+        
         <section className="login-brand-section">
           <div className="brand-main">
             <img
@@ -103,7 +102,7 @@ const Login = () => {
           </div>
         </section>
 
-        {/* ================= DIVIDER ================= */}
+       
 
         <div className="brand-divider">
           <span />
