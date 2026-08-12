@@ -248,9 +248,17 @@ const Payments = () => {
       return;
     }
 
-    setPaymentMethodStudent((current) =>
-      current?._id === student._id ? null : student
-    );
+    setPaymentMethodStudent((current) => {
+      const isClosing = current?._id === student._id;
+
+      if (!isClosing) {
+        toast("Select the payment method", {
+          icon: "💳",
+        });
+      }
+
+      return isClosing ? null : student;
+    });
   };
 
   const handlePaymentMethodSelect = async (student, event) => {
