@@ -1717,3 +1717,350 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .payment-table-card {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .payment-table-wrapper {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .payments-table {
+    width: 100%;
+    min-width: 0 !important;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .payments-table thead {
+    display: table-header-group !important;
+  }
+
+  .payments-table tbody {
+    display: table-row-group !important;
+    width: auto;
+    padding: 0 !important;
+  }
+
+  .payments-table tr {
+    display: table-row !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff;
+  }
+
+  .payments-table th,
+  .payments-table td {
+    display: table-cell !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto;
+    padding: 7px 3px !important;
+    border: 0;
+    border-bottom: 1px solid #edf0f2;
+    vertical-align: middle;
+    text-align: left !important;
+    overflow: hidden;
+  }
+
+  .payments-table th {
+    height: 30px;
+    padding: 0 3px !important;
+    background: #f6f8fa;
+    color: #7d8791;
+    font-size: 5px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.15;
+    white-space: normal;
+    text-transform: uppercase;
+  }
+
+  .payments-table td {
+    color: #46525e;
+    font-size: 6px;
+    line-height: 1.2;
+  }
+
+  .payments-table td::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .payments-table th:nth-child(1),
+  .payments-table td:nth-child(1) {
+    width: 7% !important;
+    text-align: center !important;
+  }
+
+  .payments-table th:nth-child(2),
+  .payments-table td:nth-child(2) {
+    width: 25% !important;
+  }
+
+  .payments-table th:nth-child(3),
+  .payments-table td:nth-child(3) {
+    width: 11% !important;
+  }
+
+  .payments-table th:nth-child(4),
+  .payments-table td:nth-child(4) {
+    width: 13% !important;
+  }
+
+  .payments-table th:nth-child(5),
+  .payments-table td:nth-child(5) {
+    width: 17% !important;
+  }
+
+  .payments-table th:nth-child(6),
+  .payments-table td:nth-child(6) {
+    width: 15% !important;
+  }
+
+  .payments-table th:nth-child(7),
+  .payments-table td:nth-child(7),
+  .payments-table th:nth-child(8),
+  .payments-table td:nth-child(8) {
+    width: 6% !important;
+    text-align: center !important;
+  }
+
+  .payment-student {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .payment-avatar {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+    border-radius: 5px;
+    font-size: 7px;
+  }
+
+  .payment-student > div:last-child {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .payment-student strong {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    color: #29343f;
+    font-size: 6.3px;
+    font-weight: 730;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .payment-student span {
+    display: block;
+    max-width: 100%;
+    margin-top: 1px;
+    overflow: hidden;
+    color: #969fa7;
+    font-size: 5px;
+    line-height: 1.15;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .payment-serial {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    font-size: 5.5px;
+  }
+
+  .payment-roll,
+  .payment-course {
+    max-width: 100%;
+    padding: 2px 3px;
+    border-radius: 4px;
+    font-size: 5.3px;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .payment-fee-cell {
+    gap: 1px;
+  }
+
+  .payment-fee-cell strong {
+    font-size: 5.8px;
+    line-height: 1.15;
+  }
+
+  .payment-fee-cell span {
+    font-size: 4.8px;
+    line-height: 1.15;
+  }
+
+  .payment-not-set {
+    padding: 2px 3px;
+    border-radius: 4px;
+    font-size: 5px;
+  }
+
+  .payment-status-control {
+    gap: 2px;
+  }
+
+  .payment-switch-track {
+    width: 22px;
+    height: 13px;
+  }
+
+  .payment-switch-thumb {
+    top: 2px;
+    left: 2px;
+    width: 9px;
+    height: 9px;
+  }
+
+  .payment-status-control.partial
+    .payment-switch-thumb {
+    left: 6px;
+  }
+
+  .payment-status-control.paid
+    .payment-switch-thumb {
+    left: 11px;
+  }
+
+  .payment-switch-label {
+    min-width: 0;
+    font-size: 5px;
+  }
+
+  .fee-setup-add,
+  .fee-setup-completed,
+  .payment-reverse-btn {
+    width: 21px;
+    height: 21px;
+    min-width: 21px;
+    min-height: 21px;
+    border-radius: 5px;
+    font-size: 9px;
+  }
+
+  .fee-setup-completed {
+    font-size: 14px;
+  }
+
+  .payments-table tbody tr:hover {
+    background: #fffdf8;
+  }
+}
+
+@media (max-width: 480px) {
+  .payments-table th {
+    padding: 0 2px !important;
+    font-size: 4.5px;
+  }
+
+  .payments-table td {
+    padding: 6px 2px !important;
+    font-size: 5.5px;
+  }
+
+  .payments-table th:nth-child(1),
+  .payments-table td:nth-child(1) {
+    width: 6% !important;
+  }
+
+  .payments-table th:nth-child(2),
+  .payments-table td:nth-child(2) {
+    width: 27% !important;
+  }
+
+  .payments-table th:nth-child(3),
+  .payments-table td:nth-child(3) {
+    width: 10% !important;
+  }
+
+  .payments-table th:nth-child(4),
+  .payments-table td:nth-child(4) {
+    width: 12% !important;
+  }
+
+  .payments-table th:nth-child(5),
+  .payments-table td:nth-child(5) {
+    width: 17% !important;
+  }
+
+  .payments-table th:nth-child(6),
+  .payments-table td:nth-child(6) {
+    width: 16% !important;
+  }
+
+  .payments-table th:nth-child(7),
+  .payments-table td:nth-child(7),
+  .payments-table th:nth-child(8),
+  .payments-table td:nth-child(8) {
+    width: 6% !important;
+  }
+
+  .payment-avatar {
+    display: none;
+  }
+
+  .payment-student {
+    gap: 0;
+  }
+
+  .payment-student strong {
+    font-size: 5.8px;
+  }
+
+  .payment-student span {
+    font-size: 4.6px;
+  }
+
+  .payment-roll,
+  .payment-course {
+    padding: 1px 2px;
+    font-size: 4.8px;
+  }
+
+  .payment-fee-cell strong {
+    font-size: 5.3px;
+  }
+
+  .payment-fee-cell span {
+    font-size: 4.5px;
+  }
+
+  .payment-switch-label {
+    display: none;
+  }
+
+  .payment-serial,
+  .fee-setup-add,
+  .payment-reverse-btn {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+  }
+
+  .fee-setup-completed {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    font-size: 12px;
+  }
+}
