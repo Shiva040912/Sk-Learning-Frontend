@@ -106,6 +106,42 @@ const Topbar = ({ onMenuClick }) => {
       };
     }
 
+    if (
+      location.pathname.startsWith(
+        "/invoices"
+      )
+    ) {
+      return {
+        title: "Invoices",
+        subtitle:
+          "Place to see all the recipts",
+      };
+    }
+
+    if (
+      location.pathname.startsWith(
+        "/notification"
+      )
+    ) {
+      return {
+        title: "Notification",
+        subtitle:
+          "Place to see all the fee notifications",
+      };
+    }
+
+    if (
+      location.pathname.startsWith(
+        "/settings"
+      )
+    ) {
+      return {
+        title: "Setiings",
+        subtitle:
+          "The place To change or modify things",
+      };
+    }
+
     return {
       title: "Dashboard",
       subtitle:

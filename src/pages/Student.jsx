@@ -9,6 +9,7 @@ import {
   FiX,
   FiUsers,
   FiBookOpen,
+  FiCalendar,
   FiPhone,
   FiMail,
   FiUser,
@@ -28,6 +29,7 @@ const initialForm = {
   studentName: "",
   rollNo: "",
   parentName: "",
+  dateOfBirth: "",
   phone: "",
   alternatePhone: "",
   email: "",
@@ -36,7 +38,6 @@ const initialForm = {
   batch: "",
   schoolName: "",
   address: "",
-  totalFee: "",
 };
 
 const Students = () => {
@@ -234,6 +235,9 @@ const Students = () => {
         student.rollNo || "",
       parentName:
         student.parentName || "",
+      dateOfBirth: student.dateOfBirth
+        ? new Date(student.dateOfBirth).toISOString().split("T")[0]
+        : "",
       phone: student.phone || "",
       alternatePhone:
         student.alternatePhone || "",
@@ -244,8 +248,6 @@ const Students = () => {
       schoolName:
         student.schoolName || "",
       address: student.address || "",
-      totalFee:
-        student.totalFee ?? "",
     });
 
     setFormErrors({});
@@ -342,6 +344,26 @@ const Students = () => {
         "Parent name is required";
     }
 
+    if (!formData.dateOfBirth) {
+      errors.dateOfBirth =
+        "Date of birth is required";
+    } else {
+      const selectedDob = new Date(
+        `${formData.dateOfBirth}T00:00:00`
+      );
+      const today = new Date();
+
+      today.setHours(0, 0, 0, 0);
+
+      if (
+        Number.isNaN(selectedDob.getTime()) ||
+        selectedDob > today
+      ) {
+        errors.dateOfBirth =
+          "Enter a valid date of birth";
+      }
+    }
+
     if (!formData.phone.trim()) {
       errors.phone =
         "Phone number is required";
@@ -399,14 +421,6 @@ const Students = () => {
     ) {
       errors.idproof =
         "Enter Aadhaar as 1234 5678 9878";
-    }
-
-    if (
-      formData.totalFee === "" ||
-      Number(formData.totalFee) <= 0
-    ) {
-      errors.totalFee =
-        "Enter a valid total fee";
     }
 
     setFormErrors(errors);
@@ -481,15 +495,15 @@ const Students = () => {
     if (text.includes("phone")) return "phone";
     if (text.includes("email")) return "email";
     if (text.includes("parent")) return "parentName";
+    if (
+      text.includes("date of birth") ||
+      text.includes("dateofbirth") ||
+      text.includes("dob")
+    ) {
+      return "dateOfBirth";
+    }
     if (text.includes("student name")) return "studentName";
     if (text.includes("course")) return "course";
-
-    if (
-      text.includes("total fee") ||
-      text.includes("fee")
-    ) {
-      return "totalFee";
-    }
 
     if (text.includes("payment method")) {
       return "paymentMethod";
@@ -508,6 +522,7 @@ const Students = () => {
       studentName: formData.studentName.trim(),
       rollNo: formData.rollNo.trim(),
       parentName: formData.parentName.trim(),
+      dateOfBirth: formData.dateOfBirth,
       phone: formData.phone.trim(),
       alternatePhone:
         formData.alternatePhone.trim() || undefined,
@@ -519,7 +534,6 @@ const Students = () => {
       schoolName:
         formData.schoolName.trim() || undefined,
       address: formData.address.trim() || undefined,
-      totalFee: Number(formData.totalFee),
     };
 
     try {
@@ -799,6 +813,22 @@ const Students = () => {
       "en-IN"
     );
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const getStudentId = (student) => {
     if (student.studentId) {
       return student.studentId;
@@ -1029,7 +1059,7 @@ const Students = () => {
                     <th>Roll No</th>
                     <th>Course</th>
                     <th>Phone</th>
-                    <th>Total Fee</th>
+                    <th>Aadhaar Number</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1093,10 +1123,9 @@ const Students = () => {
                         </td>
 
                         <td>
-                          ₹
-                          {formatMoney(
-                            student.totalFee
-                          )}
+                          <span className="aadhaar-table-value">
+                            {student.idproof || "-"}
+                          </span>
                         </td>
 
                         <td>
@@ -1326,40 +1355,47 @@ const Students = () => {
       )}
 
       {showFormModal && (
-        <div className="student-modal-overlay">
-          <div className="student-modal form-modal">
-            <div className="student-modal-header">
-              <div className="modal-heading-content">
-                <span className="modal-icon">
-                  <FiUser />
-                </span>
+        <div className="student-modal-overlay student-form-overlay">
+          <div className="student-modal form-modal student-admission-modal">
+            <div className="student-admission-header">
+              <div className="student-admission-title">
+                <div className="student-admission-icon">
+                  {editingStudent ? <FiEdit2 /> : <FiPlus />}
+                </div>
 
                 <div>
+                  <span>
+                    {editingStudent
+                      ? "UPDATE STUDENT"
+                      : "NEW ADMISSION"}
+                  </span>
+
                   <h2>
                     {editingStudent
-                      ? "Edit Student"
-                      : "Add Student"}
+                      ? "Edit Student Details"
+                      : "Add New Student"}
                   </h2>
 
                   <p>
                     {editingStudent
-                      ? "Update student information"
-                      : "Enter student information to create a new record"}
+                      ? "Update personal, contact and academic information."
+                      : "Create a complete student profile for SK Learnings."}
                   </p>
                 </div>
               </div>
 
               <button
                 type="button"
-                className="modal-close-btn"
+                className="modal-close-btn student-admission-close"
                 onClick={closeFormModal}
+                aria-label="Close student form"
               >
                 <FiX />
               </button>
             </div>
 
             <form
-              className="student-form"
+              className="student-form student-admission-form"
               onSubmit={handleSubmit}
               noValidate
             >
@@ -1372,359 +1408,359 @@ const Students = () => {
                 </div>
               )}
 
-              <div className="student-form-section-title">
-                Personal Information
-              </div>
+              <section className="student-form-panel">
+                <div className="student-form-panel-heading">
+                  <div className="student-form-panel-icon">
+                    <FiUser />
+                  </div>
 
-              <div className="form-grid">
-                <div className="student-form-group">
-                  <label>
-                    Student Name *
-                  </label>
-
-                  <input
-                    name="studentName"
-                    value={
-                      formData.studentName
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Enter student name"
-                    required
-                    className={
-                      formErrors.studentName
-                        ? "input-error"
-                        : ""
-                    }
-                  />
-
-                  {formErrors.studentName && (
-                    <small className="form-error-text">
-                      {formErrors.studentName}
-                    </small>
-                  )}
+                  <div>
+                    <h3>Personal Information</h3>
+                    <p>
+                      Student identity and parent details
+                    </p>
+                  </div>
                 </div>
 
-                <div className="student-form-group">
-                  <label>
-                    Roll No *
-                  </label>
+                <div className="form-grid student-admission-grid">
+                  <div className="student-form-group">
+                    <label>
+                      Student Name <span>*</span>
+                    </label>
 
-                  <input
-                    name="rollNo"
-                    value={formData.rollNo}
-                    onChange={handleChange}
-                    placeholder="Enter roll number"
-                    required
-                    className={
-                      formErrors.rollNo
-                        ? "input-error"
-                        : ""
-                    }
-                  />
+                    <input
+                      name="studentName"
+                      value={formData.studentName}
+                      onChange={handleChange}
+                      placeholder="Enter student name"
+                      required
+                      className={
+                        formErrors.studentName
+                          ? "input-error"
+                          : ""
+                      }
+                    />
 
-                  {formErrors.rollNo && (
-                    <small className="form-error-text">
-                      {formErrors.rollNo}
-                    </small>
-                  )}
+                    {formErrors.studentName && (
+                      <small className="form-error-text">
+                        {formErrors.studentName}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>
+                      Roll Number <span>*</span>
+                    </label>
+
+                    <input
+                      name="rollNo"
+                      value={formData.rollNo}
+                      onChange={handleChange}
+                      placeholder="Example: SK-LN-001"
+                      required
+                      className={
+                        formErrors.rollNo
+                          ? "input-error"
+                          : ""
+                      }
+                    />
+
+                    {formErrors.rollNo && (
+                      <small className="form-error-text">
+                        {formErrors.rollNo}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>
+                      Date of Birth <span>*</span>
+                    </label>
+
+                    <div className="student-date-field">
+                      <FiCalendar />
+
+                      <input
+                        type="date"
+                        name="dateOfBirth"
+                        value={formData.dateOfBirth}
+                        onChange={handleChange}
+                        max={new Date()
+                          .toISOString()
+                          .split("T")[0]}
+                        required
+                        className={
+                          formErrors.dateOfBirth
+                            ? "input-error"
+                            : ""
+                        }
+                      />
+                    </div>
+
+                    {formErrors.dateOfBirth && (
+                      <small className="form-error-text">
+                        {formErrors.dateOfBirth}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>
+                      Parent / Guardian Name <span>*</span>
+                    </label>
+
+                    <input
+                      name="parentName"
+                      value={formData.parentName}
+                      onChange={handleChange}
+                      placeholder="Enter parent or guardian name"
+                      required
+                      className={
+                        formErrors.parentName
+                          ? "input-error"
+                          : ""
+                      }
+                    />
+
+                    {formErrors.parentName && (
+                      <small className="form-error-text">
+                        {formErrors.parentName}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>
+                      Aadhaar Number <span>*</span>
+                    </label>
+
+                    <input
+                      name="idproof"
+                      maxLength="14"
+                      inputMode="numeric"
+                      value={formData.idproof}
+                      onChange={handleChange}
+                      placeholder="1234 5678 9878"
+                      required
+                      className={
+                        formErrors.idproof
+                          ? "input-error"
+                          : ""
+                      }
+                    />
+
+                    {formErrors.idproof && (
+                      <small className="form-error-text">
+                        {formErrors.idproof}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>School Name</label>
+
+                    <input
+                      name="schoolName"
+                      value={formData.schoolName}
+                      onChange={handleChange}
+                      placeholder="Enter school name"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section className="student-form-panel">
+                <div className="student-form-panel-heading">
+                  <div className="student-form-panel-icon">
+                    <FiPhone />
+                  </div>
+
+                  <div>
+                    <h3>Contact Information</h3>
+                    <p>
+                      Parent phone and communication details
+                    </p>
+                  </div>
                 </div>
 
-                <div className="student-form-group">
-                  <label>
-                    Parent Name *
-                  </label>
+                <div className="form-grid student-admission-grid">
+                  <div className="student-form-group">
+                    <label>
+                      Parent Phone <span>*</span>
+                    </label>
 
-                  <input
-                    name="parentName"
-                    value={
-                      formData.parentName
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Enter parent name"
-                    required
-                    className={
-                      formErrors.parentName
-                        ? "input-error"
-                        : ""
-                    }
-                  />
+                    <input
+                      name="phone"
+                      maxLength="11"
+                      inputMode="numeric"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="98789 89789"
+                      required
+                      className={
+                        formErrors.phone
+                          ? "input-error"
+                          : ""
+                      }
+                    />
 
-                  {formErrors.parentName && (
-                    <small className="form-error-text">
-                      {formErrors.parentName}
-                    </small>
-                  )}
+                    {formErrors.phone && (
+                      <small className="form-error-text">
+                        {formErrors.phone}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>Alternate Number</label>
+
+                    <input
+                      name="alternatePhone"
+                      maxLength="11"
+                      inputMode="numeric"
+                      value={formData.alternatePhone}
+                      onChange={handleChange}
+                      placeholder="98789 89789"
+                      className={
+                        formErrors.alternatePhone
+                          ? "input-error"
+                          : ""
+                      }
+                    />
+
+                    {formErrors.alternatePhone && (
+                      <small className="form-error-text">
+                        {formErrors.alternatePhone}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group full-width">
+                    <label>Email Address</label>
+
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="student@email.com"
+                      className={
+                        formErrors.email
+                          ? "input-error"
+                          : ""
+                      }
+                    />
+
+                    {formErrors.email && (
+                      <small className="form-error-text">
+                        {formErrors.email}
+                      </small>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <section className="student-form-panel">
+                <div className="student-form-panel-heading">
+                  <div className="student-form-panel-icon">
+                    <FaGraduationCap />
+                  </div>
+
+                  <div>
+                    <h3>Academic Information</h3>
+                    <p>
+                      Course, batch and learning details
+                    </p>
+                  </div>
                 </div>
 
-                <div className="student-form-group">
-                  <label>
-                    Phone Number *
-                  </label>
+                <div className="form-grid student-admission-grid">
+                  <div className="student-form-group">
+                    <label>
+                      Course <span>*</span>
+                    </label>
 
-                  <input
-                    name="phone"
-                    maxLength="11"
-                    inputMode="numeric"
-                    value={
-                      formData.phone
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Phone Number"
-                    required
-                    className={
-                      formErrors.phone
-                        ? "input-error"
-                        : ""
-                    }
-                  />
-
-                  {formErrors.phone && (
-                    <small className="form-error-text">
-                      {formErrors.phone}
-                    </small>
-                  )}
-                </div>
-
-                <div className="student-form-group">
-                  <label>
-                    Alternate Phone
-                  </label>
-
-                  <input
-                    name="alternatePhone"
-                    maxLength="11"
-                    inputMode="numeric"
-                    value={
-                      formData.alternatePhone
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Alternate Number"
-                    className={
-                      formErrors.alternatePhone
-                        ? "input-error"
-                        : ""
-                    }
-                  />
-
-                  {formErrors.alternatePhone && (
-                    <small className="form-error-text">
-                      {formErrors.alternatePhone}
-                    </small>
-                  )}
-                </div>
-
-                <div className="student-form-group">
-                  <label>
-                    Aadhaar Number *
-                  </label>
-
-                  <input
-                    name="idproof"
-                    maxLength="14"
-                    inputMode="numeric"
-                    value={formData.idproof}
-                    onChange={handleChange}
-                    placeholder="1234 5678 9878"
-                    required
-                    className={
-                      formErrors.idproof
-                        ? "input-error"
-                        : ""
-                    }
-                  />
-
-                  {formErrors.idproof && (
-                    <small className="form-error-text">
-                      {formErrors.idproof}
-                    </small>
-                  )}
-                </div>
-
-                <div className="student-form-group full-width">
-                  <label>
-                    Email Address
-                  </label>
-
-                  <input
-                    type="email"
-                    name="email"
-                    value={
-                      formData.email
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="student@email.com"
-                    className={
-                      formErrors.email
-                        ? "input-error"
-                        : ""
-                    }
-                  />
-
-                  {formErrors.email && (
-                    <small className="form-error-text">
-                      {formErrors.email}
-                    </small>
-                  )}
-                </div>
-              </div>
-
-              <div className="student-form-section-title">
-                Academic Information
-              </div>
-
-              <div className="form-grid">
-                <div className="student-form-group">
-                  <label>
-                    Course *
-                  </label>
-
-                  <select
-                    name="course"
-                    value={
-                      formData.course
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    required
-                    className={
-                      formErrors.course
-                        ? "input-error"
-                        : ""
-                    }
-                  >
-                    <option value="">
-                      Select course
-                    </option>
-
-                    {academicCourses.map((course) => (
-                      <option
-                        key={course._id}
-                        value={course.courseName}
-                      >
-                        {course.courseName}
+                    <select
+                      name="course"
+                      value={formData.course}
+                      onChange={handleChange}
+                      required
+                      className={
+                        formErrors.course
+                          ? "input-error"
+                          : ""
+                      }
+                    >
+                      <option value="">
+                        Select course
                       </option>
-                    ))}
-                  </select>
 
-                  {formErrors.course && (
-                    <small className="form-error-text">
-                      {formErrors.course}
-                    </small>
-                  )}
-                </div>
-
-                <div className="student-form-group">
-                  <label>Batch</label>
-
-                  <select
-                    name="batch"
-                    value={formData.batch}
-                    onChange={handleChange}
-                  >
-                    <option value="">
-                      Select batch
-                    </option>
-
-                    {academicBatches.map((batch) => {
-                      const label = formatBatchLabel(batch);
-
-                      return (
+                      {academicCourses.map((course) => (
                         <option
-                          key={batch._id}
-                          value={label}
+                          key={course._id}
+                          value={course.courseName}
                         >
-                          {label}
+                          {course.courseName}
                         </option>
-                      );
-                    })}
-                  </select>
+                      ))}
+                    </select>
+
+                    {formErrors.course && (
+                      <small className="form-error-text">
+                        {formErrors.course}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>Batch</label>
+
+                    <select
+                      name="batch"
+                      value={formData.batch}
+                      onChange={handleChange}
+                    >
+                      <option value="">
+                        Select batch
+                      </option>
+
+                      {academicBatches.map((batch) => {
+                        const label =
+                          formatBatchLabel(batch);
+
+                        return (
+                          <option
+                            key={batch._id}
+                            value={label}
+                          >
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div className="student-form-group full-width">
+                    <label>Residential Address</label>
+
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="Enter full residential address"
+                      rows="3"
+                    />
+                  </div>
                 </div>
+              </section>
 
-                <div className="student-form-group">
-                  <label>
-                    School Name
-                  </label>
-
-                  <input
-                    name="schoolName"
-                    value={
-                      formData.schoolName
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Enter school name"
-                  />
-                </div>
-
-                <div className="student-form-group">
-                  <label>
-                    Total Fee *
-                  </label>
-
-                  <input
-                    type="number"
-                    min="1"
-                    name="totalFee"
-                    value={
-                      formData.totalFee
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Enter total fee"
-                    required
-                    className={
-                      formErrors.totalFee
-                        ? "input-error"
-                        : ""
-                    }
-                  />
-
-                  {formErrors.totalFee && (
-                    <small className="form-error-text">
-                      {formErrors.totalFee}
-                    </small>
-                  )}
-                </div>
-
-                <div className="student-form-group full-width">
-                  <label>
-                    Address
-                  </label>
-
-                  <textarea
-                    name="address"
-                    value={
-                      formData.address
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Enter student address"
-                    rows="3"
-                  />
-                </div>
-              </div>
-
-              <div className="student-form-actions">
+              <div className="student-form-actions student-admission-actions">
                 <button
                   type="button"
                   className="secondary-btn"
-                  onClick={
-                    closeFormModal
-                  }
+                  onClick={closeFormModal}
+                  disabled={isSaving}
                 >
                   Cancel
                 </button>
@@ -1732,15 +1768,15 @@ const Students = () => {
                 <button
                   type="submit"
                   className="primary-btn"
-                  disabled={
-                    isSaving
-                  }
+                  disabled={isSaving}
                 >
+                  <FiSave />
+
                   {isSaving
                     ? "Saving..."
                     : editingStudent
                       ? "Update Student"
-                      : "Add Student"}
+                      : "Create Student"}
                 </button>
               </div>
             </form>
@@ -1748,272 +1784,168 @@ const Students = () => {
         </div>
       )}
 
-      
-
-      {showViewModal &&
-        selectedStudent && (
-          <div className="student-modal-overlay student-id-overlay">
-            <div className="student-id-modal">
+      {showViewModal && selectedStudent && (
+        <div className="student-modal-overlay student-profile-overlay">
+          <div className="student-profile-modal">
+            <div className="student-profile-hero">
               <button
                 type="button"
-                className="student-id-close"
-                onClick={
-                  closeViewModal
-                }
+                className="student-profile-close"
+                onClick={closeViewModal}
+                aria-label="Close student details"
               >
                 <FiX />
               </button>
 
-              <div className="student-id-card">
-                
+              <div className="student-profile-brand-row">
+                <div className="student-profile-brand">
+                  <img src={logo} alt="SK Learnings" />
 
-                <div className="student-id-top">
-                  <div className="student-id-brand">
-                    <img
-                      src={logo}
-                      alt="SK Learnings"
-                    />
-
-                    <div>
-                      <h3>
-                        THE SK LEARNINGS
-                      </h3>
-
-                      <p>
-                        PRIVATE EDUCATIONAL
-                        SERVICES
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="student-id-document">
-                    <FaGraduationCap />
-
-                    <span>
-                      STUDENT IDENTITY
-                    </span>
+                  <div>
+                    <span>THE SK LEARNINGS</span>
+                    <small>STUDENT PROFILE</small>
                   </div>
                 </div>
 
-                
+                <div className="student-profile-status">
+                  <span />
+                  Active Student
+                </div>
+              </div>
 
-                <div className="student-id-profile-row">
-                  <div className="student-id-photo-wrap">
-                    <div className="student-id-photo">
-                      {selectedStudent.studentName
-                        ?.charAt(0)
-                        ?.toUpperCase() ||
-                        "S"}
-                    </div>
-
-                    <span>
-                      <i />
-                      Active Student
-                    </span>
-                  </div>
-
-                  <div className="student-id-main-info">
-                    <small>
-                      STUDENT NAME
-                    </small>
-
-                    <h2>
-                      {
-                        selectedStudent.studentName
-                      }
-                    </h2>
-
-                    <div className="student-id-course-row">
-                      <span>
-                        <FiBookOpen />
-                        {
-                          selectedStudent.course
-                        }
-                      </span>
-
-                      <span>
-                        <FiUsers />
-                        {selectedStudent.batch ||
-                          "No Batch"}
-                      </span>
-                    </div>
-
-                    <div className="student-id-number">
-                      <span>
-                        ROLL NO
-                      </span>
-
-                      <strong>
-                        {selectedStudent.rollNo || "-"}
-                      </strong>
-                    </div>
-                  </div>
+              <div className="student-profile-main">
+                <div className="student-profile-avatar-large">
+                  {selectedStudent.studentName
+                    ?.charAt(0)
+                    ?.toUpperCase() || "S"}
                 </div>
 
-                
+                <div className="student-profile-identity">
+                  <small>STUDENT NAME</small>
+                  <h2>{selectedStudent.studentName}</h2>
 
-                <div className="student-id-details-grid">
-                  <IdDetail
-                    icon={<FiUser />}
-                    label="Parent Name"
-                    value={
-                      selectedStudent.parentName
-                    }
-                  />
-
-                  <IdDetail
-                    icon={<FaGraduationCap />}
-                    label="Roll No"
-                    value={
-                      selectedStudent.rollNo || "-"
-                    }
-                  />
-
-                  <IdDetail
-                    icon={<FiPhone />}
-                    label="Phone Number"
-                    value={
-                      selectedStudent.phone
-                    }
-                  />
-
-                  <IdDetail
-                    icon={<FiPhone />}
-                    label="Alternate Phone"
-                    value={
-                      selectedStudent.alternatePhone ||
-                      "-"
-                    }
-                  />
-
-                  <IdDetail
-                    icon={<FiMail />}
-                    label="Email Address"
-                    value={
-                      selectedStudent.email ||
-                      "-"
-                    }
-                  />
-
-                  <IdDetail
-                    icon={
+                  <div className="student-profile-chip-row">
+                    <span>
                       <FiBookOpen />
-                    }
-                    label="School"
-                    value={
-                      selectedStudent.schoolName ||
-                      "-"
-                    }
-                  />
-
-                  <IdDetail
-                    icon={
-                      <FiCreditCard />
-                    }
-                    label="Aadhaar Number"
-                    value={
-                      selectedStudent.idproof ||
-                      "-"
-                    }
-                  />
-                </div>
-
-                
-
-                <div className="student-id-fees">
-                  <div>
-                    <span>
-                      Total Fee
+                      {selectedStudent.course || "No Course"}
                     </span>
 
-                    <strong>
-                      ₹
-                      {formatMoney(
-                        selectedStudent.totalFee
-                      )}
-                    </strong>
-                  </div>
-
-                  <div className="fee-paid">
                     <span>
-                      Paid
+                      <FiUsers />
+                      {selectedStudent.batch || "No Batch"}
                     </span>
-
-                    <strong>
-                      ₹
-                      {formatMoney(
-                        selectedStudent.paidAmount
-                      )}
-                    </strong>
-                  </div>
-
-                  <div className="fee-pending">
-                    <span>
-                      Pending
-                    </span>
-
-                    <strong>
-                      ₹
-                      {formatMoney(
-                        selectedStudent.pendingAmount
-                      )}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span>
-                      Status
-                    </span>
-
-                    <strong
-                      className={`student-id-payment ${
-                        selectedStudent.paymentStatus ===
-                        "paid"
-                          ? "paid"
-                          : "unpaid"
-                      }`}
-                    >
-                      {selectedStudent.paymentStatus ===
-                      "paid"
-                        ? "paid"
-                        : "unpaid"}
-                    </strong>
                   </div>
                 </div>
 
-                
-
-                <div className="student-id-address">
-                  <FiMapPin />
-
-                  <div>
-                    <span>
-                      Residential Address
-                    </span>
-
-                    <p>
-                      {selectedStudent.address ||
-                        "-"}
-                    </p>
-                  </div>
-                </div>
-
-                
-
-                <div className="student-id-footer">
-                  <span>
-                    MEDICAL • ENGINEERING •
-                    FOUNDATIONS • JUNIOR IAS
-                  </span>
-
-                  <strong>
-                    THE SK LEARNINGS
-                  </strong>
+                <div className="student-profile-roll-card">
+                  <small>ROLL NO</small>
+                  <strong>{selectedStudent.rollNo || "-"}</strong>
                 </div>
               </div>
             </div>
+
+            <div className="student-profile-content">
+              <section className="student-profile-section">
+                <div className="student-profile-section-title">
+                  <span className="student-profile-section-icon">
+                    <FiUser />
+                  </span>
+
+                  <div>
+                    <h3>Parent & Contact</h3>
+                    <p>Primary student contact information</p>
+                  </div>
+                </div>
+
+                <div className="student-profile-info-grid">
+                  <ProfileDetail
+                    label="Parent Name"
+                    value={selectedStudent.parentName || "-"}
+                  />
+
+                  <ProfileDetail
+                    label="Date of Birth"
+                    value={formatDate(selectedStudent.dateOfBirth)}
+                    icon={<FiCalendar />}
+                  />
+
+                  <ProfileDetail
+                    label="Parent Phone"
+                    value={selectedStudent.phone || "-"}
+                    icon={<FiPhone />}
+                  />
+
+                  <ProfileDetail
+                    label="Alternate Number"
+                    value={selectedStudent.alternatePhone || "-"}
+                    icon={<FiPhone />}
+                  />
+
+                  <ProfileDetail
+                    label="Email Address"
+                    value={selectedStudent.email || "-"}
+                    icon={<FiMail />}
+                  />
+                </div>
+              </section>
+
+              <section className="student-profile-section">
+                <div className="student-profile-section-title">
+                  <span className="student-profile-section-icon">
+                    <FaGraduationCap />
+                  </span>
+
+                  <div>
+                    <h3>Academic & Identity</h3>
+                    <p>Education and identification details</p>
+                  </div>
+                </div>
+
+                <div className="student-profile-info-grid">
+                  <ProfileDetail
+                    label="Course"
+                    value={selectedStudent.course || "-"}
+                    icon={<FiBookOpen />}
+                  />
+
+                  <ProfileDetail
+                    label="Batch"
+                    value={selectedStudent.batch || "-"}
+                    icon={<FiUsers />}
+                  />
+
+                  <ProfileDetail
+                    label="School Name"
+                    value={selectedStudent.schoolName || "-"}
+                  />
+
+                  <ProfileDetail
+                    label="Aadhaar Number"
+                    value={selectedStudent.idproof || "-"}
+                    icon={<FiCreditCard />}
+                  />
+                </div>
+              </section>
+
+              <section className="student-profile-address-card">
+                <div className="student-profile-address-icon">
+                  <FiMapPin />
+                </div>
+
+                <div>
+                  <span>RESIDENTIAL ADDRESS</span>
+                  <p>{selectedStudent.address || "-"}</p>
+                </div>
+              </section>
+            </div>
+
+            <div className="student-profile-footer">
+              <span>THE SK LEARNINGS</span>
+              <small>Private Educational Services</small>
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
       
 
@@ -2075,19 +2007,21 @@ const Students = () => {
   );
 };
 
-const IdDetail = ({
-  icon,
+const ProfileDetail = ({
   label,
   value,
+  icon,
 }) => {
   return (
-    <div className="student-id-detail">
-      <div className="student-id-detail-icon">
-        {icon}
-      </div>
+    <div className="student-profile-detail-row">
+      {icon && (
+        <span className="student-profile-detail-icon">
+          {icon}
+        </span>
+      )}
 
       <div>
-        <span>{label}</span>
+        <small>{label}</small>
         <strong>{value}</strong>
       </div>
     </div>
