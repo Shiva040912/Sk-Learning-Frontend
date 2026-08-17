@@ -136,7 +136,7 @@ const Topbar = ({ onMenuClick }) => {
       )
     ) {
       return {
-        title: "Setiings",
+        title: "Settings",
         subtitle:
           "The place To change or modify things",
       };
