@@ -2,6 +2,8 @@ import { NavLink } from "react-router-dom";
 
 import {
   FiBell,
+  FiChevronLeft,
+  FiChevronRight,
   FiCreditCard,
   FiFileText,
   FiSettings,
@@ -15,32 +17,78 @@ import logo from "../assets/sk-logo.png";
 const Sidebar = ({
   isOpen,
   onClose,
+  isExpanded,
+  onToggleExpand,
 }) => {
   const user = JSON.parse(
-    localStorage.getItem("user") ||
-      "{}"
+    localStorage.getItem("user") || "{}"
   );
 
   const isAdministrator =
     user.role === "admin";
 
+  const navItems = [
+    {
+      to: "/students",
+      label: "Students",
+      icon: <FiUsers />,
+    },
+    {
+      to: "/payments",
+      label: "Payments",
+      icon: <FiCreditCard />,
+    },
+    {
+      to: "/invoices",
+      label: "Invoices",
+      icon: <FiFileText />,
+    },
+    {
+      to: "/notifications",
+      label: "Notifications",
+      icon: <FiBell />,
+    },
+    ...(isAdministrator
+      ? [
+          {
+            to: "/users",
+            label: "Users",
+            icon: <FiUser />,
+          },
+        ]
+      : []),
+    {
+      to: "/settings",
+      label: "Settings",
+      icon: <FiSettings />,
+    },
+  ];
+
+  const handleNavClick = () => {
+    if (window.innerWidth <= 900) {
+      onClose();
+    }
+  };
+
   return (
     <>
       {isOpen && (
-        <div
+        <button
+          type="button"
           className="sidebar-overlay"
           onClick={onClose}
+          aria-label="Close sidebar"
         />
       )}
 
       <aside
         className={`sidebar ${
-          isOpen
-            ? "sidebar-open"
-            : ""
+          isExpanded ? "expanded" : ""
+        } ${
+          isOpen ? "sidebar-open" : ""
         }`}
       >
-        <div className="sidebar-brand-area">
+        <div className="sidebar-top">
           <div className="sidebar-logo-wrap">
             <img
               src={logo}
@@ -50,14 +98,13 @@ const Sidebar = ({
           </div>
 
           <div className="sidebar-brand-text">
-            <h1>
-              THE <span>SK</span>{" "}
-              LEARNINGS
-            </h1>
+            <strong>
+              THE <span>SK</span> LEARNINGS
+            </strong>
 
-            <p>
-              Private Educational Services
-            </p>
+            <small>
+              Management Portal
+            </small>
           </div>
 
           <button
@@ -71,142 +118,59 @@ const Sidebar = ({
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink
-            to="/students"
-            className={({
-              isActive,
-            }) =>
-              `sidebar-link ${
-                isActive
-                  ? "active"
-                  : ""
-              }`
-            }
-            onClick={onClose}
-          >
-            <span className="sidebar-icon">
-              <FiUsers />
-            </span>
+          <span className="sidebar-menu-title">
+            MAIN MENU
+          </span>
 
-            <span>
-              Students
-            </span>
-          </NavLink>
-
-          <NavLink
-            to="/payments"
-            className={({
-              isActive,
-            }) =>
-              `sidebar-link ${
-                isActive
-                  ? "active"
-                  : ""
-              }`
-            }
-            onClick={onClose}
-          >
-            <span className="sidebar-icon">
-              <FiCreditCard />
-            </span>
-
-            <span>
-              Payments
-            </span>
-          </NavLink>
-
-          <NavLink
-            to="/invoices"
-            className={({
-              isActive,
-            }) =>
-              `sidebar-link ${
-                isActive
-                  ? "active"
-                  : ""
-              }`
-            }
-            onClick={onClose}
-          >
-            <span className="sidebar-icon">
-              <FiFileText />
-            </span>
-
-            <span>
-              Invoices
-            </span>
-          </NavLink>
-
-          <NavLink
-            to="/notifications"
-            className={({
-              isActive,
-            }) =>
-              `sidebar-link ${
-                isActive
-                  ? "active"
-                  : ""
-              }`
-            }
-            onClick={onClose}
-          >
-            <span className="sidebar-icon">
-              <FiBell />
-            </span>
-
-            <span>
-              Notifications
-            </span>
-          </NavLink>
-
-          {isAdministrator && (
+          {navItems.map((item) => (
             <NavLink
-              to="/users"
-              className={({
-                isActive,
-              }) =>
+              key={item.to}
+              to={item.to}
+              title={
+                !isExpanded
+                  ? item.label
+                  : undefined
+              }
+              className={({ isActive }) =>
                 `sidebar-link ${
-                  isActive
-                    ? "active"
-                    : ""
+                  isActive ? "active" : ""
                 }`
               }
-              onClick={onClose}
+              onClick={handleNavClick}
             >
               <span className="sidebar-icon">
-                <FiUser />
+                {item.icon}
               </span>
 
-              <span>
-                Users
+              <span className="sidebar-link-label">
+                {item.label}
               </span>
             </NavLink>
-          )}
-
-          <NavLink
-            to="/settings"
-            className={({
-              isActive,
-            }) =>
-              `sidebar-link ${
-                isActive
-                  ? "active"
-                  : ""
-              }`
-            }
-            onClick={onClose}
-          >
-            <span className="sidebar-icon">
-              <FiSettings />
-            </span>
-
-            <span>
-              Settings
-            </span>
-          </NavLink>
+          ))}
         </nav>
 
-        <div className="sidebar-bottom-line" />
+        <div className="sidebar-toggle-area">
+          <button
+            type="button"
+            className="sidebar-toggle-btn"
+            onClick={onToggleExpand}
+            aria-label={
+              isExpanded
+                ? "Collapse sidebar"
+                : "Expand sidebar"
+            }
+          >
+            {isExpanded ? (
+              <FiChevronLeft />
+            ) : (
+              <FiChevronRight />
+            )}
+
+            {isExpanded && (
+              <span>Collapse</span>
+            )}
+          </button>
+        </div>
       </aside>
     </>
   );

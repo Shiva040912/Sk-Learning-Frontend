@@ -3,21 +3,21 @@ import {
   useRef,
   useState,
 } from "react";
+
 import { useLocation } from "react-router-dom";
+
 import {
+  FiChevronDown,
+  FiLogOut,
   FiMenu,
   FiUser,
-  FiLogOut,
-  FiChevronDown,
 } from "react-icons/fi";
 
 const Topbar = ({ onMenuClick }) => {
   const location = useLocation();
 
-  const [
-    isProfileOpen,
-    setIsProfileOpen,
-  ] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] =
+    useState(false);
 
   const profileRef = useRef(null);
 
@@ -30,7 +30,10 @@ const Topbar = ({ onMenuClick }) => {
       return "Administrator";
     }
 
-    if (role === "Trainer") {
+    if (
+      role === "Trainer" ||
+      role === "trainer"
+    ) {
       return "Trainer";
     }
 
@@ -48,9 +51,7 @@ const Topbar = ({ onMenuClick }) => {
     const handleOutsideClick = (event) => {
       if (
         profileRef.current &&
-        !profileRef.current.contains(
-          event.target
-        )
+        !profileRef.current.contains(event.target)
       ) {
         setIsProfileOpen(false);
       }
@@ -71,9 +72,7 @@ const Topbar = ({ onMenuClick }) => {
 
   const getPageDetails = () => {
     if (
-      location.pathname.startsWith(
-        "/students"
-      )
+      location.pathname.startsWith("/students")
     ) {
       return {
         title: "Students",
@@ -83,62 +82,54 @@ const Topbar = ({ onMenuClick }) => {
     }
 
     if (
-      location.pathname.startsWith(
-        "/payments"
-      )
+      location.pathname.startsWith("/payments")
     ) {
       return {
         title: "Payments",
         subtitle:
-          "Manage fee payments and payment records",
+          "Manage fee payments and records",
       };
     }
 
     if (
-      location.pathname.startsWith(
-        "/users"
-      )
-    ) {
-      return {
-        title: "Users",
-        subtitle:
-          "Manage administrator and Trainer accounts",
-      };
-    }
-
-    if (
-      location.pathname.startsWith(
-        "/invoices"
-      )
+      location.pathname.startsWith("/invoices")
     ) {
       return {
         title: "Invoices",
         subtitle:
-          "Place to see all the recipts",
+          "View invoices and payment receipts",
       };
     }
 
     if (
       location.pathname.startsWith(
-        "/notification"
+        "/notifications"
       )
     ) {
       return {
-        title: "Notification",
+        title: "Notifications",
         subtitle:
-          "Place to see all the fee notifications",
+          "View all fee notifications",
       };
     }
 
     if (
-      location.pathname.startsWith(
-        "/settings"
-      )
+      location.pathname.startsWith("/users")
+    ) {
+      return {
+        title: "Users",
+        subtitle:
+          "Manage administrator and trainer accounts",
+      };
+    }
+
+    if (
+      location.pathname.startsWith("/settings")
     ) {
       return {
         title: "Settings",
         subtitle:
-          "The place To change or modify things",
+          "Manage application settings",
       };
     }
 
@@ -153,7 +144,7 @@ const Topbar = ({ onMenuClick }) => {
 
   return (
     <header className="topbar">
-      <div className="topbar-left">
+      <div className="topbar-brand-area">
         <button
           type="button"
           className="menu-btn"
@@ -163,14 +154,37 @@ const Topbar = ({ onMenuClick }) => {
           <FiMenu />
         </button>
 
-        <div className="topbar-page-info">
-          <div className="topbar-title-row">
-            <span className="topbar-accent" />
-            <h2>{page.title}</h2>
-          </div>
+        <div className="topbar-company">
+          <h1>
+            THE <span>SK</span> LEARNINGS
+          </h1>
 
-          <p>{page.subtitle}</p>
+          <p>
+            PRIVATE EDUCATIONAL SERVICES
+          </p>
+
+          <small>
+            MEDICAL / ENGINEERING / FOUNDATIONS /
+            JUNIOR IAS
+          </small>
         </div>
+
+        <div className="mobile-topbar-title">
+          <small>THE SK LEARNINGS</small>
+          <strong>{page.title}</strong>
+        </div>
+      </div>
+
+      <div className="topbar-divider" />
+
+      <div className="topbar-page-info">
+        <div className="topbar-title-row">
+          <span className="topbar-accent" />
+
+          <h2>{page.title}</h2>
+        </div>
+
+        <p>{page.subtitle}</p>
       </div>
 
       <div className="topbar-right">
@@ -183,8 +197,7 @@ const Topbar = ({ onMenuClick }) => {
             className="topbar-user"
             onClick={() =>
               setIsProfileOpen(
-                (currentValue) =>
-                  !currentValue
+                (current) => !current
               )
             }
           >
@@ -194,7 +207,7 @@ const Topbar = ({ onMenuClick }) => {
 
             <div className="topbar-user-info">
               <strong>
-                {user.name || "User"}
+                {user.name || "Administrator"}
               </strong>
 
               <span>
@@ -204,9 +217,7 @@ const Topbar = ({ onMenuClick }) => {
 
             <FiChevronDown
               className={`profile-chevron ${
-                isProfileOpen
-                  ? "open"
-                  : ""
+                isProfileOpen ? "open" : ""
               }`}
             />
           </button>
@@ -220,13 +231,12 @@ const Topbar = ({ onMenuClick }) => {
 
                 <div>
                   <strong>
-                    {user.name || "User"}
+                    {user.name ||
+                      "Administrator"}
                   </strong>
 
                   <span>
-                    {formatRole(
-                      user.role
-                    )}
+                    {formatRole(user.role)}
                   </span>
                 </div>
               </div>
