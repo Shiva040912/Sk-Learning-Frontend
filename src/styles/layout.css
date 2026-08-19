@@ -104,7 +104,7 @@ textarea {
 }
 
 .topbar-brand-area {
-  min-width: 355px;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -151,7 +151,7 @@ textarea {
   width: 1px;
   height: 46px;
   flex-shrink: 0;
-  margin-left: 4px;
+  margin-left: 0;
   background: rgba(255, 255, 255, 0.12);
 }
 

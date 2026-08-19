@@ -43,6 +43,7 @@ const Notification = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSendingAll, setIsSendingAll] = useState(false);
+  const [isSavingInterval, setIsSavingInterval] = useState(false);
   const [sendingStudentId, setSendingStudentId] = useState(null);
 
   const getErrorMessage = (error, fallback) => {
@@ -219,6 +220,28 @@ const Notification = () => {
       await fetchNotifications(true);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleSaveReminderInterval = async () => {
+    const intervalDays = Number(reminderIntervalDays);
+
+    if (!Number.isInteger(intervalDays) || intervalDays < 1 || intervalDays > 30) {
+      toast.error("Reminder interval must be between 1 and 30 days");
+      return;
+    }
+
+    try {
+      setIsSavingInterval(true);
+      await api.patch("/settings", {
+        overdueReminderIntervalDays: intervalDays,
+      });
+      toast.success("Reminder interval updated");
+      await fetchNotifications();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to update reminder interval"));
+    } finally {
+      setIsSavingInterval(false);
     }
   };
 
@@ -465,10 +488,26 @@ const Notification = () => {
         <div className="notification-realert-strip">
           <FiBell />
           <span>Automatic re-alert:</span>
-          <strong>
-            Every {reminderIntervalDays} day
-            {Number(reminderIntervalDays) === 1 ? "" : "s"}
-          </strong>
+          <label className="notification-interval-control">
+            <span>Every</span>
+            <input
+              type="number"
+              min="1"
+              max="30"
+              value={reminderIntervalDays}
+              onChange={(event) => setReminderIntervalDays(event.target.value)}
+              aria-label="Automatic reminder interval in days"
+            />
+            <span>day{Number(reminderIntervalDays) === 1 ? "" : "s"}</span>
+          </label>
+          <button
+            type="button"
+            className="notification-interval-save"
+            onClick={handleSaveReminderInterval}
+            disabled={isSavingInterval}
+          >
+            {isSavingInterval ? "Saving..." : "Save"}
+          </button>
         </div>
 
         <div className="notification-table-card">

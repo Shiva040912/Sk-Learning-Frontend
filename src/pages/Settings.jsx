@@ -5,7 +5,6 @@ import {
   FiCheckCircle,
   FiCreditCard,
   FiDownload,
-  FiEye,
   FiFileText,
   FiImage,
   FiLock,
@@ -13,7 +12,6 @@ import {
   FiTrash2,
   FiUploadCloud,
   FiUser,
-  FiX,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import html2canvas from "html2canvas";
@@ -84,7 +82,6 @@ const Settings = () => {
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isSettingsSaving, setIsSettingsSaving] = useState(false);
   const [isAcademicSaving, setIsAcademicSaving] = useState(false);
-  const [samplePreviewType, setSamplePreviewType] = useState(null);
   const [isSampleDownloading, setIsSampleDownloading] = useState(false);
 
   const feeSampleRef = useRef(null);
@@ -1589,9 +1586,9 @@ const Settings = () => {
                     <div>
                       <span>05</span>
                       <div>
-                        <h3>Invoice Model Preview</h3>
+                        <h3>Invoice Samples</h3>
                         <p>
-                          Preview or download the exact invoice template used by the real Invoice page.
+                          Download the exact invoice template used by the real Invoice page.
                         </p>
                       </div>
                     </div>
@@ -1611,16 +1608,6 @@ const Settings = () => {
                       </div>
 
                       <div className="invoice-model-actions">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSamplePreviewType("fee")
-                          }
-                        >
-                          <FiEye />
-                          Preview
-                        </button>
-
                         <button
                           type="button"
                           className="download"
@@ -1648,16 +1635,6 @@ const Settings = () => {
                       </div>
 
                       <div className="invoice-model-actions">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSamplePreviewType("receipt")
-                          }
-                        >
-                          <FiEye />
-                          Preview
-                        </button>
-
                         <button
                           type="button"
                           className="download"
@@ -1711,63 +1688,6 @@ const Settings = () => {
           )}
         </section>
       </div>
-
-      {samplePreviewType && (
-        <div className="settings-invoice-preview-overlay">
-          <div className="settings-invoice-preview-shell">
-            <div className="settings-invoice-preview-bar">
-              <div>
-                <strong>
-                  {samplePreviewType === "receipt"
-                    ? "Payment Receipt Sample"
-                    : "Fee Invoice Sample"}
-                </strong>
-
-                <span>
-                  Live model using the current common invoice template
-                </span>
-              </div>
-
-              <div className="settings-invoice-preview-actions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadSampleInvoice(
-                      samplePreviewType
-                    )
-                  }
-                  disabled={isSampleDownloading}
-                >
-                  <FiDownload />
-                  {isSampleDownloading
-                    ? "Downloading..."
-                    : "Download PDF"}
-                </button>
-
-                <button
-                  type="button"
-                  className="close"
-                  onClick={() =>
-                    setSamplePreviewType(null)
-                  }
-                >
-                  <FiX />
-                </button>
-              </div>
-            </div>
-
-            <div className="settings-invoice-preview-scroll">
-              <InvoiceDocument
-                invoice={
-                  samplePreviewType === "receipt"
-                    ? sampleReceiptInvoice
-                    : sampleFeeInvoice
-                }
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <div
         className="settings-hidden-invoice-render"

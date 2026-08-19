@@ -780,7 +780,7 @@ const Payments = () => {
                 <thead>
                   <tr>
                     <th>S.No</th>
-                    <th>Name</th>
+                    <th>Student</th>
                     <th>Roll No</th>
                     <th>Course</th>
                     <th>Total Fees</th>
