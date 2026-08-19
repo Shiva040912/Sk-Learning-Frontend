@@ -102,12 +102,10 @@ const Topbar = ({ onMenuClick }) => {
     }
 
     if (
-      location.pathname.startsWith(
-        "/notifications"
-      )
+      location.pathname.startsWith("/notifications")
     ) {
       return {
-        title: "Notifications",
+        title: "Notification",
         subtitle:
           "View all fee notifications",
       };
@@ -164,14 +162,8 @@ const Topbar = ({ onMenuClick }) => {
           </p>
 
           <small>
-            MEDICAL / ENGINEERING / FOUNDATIONS /
-            JUNIOR IAS
+            MEDICAL / ENGINEERING / FOUNDATIONS / JUNIOR IAS
           </small>
-        </div>
-
-        <div className="mobile-topbar-title">
-          <small>THE SK LEARNINGS</small>
-          <strong>{page.title}</strong>
         </div>
       </div>
 
@@ -231,8 +223,7 @@ const Topbar = ({ onMenuClick }) => {
 
                 <div>
                   <strong>
-                    {user.name ||
-                      "Administrator"}
+                    {user.name || "Administrator"}
                   </strong>
 
                   <span>
