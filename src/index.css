@@ -1,4 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
+/* =========================================================
+   SK LEARNINGS — GLOBAL TYPOGRAPHY
+   Professional / Modern / Management Dashboard
+========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -8,10 +17,13 @@ html,
 body,
 #root {
   font-family:
-    "DM Sans",
+    "Inter",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
     sans-serif;
 
   font-synthesis: none;
@@ -21,60 +33,454 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  font-size: 16px;
+}
+
 body {
+  margin: 0;
+
+  font-size: 14px;
   font-weight: 400;
+  line-height: 1.5;
+
   letter-spacing: -0.01em;
+
+  color: #20262d;
 }
 
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
-}
 
-/* Page titles / important headings */
+
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
+  margin-top: 0;
+
   font-family: inherit;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+
+  color: #171b20;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.03em;
 }
 
-/* Table data */
+h1 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 750;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+h5,
+h6 {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+
+
+p,
+span,
+label,
+small,
+strong,
+a,
+li {
+  font-family: inherit;
+}
+
+p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+small {
+  font-size: 11px;
+}
+
+strong {
+  font-weight: 650;
+}
+
+
+
+button {
+  font-family: inherit;
+
+  font-size: 12.5px;
+  font-weight: 650;
+
+  letter-spacing: -0.012em;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+
+
+input,
+select,
+textarea {
+  font-family: inherit;
+
+  font-size: 13px;
+  font-weight: 450;
+
+  line-height: 1.4;
+
+  letter-spacing: -0.01em;
+
+  color: #242a31;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-family: inherit;
+
+  font-size: 12.5px;
+  font-weight: 400;
+
+  color: #9aa2ab;
+
+  letter-spacing: -0.005em;
+}
+
+select {
+  font-weight: 500;
+}
+
+
+label {
+  font-size: 11.5px;
+  font-weight: 600;
+
+  letter-spacing: -0.005em;
+
+  color: #4b5560;
+}
+
+
+
 table,
+thead,
+tbody,
+tr,
 th,
 td {
   font-family: inherit;
 }
 
 th {
-  font-weight: 600;
-  letter-spacing: 0.015em;
+  font-size: 10.5px;
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  letter-spacing: 0.035em;
+
+  text-transform: uppercase;
+
+  color: #68727d;
 }
 
-/* Buttons */
-button {
-  font-weight: 600;
-  letter-spacing: -0.01em;
+td {
+  font-size: 12px;
+  font-weight: 450;
+
+  line-height: 1.4;
+
+  letter-spacing: -0.008em;
+
+  color: #313942;
 }
 
-/* Form controls */
-input,
-select,
-textarea {
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
 
-/* Numeric data */
+
 .student-count,
 .stat-value,
 .amount,
-.roll-number {
+.roll-number,
+.payment-amount,
+.invoice-number,
+.fee-amount {
   font-variant-numeric: tabular-nums;
+
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+}
+
+
+
+.roll-number {
+  font-size: 11px;
+  font-weight: 650;
+
+  letter-spacing: 0.015em;
+
+  color: #48525d;
+}
+
+
+
+.amount,
+.payment-amount,
+.fee-amount {
+  font-weight: 700;
+
+  letter-spacing: -0.025em;
+}
+
+
+
+.status,
+.badge,
+.payment-status {
+  font-size: 10.5px;
+  font-weight: 650;
+
+  letter-spacing: 0.005em;
+}
+
+
+
+
+
+.sidebar,
+.topbar,
+.sidebar-link,
+.settings-nav-item {
+  font-family: inherit;
+}
+
+.sidebar-link {
+  font-size: 12.5px;
+  font-weight: 550;
+
+  letter-spacing: -0.01em;
+}
+
+.sidebar-link.active {
+  font-weight: 650;
+}
+
+
+
+
+.topbar h1,
+.topbar h2,
+.topbar h3 {
+  letter-spacing: -0.03em;
+}
+
+.topbar-page-info h2 {
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.topbar-page-info p {
+  font-size: 11px;
+  font-weight: 400;
+
+  letter-spacing: -0.005em;
+}
+
+
+.topbar-user-info strong {
+  font-size: 12px;
+  font-weight: 650;
+
+  letter-spacing: -0.015em;
+}
+
+.topbar-user-info span {
+  font-size: 10px;
+  font-weight: 450;
+
+  letter-spacing: 0;
+}
+
+
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 750;
+
+  line-height: 1;
+
+  letter-spacing: -0.04em;
+}
+
+.student-count {
+  font-weight: 700;
+
+  letter-spacing: -0.025em;
+}
+
+
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  font-weight: 500;
+}
+
+
+
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 17px;
+  }
+
+  h3 {
+    font-size: 14px;
+  }
+
+  p {
+    font-size: 12px;
+  }
+
+  button {
+    font-size: 12px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 13px;
+  }
+
+  th {
+    font-size: 9px;
+
+    letter-spacing: 0.02em;
+  }
+
+  td {
+    font-size: 10.5px;
+  }
+
+  .sidebar-link {
+    font-size: 12px;
+  }
+
+  .topbar-page-info h2 {
+    font-size: 15px;
+  }
+
+  .topbar-page-info p {
+    font-size: 10px;
+  }
+
+  .stat-value {
+    font-size: 19px;
+  }
+}
+
+
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12.5px;
+  }
+
+  h1 {
+    font-size: 18px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  h3 {
+    font-size: 13.5px;
+  }
+
+  label {
+    font-size: 10.5px;
+  }
+
+  button {
+    font-size: 11.5px;
+  }
+
+  th {
+    font-size: 8.5px;
+  }
+
+  td {
+    font-size: 10px;
+  }
+
+  .topbar-page-info h2 {
+    font-size: 14px;
+  }
+
+  .topbar-page-info p {
+    font-size: 9.5px;
+  }
+}
+/* Compact branded loader used across page loading states. */
+.app-loading-logo {
+  position: relative;
+  width: 42px;
+  height: 56px;
+  flex: 0 0 56px;
+}
+
+.app-loading-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.app-loading-logo-ring {
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 184, 0, 0.28);
+  border-top-color: #ffb800;
+  border-right-color: #fff1bf;
+  border-radius: 50%;
+  animation: appBrainLoaderSpin 0.72s linear infinite;
+}
+
+@keyframes appBrainLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading-logo-ring {
+    animation-duration: 1.5s;
+  }
 }

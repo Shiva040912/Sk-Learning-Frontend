@@ -22,8 +22,9 @@ import { FaGraduationCap } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 import api from "../services/axios";
+import LoadingLogo from "../components/LoadingLogo";
 import "../styles/students.css";
-import logo from "../assets/sk-logo.png";
+
 
 const initialForm = {
   studentName: "",
@@ -1029,7 +1030,7 @@ const Students = () => {
         <div className="students-table-card">
           {isLoading ? (
             <div className="students-message">
-              <div className="loading-circle" />
+              <LoadingLogo />
 
               <span>
                 Loading students...
@@ -1799,7 +1800,7 @@ const Students = () => {
 
               <div className="student-profile-brand-row">
                 <div className="student-profile-brand">
-                  <img src={logo} alt="SK Learnings" />
+                 
 
                   <div>
                     <span>THE SK LEARNINGS</span>

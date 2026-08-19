@@ -20,6 +20,7 @@ import jsPDF from "jspdf";
 
 import api from "../services/axios";
 import InvoiceDocument from "../components/InvoiceDocument";
+import LoadingLogo from "../components/LoadingLogo";
 
 import "../styles/settings.css";
 
@@ -751,7 +752,7 @@ const Settings = () => {
   if (isLoading) {
     return (
       <div className="settings-loading">
-        <div className="settings-loader" />
+        <LoadingLogo />
         <span>Loading settings...</span>
       </div>
     );
@@ -1177,8 +1178,8 @@ const Settings = () => {
                       <span>3</span>
                     </div>
                     <div>
-                      <h3>Overdue Reminder</h3>
-                      <p>Continue reminders after the due date while fees remain unpaid.</p>
+                      <h3>Automatic Reminder</h3>
+                      <p>Automatically repeat overdue fee reminders at the selected interval.</p>
                     </div>
                   </div>
                   <div className="notification-control-group">
@@ -1193,6 +1194,7 @@ const Settings = () => {
                       <span />
                     </label>
                     <div className="notification-inline-field">
+                      <span>Every</span>
                       <input
                         type="number"
                         min="1"
@@ -1205,7 +1207,11 @@ const Settings = () => {
                           !settings.overdueReminderEnabled
                         }
                       />
-                      <span>Days</span>
+                      <span>
+                        {Number(settings.overdueReminderIntervalDays) === 1
+                          ? "Day"
+                          : "Days"}
+                      </span>
                     </div>
                   </div>
                 </div>

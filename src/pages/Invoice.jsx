@@ -19,6 +19,7 @@ import jsPDF from "jspdf";
 
 import api from "../services/axios";
 import InvoiceDocument from "../components/InvoiceDocument";
+import LoadingLogo from "../components/LoadingLogo";
 
 import "../styles/invoice.css";
 
@@ -454,7 +455,7 @@ const Invoices = () => {
 
       {isLoading ? (
         <div className="invoice-board-loading">
-          <div className="invoice-loader" />
+          <LoadingLogo />
           <span>Loading receipts...</span>
         </div>
       ) : (

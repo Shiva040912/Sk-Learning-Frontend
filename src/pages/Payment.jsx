@@ -14,6 +14,7 @@ import {
 import toast from "react-hot-toast";
 
 import api from "../services/axios";
+import LoadingLogo from "../components/LoadingLogo";
 import "../styles/payments.css";
 
 const initialFeeForm = {
@@ -765,7 +766,7 @@ const Payments = () => {
         <div className="payment-table-card">
           {isLoading ? (
             <div className="payment-message">
-              <div className="payment-loader" />
+              <LoadingLogo />
               <span>Loading payment details...</span>
             </div>
           ) : filteredStudents.length === 0 ? (

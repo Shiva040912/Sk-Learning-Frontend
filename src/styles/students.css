@@ -3083,3 +3083,21 @@
     min-width: 0;
   }
 }
+
+/* Final table geometry: flush edges and square corners at every viewport. */
+.students-list-section,
+.students-table-card,
+.students-table-wrapper {
+  border-radius: 0 !important;
+}
+
+.students-table-card {
+  padding: 0 !important;
+  background: #ffffff;
+}
+
+.students-table-wrapper {
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+}

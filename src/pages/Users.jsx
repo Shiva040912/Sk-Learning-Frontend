@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 
 import api from "../services/axios";
+import LoadingLogo from "../components/LoadingLogo";
 import "../styles/users.css";
 
 const initialForm = {
@@ -282,7 +283,7 @@ const Users = () => {
         <div className="users-table-card">
           {isLoading ? (
             <div className="users-message">
-              <div className="users-loader" />
+              <LoadingLogo />
               <span>Loading users...</span>
             </div>
           ) : filteredUsers.length === 0 ? (
