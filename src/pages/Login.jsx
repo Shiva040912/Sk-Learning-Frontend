@@ -114,8 +114,7 @@ const Login = () => {
           <span />
         </div>
 
-        {/* ================= LOGIN ================= */}
-
+       
         <div className="login-card">
           <div className="login-card-glow" />
 
@@ -185,20 +184,7 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="login-options">
-              <label className="remember">
-                <input type="checkbox" />
-
-                <span>Remember me</span>
-              </label>
-
-              <button
-                type="button"
-                className="forgot-btn"
-              >
-                Forgot Password?
-              </button>
-            </div>
+            
 
             <button
               type="submit"
