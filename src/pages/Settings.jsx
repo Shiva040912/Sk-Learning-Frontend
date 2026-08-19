@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiBell,
   FiBookOpen,
   FiCheckCircle,
   FiCreditCard,
-  FiDownload,
   FiFileText,
   FiImage,
   FiLock,
@@ -15,11 +14,8 @@ import {
   FiX,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 import api from "../services/axios";
-import InvoiceDocument from "../components/InvoiceDocument";
 import LoadingLogo from "../components/LoadingLogo";
 
 import "../styles/settings.css";
@@ -84,10 +80,6 @@ const Settings = () => {
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isSettingsSaving, setIsSettingsSaving] = useState(false);
   const [isAcademicSaving, setIsAcademicSaving] = useState(false);
-  const [isSampleDownloading, setIsSampleDownloading] = useState(false);
-
-  const feeSampleRef = useRef(null);
-  const receiptSampleRef = useRef(null);
 
   const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -207,6 +199,59 @@ const Settings = () => {
       ...current,
       [name]: value,
     }));
+  };
+
+  const handleProfilePhotoUpload = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Profile photo must be 2MB or smaller");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const size = 512;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+
+        const context = canvas.getContext("2d");
+        const sourceSize = Math.min(image.width, image.height);
+        const sourceX = (image.width - sourceSize) / 2;
+        const sourceY = (image.height - sourceSize) / 2;
+
+        context.drawImage(
+          image,
+          sourceX,
+          sourceY,
+          sourceSize,
+          sourceSize,
+          0,
+          0,
+          size,
+          size,
+        );
+
+        setProfile((current) => ({
+          ...current,
+          profileImage: canvas.toDataURL("image/jpeg", 0.82),
+        }));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleProfileSave = async (event) => {
@@ -543,211 +588,6 @@ const Settings = () => {
   const formatMoney = (value) =>
     Number(value || 0).toLocaleString("en-IN");
 
-  const sampleBusiness = useMemo(
-    () => ({
-      ownerName:
-        settings.ownerName ||
-        "Sample Owner",
-      gstNumber:
-        settings.gstNumber ||
-        "33ABCDE1234F1Z5",
-      address:
-        settings.invoiceAddress ||
-        "The SK Learnings, Sample Address",
-      qrCode:
-        settings.invoiceQrCode ||
-        "",
-      invoiceFooter:
-        settings.invoiceFooter ||
-        "Thank you for choosing The SK Learnings",
-      invoiceTerms:
-        settings.invoiceTerms ||
-        "Payment is subject to verification by the institute.",
-    }),
-    [
-      settings.ownerName,
-      settings.gstNumber,
-      settings.invoiceAddress,
-      settings.invoiceQrCode,
-      settings.invoiceFooter,
-      settings.invoiceTerms,
-    ]
-  );
-
-  const sampleInvoiceNumber = useMemo(() => {
-    const prefix =
-      settings.invoicePrefix?.trim() ||
-      "SK-INV";
-
-    const suffix =
-      settings.invoiceSuffix?.trim();
-
-    return `${prefix}-SAMPLE${
-      suffix ? `-${suffix}` : ""
-    }`;
-  }, [
-    settings.invoicePrefix,
-    settings.invoiceSuffix,
-  ]);
-
-  const sampleFeeInvoice = useMemo(
-    () => ({
-      _id: "sample-fee-invoice",
-      invoiceType: "fee_setup",
-      invoiceNumber: sampleInvoiceNumber,
-      invoiceDate: new Date().toISOString(),
-      dueDate: new Date(
-        Date.now() +
-          7 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      paymentStatus: "unpaid",
-      invoiceAmount: 60000,
-      paidAmount: 0,
-      pendingAmount: 60000,
-      business: sampleBusiness,
-      student: {
-        studentName: "Sample Student",
-        rollNo: "SK-LN-001",
-        course: "NEET",
-        batch: "Morning Batch",
-        parentName: "Sample Parent",
-        phone: "9876543210",
-        email: "student@example.com",
-        address: "Sample Student Address",
-      },
-      fee: {
-        feeType: "monthly",
-        totalFee: 60000,
-        monthlyAmount: 5000,
-        selectedMonths: 12,
-        minimumPartialAmount:
-          Number(
-            settings.minimumPartialAmount ||
-              10000
-          ),
-        feeEndingDate: new Date(
-          Date.now() +
-            365 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-      },
-    }),
-    [
-      sampleBusiness,
-      sampleInvoiceNumber,
-      settings.minimumPartialAmount,
-    ]
-  );
-
-  const sampleReceiptInvoice = useMemo(
-    () => ({
-      ...sampleFeeInvoice,
-      _id: "sample-paid-receipt",
-      invoiceType: "payment_receipt",
-      invoiceNumber:
-        `${sampleInvoiceNumber}-R`,
-      paymentDate:
-        new Date().toISOString(),
-      paymentStatus: "paid",
-      paymentMethod: "upi",
-      invoiceAmount: 60000,
-      paidAmount: 60000,
-      pendingAmount: 0,
-    }),
-    [
-      sampleFeeInvoice,
-      sampleInvoiceNumber,
-    ]
-  );
-
-  const downloadSampleInvoice = async (
-    type
-  ) => {
-    const targetRef =
-      type === "receipt"
-        ? receiptSampleRef
-        : feeSampleRef;
-
-    if (!targetRef.current) {
-      toast.error(
-        "Sample invoice is not ready"
-      );
-      return;
-    }
-
-    try {
-      setIsSampleDownloading(true);
-
-      const canvas =
-        await html2canvas(
-          targetRef.current,
-          {
-            scale: 2,
-            useCORS: true,
-            backgroundColor:
-              "#ffffff",
-            logging: false,
-          }
-        );
-
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pageWidth = 210;
-      const pageHeight = 297;
-
-      const scale = Math.min(
-        pageWidth / canvas.width,
-        pageHeight / canvas.height
-      );
-
-      const imageWidth =
-        canvas.width * scale;
-
-      const imageHeight =
-        canvas.height * scale;
-
-      const x =
-        (pageWidth - imageWidth) / 2;
-
-      const y =
-        (pageHeight - imageHeight) / 2;
-
-      pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
-        x,
-        y,
-        imageWidth,
-        imageHeight
-      );
-
-      pdf.save(
-        type === "receipt"
-          ? "SK-Learnings-Payment-Receipt-Sample.pdf"
-          : "SK-Learnings-Fee-Invoice-Sample.pdf"
-      );
-
-      toast.success(
-        type === "receipt"
-          ? "Payment receipt sample downloaded"
-          : "Fee invoice sample downloaded"
-      );
-    } catch (error) {
-      console.error(
-        "Sample invoice download error:",
-        error
-      );
-
-      toast.error(
-        "Failed to download sample invoice"
-      );
-    } finally {
-      setIsSampleDownloading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -837,13 +677,25 @@ const Settings = () => {
                     </div>
 
                     <div className="settings-field">
-                      <label>Profile Image URL</label>
-                      <input
-                        name="profileImage"
-                        value={profile.profileImage}
-                        onChange={handleProfileChange}
-                        placeholder="Optional image URL"
-                      />
+                      <label>Profile Photo</label>
+                      <label className="profile-photo-upload">
+                        <FiUploadCloud />
+                        <span>{profile.profileImage ? "Change Photo" : "Upload Photo"}</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={handleProfilePhotoUpload}
+                        />
+                      </label>
+                      {profile.profileImage && (
+                        <button
+                          type="button"
+                          className="profile-photo-remove"
+                          onClick={() => setProfile((current) => ({ ...current, profileImage: "" }))}
+                        >
+                          <FiTrash2 /> Remove Photo
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1588,81 +1440,6 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <div className="invoice-section-card invoice-model-card">
-                  <div className="invoice-section-heading">
-                    <div>
-                      <span>05</span>
-                      <div>
-                        <h3>Invoice Samples</h3>
-                        <p>
-                          Download the exact invoice template used by the real Invoice page.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="invoice-model-grid">
-                    <div className="invoice-model-option">
-                      <div className="invoice-model-option-icon">
-                        <FiFileText />
-                      </div>
-
-                      <div className="invoice-model-option-info">
-                        <strong>Fee Invoice Sample</strong>
-                        <span>
-                          Unpaid invoice model with payment QR and fee details.
-                        </span>
-                      </div>
-
-                      <div className="invoice-model-actions">
-                        <button
-                          type="button"
-                          className="download"
-                          disabled={isSampleDownloading}
-                          onClick={() =>
-                            downloadSampleInvoice("fee")
-                          }
-                        >
-                          <FiDownload />
-                          Download
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="invoice-model-option">
-                      <div className="invoice-model-option-icon paid">
-                        <FiCheckCircle />
-                      </div>
-
-                      <div className="invoice-model-option-info">
-                        <strong>Payment Receipt Sample</strong>
-                        <span>
-                          Successful payment receipt model with PAID status.
-                        </span>
-                      </div>
-
-                      <div className="invoice-model-actions">
-                        <button
-                          type="button"
-                          className="download"
-                          disabled={isSampleDownloading}
-                          onClick={() =>
-                            downloadSampleInvoice("receipt")
-                          }
-                        >
-                          <FiDownload />
-                          Download
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="invoice-model-note">
-                    This is not a separate invoice design. It uses the same
-                    <strong> InvoiceDocument </strong>
-                    component as the real Invoice page, so future design changes update both automatically.
-                  </div>
-                </div>
               </div>
 
               <div className="settings-panel-actions invoice-save-actions">
@@ -1696,20 +1473,6 @@ const Settings = () => {
         </section>
       </div>
 
-      <div
-        className="settings-hidden-invoice-render"
-        aria-hidden="true"
-      >
-        <InvoiceDocument
-          ref={feeSampleRef}
-          invoice={sampleFeeInvoice}
-        />
-
-        <InvoiceDocument
-          ref={receiptSampleRef}
-          invoice={sampleReceiptInvoice}
-        />
-      </div>
     </div>
   );
 };

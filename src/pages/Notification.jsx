@@ -12,6 +12,7 @@ import {
   FiRefreshCw,
   FiSearch,
   FiSend,
+  FiX,
 } from "react-icons/fi";
 
 import toast from "react-hot-toast";
@@ -295,6 +296,11 @@ const Notification = () => {
     setReminderFilter("all");
   };
 
+  const activeFilterCount =
+    Number(statusFilter !== "all") +
+    Number(courseFilter !== "all") +
+    Number(reminderFilter !== "all");
+
   return (
     <div className="notification-page">
       <div className="notification-summary-grid">
@@ -364,6 +370,9 @@ const Notification = () => {
             >
               <FiFilter />
               Filter
+              {activeFilterCount > 0 && (
+                <span className="filter-count-badge">{activeFilterCount}</span>
+              )}
             </button>
 
             {showFilters && (
@@ -371,12 +380,12 @@ const Notification = () => {
                 <div className="notification-filter-head">
                   <strong>Filter</strong>
 
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                  >
-                    Clear
-                  </button>
+                  <div className="filter-header-actions">
+                    <button type="button" disabled={activeFilterCount === 0} onClick={clearFilters}>Clear</button>
+                    <button type="button" className="filter-close-btn" onClick={() => setShowFilters(false)} aria-label="Close filters">
+                      <FiX />
+                    </button>
+                  </div>
                 </div>
 
                 <label>

@@ -171,6 +171,11 @@ const Invoices = () => {
     });
   }, [invoices, search, courseFilter, batchFilter, feeTypeFilter]);
 
+  const activeFilterCount =
+    Number(courseFilter !== "all") +
+    Number(batchFilter !== "all") +
+    Number(feeTypeFilter !== "all");
+
   const receiptBoard = useMemo(() => {
     const grouped = new Map();
 
@@ -367,10 +372,8 @@ const Invoices = () => {
           >
             <FiFilter />
             Filter
-            {(courseFilter !== "all" ||
-              batchFilter !== "all" ||
-              feeTypeFilter !== "all") && (
-              <span className="receipt-filter-dot" />
+            {activeFilterCount > 0 && (
+              <span className="filter-count-badge">{activeFilterCount}</span>
             )}
           </button>
 
@@ -379,16 +382,16 @@ const Invoices = () => {
               <div className="receipt-filter-head">
                 <strong>Filter Receipts</strong>
 
-                <button
-                  type="button"
-                  onClick={() => {
+                <div className="filter-header-actions">
+                  <button type="button" disabled={activeFilterCount === 0} onClick={() => {
                     setCourseFilter("all");
                     setBatchFilter("all");
                     setFeeTypeFilter("all");
-                  }}
-                >
-                  Clear
-                </button>
+                  }}>Clear</button>
+                  <button type="button" className="filter-close-btn" onClick={() => setShowFilters(false)} aria-label="Close filters">
+                    <FiX />
+                  </button>
+                </div>
               </div>
 
               <div className="receipt-filter-field">

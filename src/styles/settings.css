@@ -345,6 +345,42 @@
   text-overflow: ellipsis;
 }
 
+.profile-photo-upload {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px dashed #d3a72f;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #795b0a;
+  font-size: 8.5px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.profile-photo-upload input {
+  display: none;
+}
+
+.profile-photo-remove {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 0 10px;
+  border: 1px solid #edcaca;
+  border-radius: 7px;
+  background: #fff7f7;
+  color: #aa4141;
+  font-size: 7.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .settings-subheading {
   display: flex;
   align-items: center;

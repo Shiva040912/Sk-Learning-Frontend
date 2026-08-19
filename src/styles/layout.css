@@ -112,16 +112,16 @@ textarea {
 
 .topbar-company h1 {
   margin: 0;
-  color: #ffffff;
+  color: #ffb800;
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 850;
   line-height: 1;
   letter-spacing: -0.2px;
   white-space: nowrap;
 }
 
 .topbar-company h1 span {
-  color: var(--sk-gold);
+  color: inherit;
 }
 
 .topbar-company p {
@@ -1058,9 +1058,10 @@ textarea {
 }
 
 .topbar-logo {
-  width: 31px;
-  height: 31px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
+  filter: drop-shadow(0 3px 7px rgba(255, 184, 0, 0.12));
 }
 
 .sidebar-top {

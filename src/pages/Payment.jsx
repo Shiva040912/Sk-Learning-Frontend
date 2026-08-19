@@ -247,6 +247,11 @@ const Payments = () => {
       );
   }, [paymentRows, search, courseFilter, statusFilter, feeTypeFilter]);
 
+  const activeFilterCount =
+    Number(courseFilter !== "all") +
+    Number(statusFilter !== "all") +
+    Number(feeTypeFilter !== "all");
+
   const formatMoney = (value) =>
     Number(value || 0).toLocaleString("en-IN", {
       maximumFractionDigits: 2,
@@ -695,10 +700,8 @@ const Payments = () => {
             >
               <FiFilter />
               <span>Filter</span>
-              {(courseFilter !== "all" ||
-                statusFilter !== "all" ||
-                feeTypeFilter !== "all") && (
-                <span className="filter-active-dot" />
+              {activeFilterCount > 0 && (
+                <span className="filter-count-badge">{activeFilterCount}</span>
               )}
             </button>
 
@@ -706,16 +709,16 @@ const Payments = () => {
               <div className="payment-filter-dropdown">
                 <div className="payment-filter-header">
                   <strong>Filter Students</strong>
-                  <button
-                    type="button"
-                    onClick={() => {
+                  <div className="filter-header-actions">
+                    <button type="button" disabled={activeFilterCount === 0} onClick={() => {
                       setCourseFilter("all");
                       setStatusFilter("all");
                       setFeeTypeFilter("all");
-                    }}
-                  >
-                    Clear
-                  </button>
+                    }}>Clear</button>
+                    <button type="button" className="filter-close-btn" onClick={() => setShowFilters(false)} aria-label="Close filters">
+                      <FiX />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="payment-filter-field">

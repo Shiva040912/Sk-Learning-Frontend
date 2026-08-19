@@ -9,6 +9,7 @@ import { Toaster } from "react-hot-toast";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PopupKeyboardController from "./components/PopupKeyboardController";
 
 import Login from "./pages/Login";
 import Students from "./pages/Student";
@@ -21,6 +22,7 @@ import Invoices from "./pages/Invoice";
 const App = () => {
   return (
     <BrowserRouter>
+      <PopupKeyboardController />
       <Toaster
         position="top-right"
         toastOptions={{
