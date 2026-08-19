@@ -12,6 +12,7 @@ import {
   FiTrash2,
   FiUploadCloud,
   FiUser,
+  FiX,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import html2canvas from "html2canvas";
