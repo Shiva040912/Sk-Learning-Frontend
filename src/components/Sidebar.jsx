@@ -89,23 +89,15 @@ const Sidebar = ({
         }`}
       >
         <div className="sidebar-top">
-          <div className="sidebar-logo-wrap">
-            <img
-              src={logo}
-              alt="The SK Learnings"
-              className="sidebar-logo"
-            />
-          </div>
-
-          <div className="sidebar-brand-text">
-            <strong>
-              THE <span>SK</span> LEARNINGS
-            </strong>
-
-            <small>
-              Management Portal
-            </small>
-          </div>
+          <button
+            type="button"
+            className="sidebar-toggle-btn sidebar-top-toggle"
+            onClick={onToggleExpand}
+            aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {isExpanded ? <FiChevronLeft /> : <FiChevronRight />}
+            {isExpanded && <span>Collapse</span>}
+          </button>
 
           <button
             type="button"
@@ -149,28 +141,18 @@ const Sidebar = ({
           ))}
         </nav>
 
-        <div className="sidebar-toggle-area">
-          <button
-            type="button"
-            className="sidebar-toggle-btn"
-            onClick={onToggleExpand}
-            aria-label={
-              isExpanded
-                ? "Collapse sidebar"
-                : "Expand sidebar"
-            }
-          >
-            {isExpanded ? (
-              <FiChevronLeft />
-            ) : (
-              <FiChevronRight />
-            )}
+        <div className="sidebar-bottom-brand">
+          <img
+            src={logo}
+            alt="The SK Learnings"
+            className="sidebar-bottom-logo"
+          />
 
-            {isExpanded && (
-              <span>Collapse</span>
-            )}
-          </button>
+          <strong className="sidebar-bottom-brand-text">
+            THE <span>SK</span> LEARNINGS
+          </strong>
         </div>
+
       </aside>
     </>
   );

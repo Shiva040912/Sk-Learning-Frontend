@@ -13,6 +13,8 @@ import {
   FiUser,
 } from "react-icons/fi";
 
+import logo from "../assets/sk-logo.png";
+
 const Topbar = ({ onMenuClick }) => {
   const location = useLocation();
 
@@ -151,6 +153,14 @@ const Topbar = ({ onMenuClick }) => {
         >
           <FiMenu />
         </button>
+
+        <div className="topbar-logo-wrap">
+          <img
+            src={logo}
+            alt="The SK Learnings"
+            className="topbar-logo"
+          />
+        </div>
 
         <div className="topbar-company">
           <h1>
