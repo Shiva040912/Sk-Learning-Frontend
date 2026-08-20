@@ -57,6 +57,8 @@ const Payments = () => {
   const [showReverseModal, setShowReverseModal] = useState(false);
 
   const [feeForm, setFeeForm] = useState(initialFeeForm);
+  const [feeSetupMode, setFeeSetupMode] = useState("individual");
+  const [bulkCourse, setBulkCourse] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
 
@@ -305,26 +307,39 @@ const Payments = () => {
     return false;
   };
 
-  const openFeeSetupModal = (student) => {
-    const defaultMonths = Number(feeSettings.defaultMonths || 12);
+  const getEmptyFeeForm = () => ({
+    ...initialFeeForm,
+    selectedMonths: String(feeSettings.defaultMonths || 12),
+  });
 
-    setSelectedStudent(student);
-
-    setFeeForm({
-      totalFee:
-        student.feeSetupCompleted && student.totalFee
-          ? String(student.totalFee)
-          : "",
-      feeType: student.feeType || "",
-      feeEndingDate: student.feeEndingDate
-        ? new Date(student.feeEndingDate).toISOString().split("T")[0]
+  const getStudentFeeForm = (student) => ({
+    totalFee:
+      student?.feeSetupCompleted && student?.totalFee
+        ? String(student.totalFee)
         : "",
-      selectedMonths:
-        student.feeType === "monthly" && student.selectedMonths
-          ? String(student.selectedMonths)
-          : String(defaultMonths),
-    });
+    feeType: student?.feeType || "",
+    feeEndingDate: student?.feeEndingDate
+      ? new Date(student.feeEndingDate).toISOString().split("T")[0]
+      : "",
+    selectedMonths:
+      student?.feeType === "monthly" && student?.selectedMonths
+        ? String(student.selectedMonths)
+        : String(feeSettings.defaultMonths || 12),
+  });
 
+  const openFeeSetupModal = (student) => {
+    setFeeSetupMode("individual");
+    setBulkCourse("");
+    setSelectedStudent(student);
+    setFeeForm(getStudentFeeForm(student));
+    setShowFeeModal(true);
+  };
+
+  const openFeeSetupManager = () => {
+    setFeeSetupMode("individual");
+    setBulkCourse("");
+    setSelectedStudent(null);
+    setFeeForm(getEmptyFeeForm());
     setShowFeeModal(true);
   };
 
@@ -333,7 +348,31 @@ const Payments = () => {
 
     setShowFeeModal(false);
     setSelectedStudent(null);
+    setFeeSetupMode("individual");
+    setBulkCourse("");
     setFeeForm(initialFeeForm);
+  };
+
+  const handleFeeSetupModeChange = (mode) => {
+    if (isFeeSaving) return;
+
+    setFeeSetupMode(mode);
+    setBulkCourse("");
+    setSelectedStudent(null);
+    setFeeForm(getEmptyFeeForm());
+  };
+
+  const handleIndividualStudentChange = (event) => {
+    const studentId = event.target.value;
+
+    const student =
+      paymentRows.find((item) => item._id === studentId) || null;
+
+    setSelectedStudent(student);
+
+    setFeeForm(
+      student ? getStudentFeeForm(student) : getEmptyFeeForm(),
+    );
   };
 
   const handleFeeFormChange = (event) => {
@@ -371,7 +410,15 @@ const Payments = () => {
   const handleFeeSetup = async (event) => {
     event.preventDefault();
 
-    if (!selectedStudent) return;
+    if (feeSetupMode === "individual" && !selectedStudent) {
+      toast.error("Select a student");
+      return;
+    }
+
+    if (feeSetupMode === "course" && !bulkCourse) {
+      toast.error("Select a course");
+      return;
+    }
 
     const totalFee = Number(feeForm.totalFee);
 
@@ -426,25 +473,65 @@ const Payments = () => {
     try {
       setIsFeeSaving(true);
 
-      const response = await api.put(
-        `/payments/student/${selectedStudent._id}/fee-setup`,
-        payload,
-      );
+      let response;
 
-      toast.success(
-        response.data?.message ||
-          `${selectedStudent.studentName} fee setup completed`,
-      );
+      if (feeSetupMode === "common") {
+        response = await api.put(
+          "/payments/fee-setup/common",
+          payload,
+        );
+      } else if (feeSetupMode === "course") {
+        response = await api.put(
+          `/payments/fee-setup/course/${encodeURIComponent(bulkCourse)}`,
+          payload,
+        );
+      } else {
+        response = await api.put(
+          `/payments/student/${selectedStudent._id}/fee-setup`,
+          payload,
+        );
+      }
+
+      const result = response.data || {};
+
+      if (feeSetupMode === "individual") {
+        toast.success(
+          result.message ||
+            `${selectedStudent.studentName} fee setup completed`,
+        );
+      } else {
+        const successCount = Number(result.successCount || 0);
+        const skippedCount = Number(result.skippedCount || 0);
+        const failedCount = Number(result.failedCount || 0);
+
+        toast.success(
+          `${successCount} updated${
+            skippedCount ? `, ${skippedCount} skipped` : ""
+          }${failedCount ? `, ${failedCount} failed` : ""}`,
+          {
+            duration: 5000,
+          },
+        );
+      }
 
       setShowFeeModal(false);
       setSelectedStudent(null);
+      setFeeSetupMode("individual");
+      setBulkCourse("");
       setFeeForm(initialFeeForm);
 
       await fetchPaymentPageData();
     } catch (error) {
       console.error("Fee setup error:", error?.response?.data || error);
 
-      toast.error(getErrorMessage(error, "Failed to setup student fee"));
+      toast.error(
+        getErrorMessage(
+          error,
+          feeSetupMode === "individual"
+            ? "Failed to setup student fee"
+            : "Failed to apply bulk fee setup",
+        ),
+      );
     } finally {
       setIsFeeSaving(false);
     }
@@ -764,6 +851,16 @@ const Payments = () => {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            className="payment-main-setup-btn"
+            onClick={openFeeSetupManager}
+            title="Fee setup"
+          >
+            <FiPlus />
+            <span>Fee Setup</span>
+          </button>
         </div>
 
         <div className="payment-table-card">
@@ -916,17 +1013,18 @@ const Payments = () => {
         </div>
       </section>
 
-      {showFeeModal && selectedStudent && (
+      {showFeeModal && (
         <div className="payment-modal-overlay">
-          <div className="payment-modal fee-setup-modal">
+          <div className="payment-modal fee-setup-modal fee-setup-manager-modal">
             <div className="payment-modal-header">
               <div>
                 <span>FEE SETUP</span>
-                <h2>{selectedStudent.studentName}</h2>
+                <h2>Fee Configuration</h2>
                 <p>
-                  {selectedStudent.rollNo} • {selectedStudent.course}
+                  Choose how you want to set the student fees and ending date.
                 </p>
               </div>
+
               <button
                 type="button"
                 className="payment-modal-close"
@@ -938,7 +1036,147 @@ const Payments = () => {
             </div>
 
             <form className="fee-setup-form" onSubmit={handleFeeSetup}>
-              <div className="payment-form-grid">
+              <div className="fee-setup-mode-grid">
+                <button
+                  type="button"
+                  className={`fee-setup-mode-card ${
+                    feeSetupMode === "individual" ? "active" : ""
+                  }`}
+                  onClick={() => handleFeeSetupModeChange("individual")}
+                  disabled={isFeeSaving}
+                >
+                  <span>01</span>
+                  <div>
+                    <strong>Individual</strong>
+                    <small>One student</small>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`fee-setup-mode-card ${
+                    feeSetupMode === "common" ? "active" : ""
+                  }`}
+                  onClick={() => handleFeeSetupModeChange("common")}
+                  disabled={isFeeSaving}
+                >
+                  <span>02</span>
+                  <div>
+                    <strong>Common</strong>
+                    <small>All students</small>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`fee-setup-mode-card ${
+                    feeSetupMode === "course" ? "active" : ""
+                  }`}
+                  onClick={() => handleFeeSetupModeChange("course")}
+                  disabled={isFeeSaving}
+                >
+                  <span>03</span>
+                  <div>
+                    <strong>Course Wise</strong>
+                    <small>Selected course</small>
+                  </div>
+                </button>
+              </div>
+
+              {feeSetupMode === "individual" && (
+                <div className="fee-setup-target-card">
+                  <div className="payment-form-group fee-target-select">
+                    <label>Select Student *</label>
+
+                    <select
+                      value={selectedStudent?._id || ""}
+                      onChange={handleIndividualStudentChange}
+                      disabled={isFeeSaving}
+                    >
+                      <option value="">Select student</option>
+
+                      {paymentRows.map((student) => (
+                        <option key={student._id} value={student._id}>
+                          {student.rollNo} - {student.studentName} - {student.course}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedStudent && (
+                    <div className="fee-target-preview">
+                      <div>
+                        <span>Student</span>
+                        <strong>{selectedStudent.studentName}</strong>
+                      </div>
+
+                      <div>
+                        <span>Roll No</span>
+                        <strong>{selectedStudent.rollNo}</strong>
+                      </div>
+
+                      <div>
+                        <span>Course</span>
+                        <strong>{selectedStudent.course}</strong>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {feeSetupMode === "common" && (
+                <div className="fee-setup-target-card common-target-card">
+                  <div>
+                    <span>COMMON FEE</span>
+                    <strong>Apply the same fee and ending date to all students</strong>
+                    <p>
+                      Students who already started payment will be skipped.
+                    </p>
+                  </div>
+
+                  <div className="bulk-student-count">
+                    <strong>{paymentRows.length}</strong>
+                    <span>Students</span>
+                  </div>
+                </div>
+              )}
+
+              {feeSetupMode === "course" && (
+                <div className="fee-setup-target-card course-target-card">
+                  <div className="payment-form-group fee-target-select">
+                    <label>Select Course *</label>
+
+                    <select
+                      value={bulkCourse}
+                      onChange={(event) => setBulkCourse(event.target.value)}
+                      disabled={isFeeSaving}
+                    >
+                      <option value="">Select course</option>
+
+                      {courseOptions.map((course) => (
+                        <option key={course} value={course}>
+                          {course}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {bulkCourse && (
+                    <div className="course-target-summary">
+                      <span>{bulkCourse} Students</span>
+                      <strong>
+                        {
+                          paymentRows.filter(
+                            (student) => student.course === bulkCourse,
+                          ).length
+                        }
+                      </strong>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="payment-form-grid bulk-fee-form-grid">
                 <div className="payment-form-group">
                   <label>Total Fees *</label>
                   <input
@@ -984,6 +1222,7 @@ const Payments = () => {
                 {feeForm.feeType === "monthly" && (
                   <div className="payment-form-group">
                     <label>Payment Duration *</label>
+
                     <select
                       name="selectedMonths"
                       value={feeForm.selectedMonths}
@@ -1012,6 +1251,7 @@ const Payments = () => {
 
                 <div className="payment-form-group">
                   <label>Fees Ending Date *</label>
+
                   <input
                     type="date"
                     name="feeEndingDate"
@@ -1027,6 +1267,7 @@ const Payments = () => {
                     <span>Selected Duration</span>
                     <strong>{feeForm.selectedMonths || "-"} Months</strong>
                   </div>
+
                   <div>
                     <span>Monthly Amount</span>
                     <strong>₹{formatMoney(monthlyPreview)}</strong>
@@ -1046,7 +1287,7 @@ const Payments = () => {
 
               {feeForm.feeType === "yearly" && (
                 <div className="fee-rule-note">
-                  Yearly mode collects the complete pending fee in one payment.
+                  Yearly mode collects the complete configured fee in one payment.
                 </div>
               )}
 
@@ -1059,12 +1300,23 @@ const Payments = () => {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="payment-primary-btn"
-                  disabled={isFeeSaving}
+                  disabled={
+                    isFeeSaving ||
+                    (feeSetupMode === "individual" && !selectedStudent) ||
+                    (feeSetupMode === "course" && !bulkCourse)
+                  }
                 >
-                  {isFeeSaving ? "Setting..." : "Set Fee"}
+                  {isFeeSaving
+                    ? "Applying..."
+                    : feeSetupMode === "individual"
+                      ? "Set Individual Fee"
+                      : feeSetupMode === "common"
+                        ? "Apply Common Fee"
+                        : "Apply Course Fee"}
                 </button>
               </div>
             </form>

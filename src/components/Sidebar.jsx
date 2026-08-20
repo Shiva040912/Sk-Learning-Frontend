@@ -19,6 +19,7 @@ const Sidebar = ({
   onClose,
   isExpanded,
   onToggleExpand,
+  mobileNavLayout,
 }) => {
   const user = JSON.parse(
     localStorage.getItem("user") || "{}"
@@ -65,7 +66,7 @@ const Sidebar = ({
   ];
 
   const handleNavClick = () => {
-    if (window.innerWidth <= 900) {
+    if (window.innerWidth <= 900 && mobileNavLayout === "drawer") {
       onClose();
     }
   };
@@ -82,7 +83,7 @@ const Sidebar = ({
       )}
 
       <aside
-        className={`sidebar ${
+        className={`sidebar mobile-sidebar-${mobileNavLayout} ${
           isExpanded ? "expanded" : ""
         } ${
           isOpen ? "sidebar-open" : ""

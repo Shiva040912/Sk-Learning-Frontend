@@ -445,7 +445,7 @@ a {
     font-size: 9.5px;
   }
 }
-/* Compact branded loader used across page loading states. */
+
 .app-loading-logo {
   position: relative;
   width: 42px;
@@ -485,7 +485,7 @@ a {
   }
 }
 
-/* Shared filter selection indicator and dropdown actions. */
+
 .filter-count-badge {
   min-width: 17px;
   height: 17px;

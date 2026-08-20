@@ -2259,3 +2259,312 @@
 .payment-table-card {
   padding: 0 !important;
 }
+
+.payment-main-setup-btn {
+  height: 37px;
+  min-width: 96px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid #e0ad1b;
+  border-radius: 8px;
+  background: #ffb800;
+  color: #171717;
+  font-size: 8.5px;
+  font-weight: 750;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.payment-main-setup-btn:hover {
+  background: #ffc42b;
+  border-color: #dba714;
+}
+
+.fee-setup-manager-modal {
+  width: min(760px, calc(100vw - 28px));
+  max-width: 760px;
+  max-height: 91vh;
+  overflow: hidden;
+}
+
+.fee-setup-manager-modal .fee-setup-form {
+  max-height: calc(91vh - 78px);
+  overflow-y: auto;
+  padding: 15px 16px 16px;
+}
+
+.fee-setup-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 11px;
+}
+
+.fee-setup-mode-card {
+  min-width: 0;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  border: 1px solid #e2e6ea;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #46515c;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.fee-setup-mode-card:hover {
+  border-color: #e1bd57;
+  background: #fffdf7;
+}
+
+.fee-setup-mode-card.active {
+  border-color: #dcae27;
+  background: #fff8e4;
+  box-shadow: 0 0 0 2px rgba(255, 184, 0, 0.05);
+}
+
+.fee-setup-mode-card > span {
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border-radius: 7px;
+  background: #f0f2f4;
+  color: #808992;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.fee-setup-mode-card.active > span {
+  background: #ffb800;
+  color: #171717;
+}
+
+.fee-setup-mode-card > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fee-setup-mode-card strong {
+  color: inherit;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.fee-setup-mode-card small {
+  display: block;
+  margin-top: 2px;
+  color: #929aa3;
+  font-size: 6.5px;
+  font-weight: 500;
+}
+
+.fee-setup-target-card {
+  margin-bottom: 11px;
+  padding: 10px;
+  border: 1px solid #e3e7eb;
+  border-radius: 9px;
+  background: #fafbfc;
+}
+
+.fee-target-select {
+  margin-bottom: 0;
+}
+
+.fee-target-preview {
+  display: grid;
+  grid-template-columns: 1.25fr 0.8fr 1fr;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.fee-target-preview > div {
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #e4e8ec;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.fee-target-preview span,
+.course-target-summary span,
+.bulk-student-count span {
+  display: block;
+  color: #8e969f;
+  font-size: 6px;
+  font-weight: 750;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+.fee-target-preview strong {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #37434e;
+  font-size: 8px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.common-target-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-color: #ead79d;
+  background: #fffaf0;
+}
+
+.common-target-card > div:first-child {
+  min-width: 0;
+}
+
+.common-target-card > div:first-child > span {
+  color: #a47600;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.65px;
+}
+
+.common-target-card > div:first-child > strong {
+  display: block;
+  margin-top: 3px;
+  color: #34404b;
+  font-size: 9px;
+}
+
+.common-target-card p {
+  margin: 3px 0 0;
+  color: #88919a;
+  font-size: 6.5px;
+  line-height: 1.4;
+}
+
+.bulk-student-count {
+  min-width: 80px;
+  padding: 8px 10px;
+  border: 1px solid #ead28b;
+  border-radius: 8px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.bulk-student-count strong {
+  display: block;
+  color: #9b7000;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.bulk-student-count span {
+  margin-top: 4px;
+}
+
+.course-target-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 7px 9px;
+  border: 1px solid #e4e8ec;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.course-target-summary strong {
+  color: #997000;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .payment-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .fee-setup-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fee-target-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .payment-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .payment-search {
+    grid-column: 1 / -1;
+  }
+
+  .payment-main-setup-btn {
+    min-width: 94px;
+    height: 34px;
+  }
+
+  .payment-filter-button {
+    height: 34px;
+  }
+
+  .fee-setup-manager-modal {
+    width: calc(100vw - 14px);
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+
+  .fee-setup-manager-modal .fee-setup-form {
+    max-height: calc(94vh - 69px);
+    padding: 10px;
+  }
+
+  .common-target-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-student-count {
+    width: 100%;
+  }
+
+  .bulk-fee-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fee-setup-manager-modal .payment-modal-actions {
+    position: sticky;
+    bottom: -10px;
+    z-index: 4;
+    margin: 14px -10px -10px;
+    padding: 9px 10px;
+    border-top: 1px solid #e8ecef;
+    background: rgba(255, 255, 255, 0.97);
+  }
+
+  .fee-setup-manager-modal .payment-primary-btn,
+  .fee-setup-manager-modal .payment-secondary-btn {
+    flex: 1;
+    min-width: 0;
+  }
+}

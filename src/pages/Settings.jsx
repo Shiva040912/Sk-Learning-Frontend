@@ -8,6 +8,7 @@ import {
   FiImage,
   FiLock,
   FiSave,
+  FiSmartphone,
   FiTrash2,
   FiUploadCloud,
   FiUser,
@@ -62,6 +63,9 @@ const initialSettings = {
 };
 
 const Settings = () => {
+  const [mobileNavLayout, setMobileNavLayout] = useState(
+    () => localStorage.getItem("mobileNavLayout") || "drawer"
+  );
   const [activeTab, setActiveTab] = useState("profile");
   const [profile, setProfile] = useState(initialProfile);
   const [passwordForm, setPasswordForm] = useState(initialPassword);
@@ -167,6 +171,11 @@ const Settings = () => {
         id: "profile",
         label: "Profile",
         icon: <FiUser />,
+      },
+      {
+        id: "appearance",
+        label: "Mobile Layout",
+        icon: <FiSmartphone />,
       },
       {
         id: "fees",
@@ -588,6 +597,19 @@ const Settings = () => {
   const formatMoney = (value) =>
     Number(value || 0).toLocaleString("en-IN");
 
+  const mobileLayouts = [
+    { id: "drawer", name: "Classic Drawer", description: "Menu opens smoothly from the left." },
+    { id: "rail", name: "Icon Rail", description: "Quick-access icons stay on the left." },
+    { id: "bottom", name: "Bottom Dock", description: "Navigation stays within thumb reach." },
+  ];
+
+  const selectMobileLayout = (layout) => {
+    setMobileNavLayout(layout);
+    localStorage.setItem("mobileNavLayout", layout);
+    window.dispatchEvent(new CustomEvent("mobile-nav-layout-change", { detail: layout }));
+    toast.success("Mobile navigation layout updated");
+  };
+
 
   if (isLoading) {
     return (
@@ -773,6 +795,40 @@ const Settings = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {activeTab === "appearance" && (
+            <div className="settings-panel mobile-layout-panel">
+              <div className="settings-panel-header">
+                <div>
+                  <h2>Mobile Navigation</h2>
+                  <p>Choose how the menu appears on phones. Desktop navigation will stay unchanged.</p>
+                </div>
+              </div>
+
+              <div className="mobile-layout-picker">
+                {mobileLayouts.map((layout) => (
+                  <button
+                    key={layout.id}
+                    type="button"
+                    className={`mobile-layout-option ${mobileNavLayout === layout.id ? "selected" : ""}`}
+                    onClick={() => selectMobileLayout(layout.id)}
+                    aria-pressed={mobileNavLayout === layout.id}
+                  >
+                    <span className={`mobile-layout-preview preview-${layout.id}`} aria-hidden="true">
+                      <span className="preview-header"><i /><b /></span>
+                      <span className="preview-content" />
+                      <span className="preview-navigation"><i /><i /><i /><i /></span>
+                    </span>
+                    <span className="mobile-layout-copy">
+                      <strong>{layout.name}</strong>
+                      <small>{layout.description}</small>
+                    </span>
+                    <span className="mobile-layout-check"><FiCheckCircle /></span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
