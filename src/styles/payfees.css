@@ -1114,3 +1114,17 @@
     height: 215px;
   }
 }
+
+.payment-source-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 10px;
+  padding: 6px 9px;
+  border: 1px solid #ead79e;
+  border-radius: 999px;
+  background: #fff9e8;
+  color: #8d6900;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+}

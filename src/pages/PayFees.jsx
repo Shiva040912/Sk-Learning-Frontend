@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 import {
   FiCalendar,
@@ -20,12 +20,26 @@ import "../styles/payfees.css";
 
 const PayFees = () => {
   const { studentId } = useParams();
+  const location = useLocation();
 
   const cleanStudentId = String(
     studentId || "",
   )
     .replace(/\{\{1\}\}/g, "")
+    .split("?")[0]
     .trim();
+
+  const source = useMemo(() => {
+    const params = new URLSearchParams(
+      location.search,
+    );
+
+    return String(
+      params.get("source") || "direct",
+    )
+      .trim()
+      .toLowerCase();
+  }, [location.search]);
 
   const [paymentData, setPaymentData] = useState(null);
   const [amount, setAmount] = useState("");
@@ -253,6 +267,10 @@ const PayFees = () => {
         student.studentName ||
         student.rollNo ||
         "Student"
+      }${
+        source === "reminder"
+          ? " - Reminder"
+          : ""
       }`,
     );
 
@@ -402,6 +420,12 @@ const PayFees = () => {
           <span className="payment-eyebrow">
             FEE PAYMENT
           </span>
+
+          {source === "reminder" && (
+            <div className="payment-source-badge">
+              Opened from fee reminder
+            </div>
+          )}
 
           <h1>
             {paymentCompleted
