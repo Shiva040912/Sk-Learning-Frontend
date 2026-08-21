@@ -6,6 +6,7 @@ import {
   FiChevronRight,
   FiCreditCard,
   FiFileText,
+  FiGrid,
   FiSettings,
   FiUser,
   FiUsers,
@@ -29,6 +30,11 @@ const Sidebar = ({
     user.role === "admin";
 
   const navItems = [
+    {
+      to: "/dashboard",
+      label: "Dashboard",
+      icon: <FiGrid />,
+    },
     {
       to: "/students",
       label: "Students",
@@ -66,7 +72,10 @@ const Sidebar = ({
   ];
 
   const handleNavClick = () => {
-    if (window.innerWidth <= 900 && mobileNavLayout === "drawer") {
+    if (
+      window.innerWidth <= 900 &&
+      mobileNavLayout === "drawer"
+    ) {
       onClose();
     }
   };
@@ -94,10 +103,21 @@ const Sidebar = ({
             type="button"
             className="sidebar-toggle-btn sidebar-top-toggle"
             onClick={onToggleExpand}
-            aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+            aria-label={
+              isExpanded
+                ? "Collapse sidebar"
+                : "Expand sidebar"
+            }
           >
-            {isExpanded ? <FiChevronLeft /> : <FiChevronRight />}
-            {isExpanded && <span>Collapse</span>}
+            {isExpanded ? (
+              <FiChevronLeft />
+            ) : (
+              <FiChevronRight />
+            )}
+
+            {isExpanded && (
+              <span>Collapse</span>
+            )}
           </button>
 
           <button
@@ -153,7 +173,6 @@ const Sidebar = ({
             THE <span>SK</span> LEARNINGS
           </strong>
         </div>
-
       </aside>
     </>
   );

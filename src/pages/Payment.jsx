@@ -5,10 +5,16 @@ import {
   FiCreditCard,
   FiDollarSign,
   FiFilter,
+  FiImage,
   FiPlus,
   FiRotateCcw,
+  FiSave,
   FiSearch,
+  FiSettings,
+  FiTrash2,
   FiTrendingUp,
+  FiUpload,
+  FiShield,
   FiX,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
@@ -55,6 +61,17 @@ const Payments = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReverseModal, setShowReverseModal] = useState(false);
+
+  const [showUpiSettingsModal, setShowUpiSettingsModal] = useState(false);
+  const [isUpiSettingsLoading, setIsUpiSettingsLoading] = useState(false);
+  const [isUpiSettingsSaving, setIsUpiSettingsSaving] = useState(false);
+
+  const [paymentSettings, setPaymentSettings] = useState({
+    upiId: "",
+    receiverName: "",
+    paymentPhone: "",
+    upiQrImage: "",
+  });
 
   const [feeForm, setFeeForm] = useState(initialFeeForm);
   const [feeSetupMode, setFeeSetupMode] = useState("individual");
@@ -709,6 +726,221 @@ const Payments = () => {
       setIsReversing(false);
     }
   };
+  const loadUpiSettings = async () => {
+    try {
+      setIsUpiSettingsLoading(true);
+
+      const response = await api.get("/payments/settings");
+      const saved = response.data?.paymentSettings || response.data?.settings || response.data || {};
+
+      setPaymentSettings({
+        upiId: saved.upiId || "",
+        receiverName: saved.receiverName || "",
+        paymentPhone: saved.paymentPhone || "",
+        upiQrImage: saved.upiQrImage || "",
+      });
+
+      return true;
+    } catch (error) {
+      console.error(
+        "UPI settings load error:",
+        error?.response?.data || error,
+      );
+
+      toast.error(
+        getErrorMessage(
+          error,
+          "Failed to load UPI payment settings",
+        ),
+      );
+
+      return false;
+    } finally {
+      setIsUpiSettingsLoading(false);
+    }
+  };
+
+  const openUpiSettings = async () => {
+    setShowUpiSettingsModal(true);
+    await loadUpiSettings();
+  };
+
+  const closeUpiSettings = () => {
+    if (isUpiSettingsSaving) return;
+    setShowUpiSettingsModal(false);
+  };
+
+  const handlePaymentSettingChange = (event) => {
+    const { name, value } = event.target;
+
+    setPaymentSettings((current) => ({
+      ...current,
+      [name]:
+        name === "paymentPhone"
+          ? value.replace(/\D/g, "").slice(0, 10)
+          : value,
+    }));
+  };
+
+  const handleQrUpload = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid QR image");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const image = new Image();
+
+      image.onload = () => {
+        const maxSize = 520;
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, maxSize, maxSize);
+
+        const scale = Math.min(
+          maxSize / image.width,
+          maxSize / image.height,
+        );
+
+        const width = image.width * scale;
+        const height = image.height * scale;
+        const x = (maxSize - width) / 2;
+        const y = (maxSize - height) / 2;
+
+        context.drawImage(
+          image,
+          x,
+          y,
+          width,
+          height,
+        );
+
+        const upiQrImage = canvas.toDataURL(
+          "image/jpeg",
+          0.9,
+        );
+
+        setPaymentSettings((current) => ({
+          ...current,
+          upiQrImage,
+        }));
+
+        toast.success("QR image selected");
+      };
+
+      image.onerror = () => {
+        toast.error("Unable to read the QR image");
+      };
+
+      image.src = String(reader.result || "");
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const removeQrImage = () => {
+    setPaymentSettings((current) => ({
+      ...current,
+      upiQrImage: "",
+    }));
+  };
+
+  const handleSavePaymentSettings = async (event) => {
+    event.preventDefault();
+
+    const upiId = paymentSettings.upiId.trim();
+    const receiverName = paymentSettings.receiverName.trim();
+    const paymentPhone = paymentSettings.paymentPhone.trim();
+
+    if (!upiId || !upiId.includes("@")) {
+      toast.error("Enter a valid UPI ID");
+      return;
+    }
+
+    if (!receiverName) {
+      toast.error("Receiver name is required");
+      return;
+    }
+
+    if (!/^[6-9]\d{9}$/.test(paymentPhone)) {
+      toast.error(
+        "Enter a valid 10 digit payment phone number",
+      );
+      return;
+    }
+
+    if (!paymentSettings.upiQrImage) {
+      toast.error("Upload the payment QR image");
+      return;
+    }
+
+    try {
+      setIsUpiSettingsSaving(true);
+
+      const response = await api.put(
+        "/payments/settings",
+        {
+          upiId,
+          receiverName,
+          paymentPhone,
+          upiQrImage:
+            paymentSettings.upiQrImage,
+        },
+      );
+
+      const saved =
+        response.data?.paymentSettings ||
+        response.data?.settings ||
+        response.data ||
+        {};
+
+      setPaymentSettings({
+        upiId: saved.upiId ?? upiId,
+        receiverName:
+          saved.receiverName ?? receiverName,
+        paymentPhone:
+          saved.paymentPhone ?? paymentPhone,
+        upiQrImage:
+          saved.upiQrImage ??
+          paymentSettings.upiQrImage,
+      });
+
+      toast.success(
+        response.data?.message ||
+          "UPI payment settings updated successfully",
+      );
+
+      setShowUpiSettingsModal(false);
+    } catch (error) {
+      console.error(
+        "UPI settings save error:",
+        error?.response?.data || error,
+      );
+
+      toast.error(
+        getErrorMessage(
+          error,
+          "Failed to update UPI payment settings",
+        ),
+      );
+    } finally {
+      setIsUpiSettingsSaving(false);
+    }
+  };
+
   const openStudentDetails = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
@@ -851,6 +1083,16 @@ const Payments = () => {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            className="payment-upi-setup-btn"
+            onClick={openUpiSettings}
+            title="UPI payment setup"
+          >
+            <FiSettings />
+            <span>UPI ID Setup</span>
+          </button>
 
           <button
             type="button"
@@ -1447,6 +1689,191 @@ const Payments = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showUpiSettingsModal && (
+        <div className="payment-modal-overlay">
+          <div className="payment-modal upi-settings-modal">
+            <div className="payment-modal-header">
+              <div>
+                <span>ONLINE PAYMENT</span>
+                <h2>UPI Payment Setup</h2>
+                <p>
+                  Configure the receiver details used on the public student Pay Now page.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="payment-modal-close"
+                onClick={closeUpiSettings}
+                disabled={isUpiSettingsSaving}
+                aria-label="Close UPI settings"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            {isUpiSettingsLoading ? (
+              <div className="upi-settings-loading">
+                <LoadingLogo />
+                <span>Loading UPI settings...</span>
+              </div>
+            ) : (
+              <form
+                className="upi-settings-form"
+                onSubmit={handleSavePaymentSettings}
+              >
+                <div className="upi-settings-grid">
+                  <div className="payment-form-group">
+                    <label>UPI ID *</label>
+
+                    <input
+                      type="text"
+                      name="upiId"
+                      value={paymentSettings.upiId}
+                      onChange={handlePaymentSettingChange}
+                      placeholder="example@upi"
+                      autoComplete="off"
+                    />
+
+                    <small className="payment-field-hint">
+                      This UPI ID is used for GPay, PhonePe and Paytm.
+                    </small>
+                  </div>
+
+                  <div className="payment-form-group">
+                    <label>Receiver Name *</label>
+
+                    <input
+                      type="text"
+                      name="receiverName"
+                      value={paymentSettings.receiverName}
+                      onChange={handlePaymentSettingChange}
+                      placeholder="The SK Learnings"
+                      autoComplete="off"
+                    />
+
+                    <small className="payment-field-hint">
+                      Students will see this receiver name before payment.
+                    </small>
+                  </div>
+
+                  <div className="payment-form-group">
+                    <label>Payment Phone Number *</label>
+
+                    <input
+                      type="tel"
+                      name="paymentPhone"
+                      inputMode="numeric"
+                      maxLength="10"
+                      value={paymentSettings.paymentPhone}
+                      onChange={handlePaymentSettingChange}
+                      placeholder="9876543210"
+                      autoComplete="off"
+                    />
+
+                    <small className="payment-field-hint">
+                      Enter the mobile number connected with the payment account.
+                    </small>
+                  </div>
+                </div>
+
+                <div className="upi-qr-settings">
+                  <div className="upi-qr-settings-heading">
+                    <div>
+                      <span>PAYMENT QR</span>
+                      <strong>Upload Payment QR</strong>
+                      <small>
+                        The latest saved QR will automatically appear on every student's public payment page.
+                      </small>
+                    </div>
+
+                    <FiImage />
+                  </div>
+
+                  <div className="upi-qr-settings-content">
+                    <div className="upi-qr-preview">
+                      {paymentSettings.upiQrImage ? (
+                        <img
+                          src={paymentSettings.upiQrImage}
+                          alt="Payment QR preview"
+                        />
+                      ) : (
+                        <div className="upi-qr-empty">
+                          <FiImage />
+                          <span>No QR uploaded</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="upi-qr-actions">
+                      <label
+                        className="upi-upload-button"
+                        htmlFor="upi-qr-file"
+                      >
+                        <FiUpload />
+                        <span>
+                          {paymentSettings.upiQrImage
+                            ? "Change QR"
+                            : "Upload QR"}
+                        </span>
+                      </label>
+
+                      <input
+                        id="upi-qr-file"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={handleQrUpload}
+                      />
+
+                      {paymentSettings.upiQrImage && (
+                        <button
+                          type="button"
+                          className="upi-remove-button"
+                          onClick={removeQrImage}
+                        >
+                          <FiTrash2 />
+                          <span>Remove QR</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="upi-settings-note">
+                  <FiShield />
+                  <span>
+                    These values are stored in Payment Settings. If you change them later,
+                    the student Pay Now page will automatically load the latest saved UPI details and QR.
+                  </span>
+                </div>
+
+                <div className="payment-modal-actions">
+                  <button
+                    type="button"
+                    className="payment-secondary-btn"
+                    onClick={closeUpiSettings}
+                    disabled={isUpiSettingsSaving}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="payment-primary-btn"
+                    disabled={isUpiSettingsSaving}
+                  >
+                    <FiSave />
+                    {isUpiSettingsSaving
+                      ? "Saving..."
+                      : "Save UPI Settings"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

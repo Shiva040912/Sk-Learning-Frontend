@@ -12,17 +12,20 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PopupKeyboardController from "./components/PopupKeyboardController";
 
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Student";
 import Users from "./pages/Users";
 import Payments from "./pages/Payment";
 import Notification from "./pages/Notification";
 import Settings from "./pages/Settings";
 import Invoices from "./pages/Invoice";
+import PayFees from "./pages/PayFees";
 
 const App = () => {
   return (
     <BrowserRouter>
       <PopupKeyboardController />
+
       <Toaster
         position="top-right"
         toastOptions={{
@@ -46,10 +49,19 @@ const App = () => {
           element={<Login />}
         />
 
+        {/* PUBLIC STUDENT PAYMENT PAGE - NO ADMIN AUTH */}
+        <Route
+          path="/pay-fees/:studentId"
+          element={<PayFees />}
+        />
+
         <Route element={<ProtectedRoute />}>
-          <Route
-            element={<DashboardLayout />}
-          >
+          <Route element={<DashboardLayout />}>
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
+
             <Route
               path="/students"
               element={<Students />}
