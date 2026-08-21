@@ -21,6 +21,12 @@ import "../styles/payfees.css";
 const PayFees = () => {
   const { studentId } = useParams();
 
+  const cleanStudentId = String(
+    studentId || "",
+  )
+    .replace(/\{\{1\}\}/g, "")
+    .trim();
+
   const [paymentData, setPaymentData] = useState(null);
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(true);
@@ -35,7 +41,7 @@ const PayFees = () => {
 
   useEffect(() => {
     const loadPaymentDetails = async () => {
-      if (!studentId) {
+      if (!cleanStudentId) {
         setError("Invalid payment link");
         setLoading(false);
         return;
@@ -46,7 +52,7 @@ const PayFees = () => {
         setError("");
 
         const response = await api.get(
-          `/payments/public/student/${studentId}`,
+          `/payments/public/student/${cleanStudentId}`,
         );
 
         setPaymentData(response.data);
@@ -66,7 +72,7 @@ const PayFees = () => {
     };
 
     loadPaymentDetails();
-  }, [studentId]);
+  }, [cleanStudentId]);
 
   /*
    * ======================================================
