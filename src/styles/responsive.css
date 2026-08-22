@@ -1016,3 +1016,77 @@ button {
     display: none;
   }
 }
+
+/* Final Students phone layout: hide sensitive contact columns and fit all actions. */
+@media (max-width: 768px) {
+  .students-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+
+  /* Parent Phone and Aadhaar Number are intentionally hidden on phones. */
+  .students-table th:nth-child(6),
+  .students-table td:nth-child(6),
+  .students-table th:nth-child(7),
+  .students-table td:nth-child(7) {
+    display: none !important;
+  }
+
+  .students-table th:nth-child(1),
+  .students-table td:nth-child(1) { width: 7% !important; }
+  .students-table th:nth-child(2),
+  .students-table td:nth-child(2) { width: 29% !important; }
+  .students-table th:nth-child(3),
+  .students-table td:nth-child(3) { width: 17% !important; }
+  .students-table th:nth-child(4),
+  .students-table td:nth-child(4) { width: 14% !important; }
+  .students-table th:nth-child(5),
+  .students-table td:nth-child(5) { width: 12% !important; }
+  .students-table th:nth-child(8),
+  .students-table td:nth-child(8) {
+    width: 21% !important;
+    min-width: 0 !important;
+    padding-right: 5px !important;
+    padding-left: 3px !important;
+    text-align: right !important;
+  }
+
+  .students-table .student-actions {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 3px !important;
+  }
+
+  .students-table .student-actions button {
+    width: 20px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    flex: 0 0 20px !important;
+    padding: 0 !important;
+    font-size: 8px !important;
+  }
+
+  .students-table-wrapper {
+    overflow-x: hidden !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .students-table th:nth-child(2),
+  .students-table td:nth-child(2) { width: 28% !important; }
+  .students-table th:nth-child(8),
+  .students-table td:nth-child(8) { width: 22% !important; }
+
+  .students-table .student-actions { gap: 2px !important; }
+  .students-table .student-actions button {
+    width: 18px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    flex-basis: 18px !important;
+  }
+}
