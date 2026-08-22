@@ -184,11 +184,6 @@ const Settings = () => {
         icon: <FiUser />,
       },
       {
-        id: "appearance",
-        label: "Mobile Layout",
-        icon: <FiSmartphone />,
-      },
-      {
         id: "fees",
         label: "Fee Settings",
         icon: <FiCreditCard />,

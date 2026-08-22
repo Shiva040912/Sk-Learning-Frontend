@@ -1172,3 +1172,182 @@ button {
   .student-admission-actions .primary-btn,
   .student-admission-actions .secondary-btn { min-height: 34px !important; }
 }
+
+/* Definitive Payments phone table: six columns, seven visible records. */
+@media (max-width: 768px) {
+  .payment-table-card { overflow: hidden !important; }
+  .payment-table-wrapper {
+    width: 100% !important;
+    height: 354px !important;
+    max-height: 354px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    background: #fff !important;
+  }
+  .payments-table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+  }
+  .payments-table thead { display: table-header-group !important; }
+  .payments-table tbody { display: table-row-group !important; padding: 0 !important; }
+  .payments-table tbody tr {
+    display: table-row !important;
+    width: auto !important;
+    height: 46px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .payments-table th,
+  .payments-table tbody td {
+    display: table-cell !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 0 3px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #edf0f2 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+  }
+  .payments-table th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    height: 32px !important;
+    background: #f6f8fa !important;
+    color: #727d88 !important;
+    font-size: 5.2px !important;
+    font-weight: 850 !important;
+    letter-spacing: .2px !important;
+    line-height: 1.1 !important;
+  }
+  .payments-table tbody td {
+    width: auto !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    color: #293744 !important;
+    font-size: 7px !important;
+    line-height: 1.15 !important;
+  }
+  .payments-table tbody td::before { display: none !important; content: none !important; }
+
+  /* Mobile columns: S.No, Student, Roll No, Course, Status, Setup only. */
+  .payments-table th:nth-child(5),
+  .payments-table td:nth-child(5),
+  .payments-table th:nth-child(7),
+  .payments-table td:nth-child(7) { display: none !important; }
+
+  .payments-table th:nth-child(1), .payments-table td:nth-child(1) { width: 7% !important; text-align: center !important; }
+  .payments-table th:nth-child(2), .payments-table td:nth-child(2) { width: 29% !important; }
+  .payments-table th:nth-child(3), .payments-table td:nth-child(3) { width: 18% !important; }
+  .payments-table th:nth-child(4), .payments-table td:nth-child(4) { width: 15% !important; }
+  .payments-table th:nth-child(6), .payments-table td:nth-child(6) { width: 21% !important; text-align: center !important; }
+  .payments-table th:nth-child(8), .payments-table td:nth-child(8) { width: 10% !important; text-align: center !important; }
+
+  .payments-table .payment-student { width: 100% !important; max-width: 100% !important; gap: 0 !important; text-align: left !important; }
+  .payments-table .payment-avatar { display: none !important; }
+  .payments-table .payment-student > div:last-child { width: 100% !important; }
+  .payments-table .payment-student strong { font-size: 7.3px !important; line-height: 1.15 !important; }
+  .payments-table .payment-student span { margin-top: 2px !important; font-size: 5.5px !important; }
+  .payments-table .payment-roll,
+  .payments-table .payment-course {
+    display: block !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    background: transparent !important;
+    font-size: 6.5px !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    text-overflow: ellipsis !important;
+  }
+  .payments-table .payment-status-cell { width: 100% !important; min-height: 0 !important; justify-content: center !important; }
+  .payments-table .payment-status-display,
+  .payments-table .payment-status-control {
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    margin: 0 auto !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
+    font-size: 6px !important;
+  }
+  .payments-table .payment-switch-track { transform: scale(.72); transform-origin: center; }
+  .payments-table .fee-setup-add,
+  .payments-table .fee-setup-completed {
+    width: 25px !important;
+    min-width: 25px !important;
+    height: 25px !important;
+    min-height: 25px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+  }
+  .payments-table .payment-serial { font-size: 7px !important; }
+}
+
+@media (max-width: 390px) {
+  .payments-table th { font-size: 4.8px !important; }
+  .payments-table .payment-student strong { font-size: 6.8px !important; }
+  .payments-table .payment-roll,
+  .payments-table .payment-course { font-size: 6px !important; }
+}
+
+/* Final payments toolbar layout on phones. */
+@media (max-width: 768px) {
+  .payment-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+    padding: 9px !important;
+  }
+  .payment-toolbar .payment-search {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+  .payment-toolbar .payment-filter-wrapper {
+    grid-column: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+  .payment-toolbar .payment-filter-button,
+  .payment-toolbar .payment-upi-setup-btn,
+  .payment-toolbar .payment-main-setup-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 38px !important;
+    margin: 0 !important;
+    justify-content: center !important;
+  }
+  .payment-toolbar .payment-upi-setup-btn { grid-column: 2 !important; }
+  .payment-toolbar .payment-main-setup-btn { grid-column: 1 / -1 !important; }
+}
+/* Fee Configuration mobile actions: keep Cancel and Set Fee in one row. */
+@media (max-width: 768px) {
+  .fee-setup-manager-modal .payment-modal-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: auto !important;
+  }
+  .fee-setup-manager-modal .payment-modal-actions .payment-secondary-btn,
+  .fee-setup-manager-modal .payment-modal-actions .payment-primary-btn {
+    flex: 1 1 0 !important;
+    width: 50% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+}
