@@ -203,6 +203,11 @@ const Settings = () => {
         label: "Invoice",
         icon: <FiFileText />,
       },
+      {
+        id: "appearance",
+        label: "Mobile Layout",
+        icon: <FiSmartphone />,
+      },
     ],
     []
   );

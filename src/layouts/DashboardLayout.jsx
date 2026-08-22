@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
@@ -7,16 +7,27 @@ import Topbar from "../components/Topbar";
 import "../styles/layout.css";
 
 const DashboardLayout = () => {
-  const mobileNavLayout = "drawer";
+  const [mobileNavLayout, setMobileNavLayout] = useState(() => {
+    const saved = localStorage.getItem("mobileNavLayout");
+    return saved === "bottom" ? "bottom" : "drawer";
+  });
 
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] =
-    useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
-  const [isSidebarExpanded, setIsSidebarExpanded] =
-    useState(false);
-
-
-
+  useEffect(() => {
+    const syncLayout = (event) => {
+      const next = event?.detail || localStorage.getItem("mobileNavLayout");
+      setMobileNavLayout(next === "bottom" ? "bottom" : "drawer");
+      setIsMobileSidebarOpen(false);
+    };
+    window.addEventListener("mobile-nav-layout-change", syncLayout);
+    window.addEventListener("storage", syncLayout);
+    return () => {
+      window.removeEventListener("mobile-nav-layout-change", syncLayout);
+      window.removeEventListener("storage", syncLayout);
+    };
+  }, []);
   return (
     <div
       className={`dashboard-layout mobile-nav-${mobileNavLayout} ${

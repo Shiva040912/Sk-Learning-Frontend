@@ -1351,3 +1351,19 @@ button {
     white-space: nowrap !important;
   }
 }
+/* Payments phone list: seven-row viewport with its own visible scroll. */
+@media (max-width: 768px) {
+  .payments-page { padding-bottom: 0 !important; }
+  .payment-history-section { margin-bottom: 0 !important; }
+  .payment-table-card { margin-bottom: 0 !important; }
+  .payment-table-wrapper {
+    height: 354px !important;
+    max-height: 354px !important;
+    overflow-y: scroll !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #aeb5bb #eef1f3 !important;
+  }
+  .payment-table-wrapper::-webkit-scrollbar { width: 4px !important; }
+  .payment-table-wrapper::-webkit-scrollbar-track { background: #eef1f3 !important; }
+  .payment-table-wrapper::-webkit-scrollbar-thumb { background: #aeb5bb !important; border-radius: 8px !important; }
+}
