@@ -1506,3 +1506,24 @@ button {
     font-weight: 500 !important;
   }
 }
+/* Bottom Dock safe area: list content must finish above the fixed dock. */
+@media (max-width: 768px) {
+  .mobile-nav-bottom .students-table-wrapper {
+    height: calc(100dvh - var(--topbar-height, 61px) - 112px - 82px) !important;
+    min-height: 250px !important;
+    scroll-padding-bottom: 8px !important;
+  }
+  .mobile-nav-bottom .payment-table-wrapper {
+    height: calc(100dvh - var(--topbar-height, 61px) - 166px - 82px) !important;
+    min-height: 250px !important;
+    scroll-padding-bottom: 8px !important;
+  }
+  .mobile-nav-bottom .students-page,
+  .mobile-nav-bottom .payments-page {
+    padding-bottom: 82px !important;
+  }
+  .mobile-nav-bottom .students-list-section,
+  .mobile-nav-bottom .payment-history-section {
+    margin-bottom: 0 !important;
+  }
+}
