@@ -23,9 +23,18 @@ const Topbar = ({ onMenuClick }) => {
 
   const profileRef = useRef(null);
 
-  const user = JSON.parse(
-    localStorage.getItem("user") || "{}"
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("user") || "{}")
   );
+
+  useEffect(() => {
+    const handleProfileUpdated = (event) => {
+      setUser(event.detail || JSON.parse(localStorage.getItem("user") || "{}"));
+    };
+
+    window.addEventListener("profile-updated", handleProfileUpdated);
+    return () => window.removeEventListener("profile-updated", handleProfileUpdated);
+  }, []);
 
   const formatRole = (role) => {
     if (role === "admin") {
@@ -204,7 +213,11 @@ const Topbar = ({ onMenuClick }) => {
             }
           >
             <div className="topbar-user-avatar">
-              <FiUser />
+              {user.profileImage ? (
+                <img src={user.profileImage} alt={user.name || "Profile"} />
+              ) : (
+                <FiUser />
+              )}
             </div>
 
             <div className="topbar-user-info">
@@ -228,7 +241,11 @@ const Topbar = ({ onMenuClick }) => {
             <div className="profile-dropdown">
               <div className="profile-dropdown-info">
                 <div className="profile-dropdown-avatar">
-                  <FiUser />
+                  {user.profileImage ? (
+                    <img src={user.profileImage} alt={user.name || "Profile"} />
+                  ) : (
+                    <FiUser />
+                  )}
                 </div>
 
                 <div>

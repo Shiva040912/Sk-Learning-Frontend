@@ -2864,3 +2864,1118 @@
     min-width: 120px;
   }
 }
+
+
+/* =========================================================
+   MONTHLY + PARTIAL FEE MANAGEMENT
+   ========================================================= */
+
+.payment-status-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid #e1e5e9;
+  border-radius: 999px;
+  background: #f8f9fa;
+  color: #7a838c;
+  font-size: 7.5px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.payment-status-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #b8c0c7;
+}
+
+.payment-status-display.unpaid {
+  border-color: #eadcae;
+  background: #fffaf0;
+  color: #9a7100;
+}
+
+.payment-status-display.unpaid .payment-status-dot {
+  background: #d39a00;
+}
+
+.payment-status-display.partial {
+  border-color: #ead59c;
+  background: #fff8e6;
+  color: #9a7100;
+}
+
+.payment-status-display.partial .payment-status-dot {
+  background: #e1a600;
+}
+
+.payment-status-display.paid {
+  border-color: #cce8d5;
+  background: #f1faf4;
+  color: #2f8f50;
+}
+
+.payment-status-display.paid .payment-status-dot {
+  background: #42a563;
+}
+
+.monthly-setup-preview {
+  margin-top: 10px;
+  padding: 11px;
+  border: 1px solid #e5e9ed;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.monthly-setup-preview-title,
+.transaction-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.monthly-setup-preview-title strong,
+.transaction-history-heading strong {
+  color: #3c4853;
+  font-size: 9px;
+}
+
+.monthly-setup-preview-title span,
+.transaction-history-heading span {
+  color: #969ea7;
+  font-size: 7px;
+}
+
+.monthly-setup-preview-list {
+  max-height: 170px;
+  overflow-y: auto;
+  display: grid;
+  gap: 5px;
+  padding-right: 2px;
+}
+
+.monthly-setup-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid #e8ecef;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.monthly-setup-preview-row span {
+  color: #707b85;
+  font-size: 7.5px;
+  font-weight: 700;
+}
+
+.monthly-setup-preview-row strong {
+  color: #394550;
+  font-size: 8.5px;
+}
+
+.monthly-history-section,
+.partial-history-section {
+  width: 100%;
+}
+
+.monthly-plan-summary,
+.partial-payment-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.monthly-plan-summary > div,
+.partial-payment-summary > div {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #e5e9ed;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.monthly-plan-summary span,
+.partial-payment-summary span {
+  display: block;
+  color: #929aa3;
+  font-size: 6px;
+  font-weight: 760;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.monthly-plan-summary strong,
+.partial-payment-summary strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #35414c;
+  font-size: 8.5px;
+  font-weight: 730;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history-payment-method {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 220px);
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+  margin-bottom: 9px;
+  padding: 8px 9px;
+  border: 1px solid #e7ebee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.history-payment-method label {
+  color: #727d87;
+  font-size: 7px;
+  font-weight: 750;
+}
+
+.history-payment-method select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #dce1e6;
+  border-radius: 7px;
+  outline: none;
+  background: #fff;
+  color: #34404b;
+  font-size: 8px;
+}
+
+.history-payment-method select:focus {
+  border-color: #d4a000;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.07);
+}
+
+.monthly-installment-list {
+  display: grid;
+  gap: 6px;
+}
+
+.monthly-installment-row {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid #e6eaee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.monthly-installment-row.current {
+  border-color: #e3c269;
+  background: #fffaf0;
+}
+
+.monthly-installment-row.paid {
+  border-color: #cfe5d6;
+  background: #f7fcf8;
+}
+
+.monthly-installment-main {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(60px, auto) minmax(70px, auto);
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.monthly-installment-number {
+  color: #596571;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.monthly-installment-main strong {
+  color: #34404b;
+  font-size: 9px;
+}
+
+.monthly-installment-main small {
+  grid-column: 1 / -1;
+  color: #939ba4;
+  font-size: 6.5px;
+}
+
+.monthly-installment-action {
+  flex-shrink: 0;
+}
+
+.installment-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid #bfe1ca;
+  border-radius: 7px;
+  background: #edf9f1;
+  color: #2f8f50;
+  font-size: 7.5px;
+  font-weight: 760;
+}
+
+.installment-paid-badge svg {
+  font-size: 10px;
+}
+
+.installment-pay-btn {
+  min-width: 72px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #dfb94f;
+  border-radius: 7px;
+  background: #fff7df;
+  color: #8a6200;
+  font-size: 7.5px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.installment-pay-btn:hover:not(:disabled) {
+  background: #ffefbe;
+}
+
+.installment-pay-btn:disabled {
+  border-color: #e3e7ea;
+  background: #f7f8f9;
+  color: #aab1b8;
+  cursor: not-allowed;
+}
+
+.transaction-history-block {
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid #eceff2;
+}
+
+.partial-payment-entry {
+  margin-bottom: 11px;
+  padding: 11px;
+  border: 1px solid #e5e9ed;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.partial-payment-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.partial-payment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.partial-payment-form .payment-form-group {
+  margin-bottom: 0;
+}
+
+.partial-add-payment-btn {
+  min-width: 105px;
+  height: 39px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffb800;
+  color: #171717;
+  font-size: 8.5px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.partial-add-payment-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.partial-history-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.partial-paid-label {
+  margin-top: 0 !important;
+  padding: 4px 7px;
+  border: 1px solid #bfe1ca;
+  border-radius: 6px;
+  background: #eef9f2;
+  color: #2f8f50 !important;
+  font-size: 7px !important;
+  font-weight: 760;
+}
+
+.fee-complete-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding: 10px 11px;
+  border: 1px solid #c7e5d0;
+  border-radius: 9px;
+  background: #f1faf4;
+  color: #2f8f50;
+}
+
+.fee-complete-banner > svg {
+  flex: 0 0 auto;
+  font-size: 16px;
+}
+
+.fee-complete-banner strong {
+  display: block;
+  color: #2f7f49;
+  font-size: 9px;
+}
+
+.fee-complete-banner span {
+  display: block;
+  margin-top: 2px;
+  color: #6b8e77;
+  font-size: 7px;
+}
+
+@media (max-width: 768px) {
+  .payment-status-display {
+    min-height: 22px;
+    gap: 4px;
+    padding: 0 5px;
+    font-size: 5.8px;
+  }
+
+  .payment-status-dot {
+    width: 5px;
+    height: 5px;
+    flex-basis: 5px;
+  }
+
+  .monthly-plan-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .partial-payment-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .partial-payment-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .partial-add-payment-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .monthly-setup-preview-list {
+    max-height: 145px;
+  }
+
+  .monthly-installment-row {
+    min-height: 45px;
+    gap: 7px;
+    padding: 7px 8px;
+  }
+
+  .monthly-installment-main {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .monthly-installment-main small {
+    grid-column: auto;
+  }
+
+  .history-payment-method {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .partial-payment-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .partial-payment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .partial-add-payment-btn {
+    grid-column: auto;
+  }
+
+  .partial-history-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+}
+
+
+/* =========================================================
+   COMMON FEE CYCLE + HISTORY MODAL
+   ========================================================= */
+
+.fee-setup-mode-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.payment-common-cycle-box {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  min-height: 39px;
+}
+
+.payment-common-cycle-box > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid #eadcae;
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.payment-common-cycle-box span {
+  color: #8a929b;
+  font-size: 6.5px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.payment-common-cycle-box strong {
+  color: #8f6900;
+  font-size: 10px;
+}
+
+.settings-cycle-info-field {
+  grid-column: 1 / -1;
+}
+
+.payment-details-header-actions,
+.payment-history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.payment-view-history-btn,
+.payment-clear-history-btn {
+  min-height: 31px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 7.5px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.payment-view-history-btn {
+  border: 1px solid #e1c269;
+  background: #fff9e8;
+  color: #8c6500;
+}
+
+.payment-view-history-btn:hover {
+  background: #fff2c9;
+}
+
+.payment-clear-history-btn {
+  border: 1px solid #edc9c9;
+  background: #fff7f7;
+  color: #a54848;
+}
+
+.payment-clear-history-btn:hover:not(:disabled) {
+  background: #ffeded;
+}
+
+.payment-clear-history-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.payment-history-modal {
+  max-width: 700px;
+}
+
+.payment-history-modal-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  padding: 14px 17px 0;
+}
+
+.payment-history-modal-summary > div {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #e5e9ed;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.payment-history-modal-summary span {
+  display: block;
+  color: #929aa3;
+  font-size: 6px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.payment-history-modal-summary strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #35414c;
+  font-size: 8.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.payment-history-modal-list {
+  padding-top: 13px;
+}
+
+.history-clear-note {
+  margin-top: 12px;
+  padding: 9px 10px;
+  border: 1px solid #e5e9ed;
+  border-radius: 8px;
+  background: #fafbfc;
+  color: #8b949d;
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .payment-common-cycle-box {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-modal-header {
+    align-items: center;
+  }
+
+  .payment-view-history-btn span,
+  .payment-clear-history-btn span {
+    display: none;
+  }
+
+  .payment-view-history-btn,
+  .payment-clear-history-btn {
+    width: 31px;
+    padding: 0;
+    font-size: 12px;
+  }
+
+  .payment-history-modal-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 11px 11px 0;
+  }
+
+  .payment-history-modal-list {
+    padding-top: 10px;
+  }
+}
+
+
+/* =========================================================
+   FINAL FEE RULE + DETAILS/HISTORY UI CORRECTIONS
+   ========================================================= */
+
+/* Remove browser increment/decrement arrows from fee/month inputs. */
+.payments-page input[type="number"]::-webkit-outer-spin-button,
+.payments-page input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.payments-page input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.bulk-yearly-fixed-field {
+  min-height: 39px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 7px 10px;
+  border: 1px solid #dce1e6;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+
+.bulk-yearly-fixed-field strong {
+  color: #37434e;
+  font-size: 9px;
+}
+
+.bulk-yearly-fixed-field span {
+  color: #929aa3;
+  font-size: 6.5px;
+  line-height: 1.35;
+}
+
+/* Student Details payment controls live here, not inside History. */
+.details-payment-actions-section {
+  margin: 0 17px 15px;
+  padding: 12px;
+  border: 1px solid #e3e7eb;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.details-payment-actions-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.details-payment-actions-title > div > span {
+  display: block;
+  margin-bottom: 3px;
+  color: #a57600;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: .7px;
+}
+
+.details-payment-actions-title strong {
+  display: block;
+  color: #37434e;
+  font-size: 10px;
+}
+
+.details-payment-actions-title small {
+  color: #929aa3;
+  font-size: 7px;
+  text-align: right;
+}
+
+.details-monthly-installment-list {
+  display: grid;
+  gap: 6px;
+  max-height: 255px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.details-monthly-installment-row {
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(190px, auto);
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border: 1px solid #e5e9ed;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.details-monthly-installment-row.current {
+  border-color: #e4c15d;
+  background: #fffaf0;
+}
+
+.details-monthly-installment-row.paid {
+  border-color: #cfe5d6;
+  background: #f6fbf8;
+}
+
+.details-monthly-installment-row.future {
+  background: #fafbfc;
+}
+
+.details-monthly-installment-info {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.details-monthly-installment-info span {
+  min-width: 54px;
+  color: #68737e;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.details-monthly-installment-info strong {
+  color: #34404b;
+  font-size: 9px;
+}
+
+.details-monthly-current-action {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 84px;
+  align-items: center;
+  gap: 7px;
+}
+
+.details-monthly-current-action select {
+  width: 100%;
+  height: 30px;
+  padding: 0 7px;
+  border: 1px solid #d8dee3;
+  border-radius: 7px;
+  outline: none;
+  background: #fff;
+  color: #3b4651;
+  font-size: 7.5px;
+}
+
+.details-monthly-current-action select:focus {
+  border-color: #d4a000;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, .07);
+}
+
+.details-monthly-current-action .installment-pay-btn {
+  width: 84px;
+  min-width: 84px;
+  height: 30px;
+}
+
+.future-installment-label {
+  justify-self: end;
+  min-width: 64px;
+  padding: 5px 8px;
+  border: 1px solid #e3e7ea;
+  border-radius: 7px;
+  background: #f4f6f8;
+  color: #9aa2aa;
+  font-size: 7px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.details-partial-payment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 118px;
+  align-items: end;
+  gap: 9px;
+}
+
+.details-partial-payment-form .payment-form-group {
+  margin-bottom: 0;
+}
+
+.details-partial-payment-form .partial-add-payment-btn {
+  width: 118px;
+  height: 39px;
+}
+
+.details-fee-complete-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 17px 15px;
+  padding: 10px 11px;
+  border: 1px solid #c7e5d0;
+  border-radius: 9px;
+  background: #f1faf4;
+  color: #2f8f50;
+}
+
+.details-fee-complete-banner > svg {
+  font-size: 16px;
+}
+
+.details-fee-complete-banner strong {
+  display: block;
+  color: #2f7f49;
+  font-size: 9px;
+}
+
+.details-fee-complete-banner span {
+  display: block;
+  margin-top: 2px;
+  color: #6b8e77;
+  font-size: 7px;
+}
+
+/* History summary alignment: exactly four equal cards. */
+.payment-history-modal-summary {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  gap: 10px !important;
+  padding: 15px 17px 0 !important;
+}
+
+.payment-history-modal-summary > div {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 12px !important;
+  border: 1px solid #e3e7eb;
+  border-radius: 9px;
+  background: #fafbfc;
+}
+
+.payment-history-modal-list {
+  padding-top: 14px !important;
+}
+
+/* History is read-only: payment date, method and status. */
+.history-only-row {
+  display: grid;
+  grid-template-columns: minmax(110px, .8fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 9px 11px;
+  border: 1px solid #e5e9ed;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.history-only-row + .history-only-row {
+  margin-top: 7px;
+}
+
+.history-only-main strong {
+  display: block;
+  color: #35414c;
+  font-size: 8.5px;
+}
+
+.history-only-main span {
+  display: block;
+  margin-top: 3px;
+  color: #8e979f;
+  font-size: 7px;
+}
+
+.history-only-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.history-only-meta > div {
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #edf0f2;
+  border-radius: 7px;
+  background: #fafbfc;
+}
+
+.history-only-meta span {
+  display: block;
+  color: #969ea7;
+  font-size: 5.8px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.history-only-meta strong {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #4a5661;
+  font-size: 7.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history-only-meta .history-paid-status {
+  color: #2f8f50;
+}
+
+@media (max-width: 768px) {
+  .details-monthly-installment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .details-monthly-current-action {
+    grid-template-columns: minmax(0, 1fr) 82px;
+  }
+
+  .details-partial-payment-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .details-partial-payment-form .partial-add-payment-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .payment-history-modal-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .history-only-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .details-payment-actions-section {
+    margin: 0 11px 11px;
+    padding: 9px;
+  }
+
+  .details-payment-actions-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .details-payment-actions-title small {
+    text-align: left;
+  }
+
+  .details-monthly-current-action,
+  .details-partial-payment-form,
+  .history-only-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .details-monthly-current-action .installment-pay-btn,
+  .details-partial-payment-form .partial-add-payment-btn {
+    width: 100%;
+  }
+
+  .payment-history-modal-summary {
+    gap: 7px !important;
+    padding: 11px 11px 0 !important;
+  }
+
+  .payment-history-modal-summary > div {
+    min-height: 58px;
+    padding: 8px !important;
+  }
+}
+/* Payment method is always visible in the Status column with a distinct colour. */
+.payment-status-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.payment-method-indicator {
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 6.5px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .25px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.payment-method-indicator.monthly {
+  border-color: #b9d8f5;
+  background: #edf6ff;
+  color: #246da8;
+}
+
+.payment-method-indicator.partial {
+  border-color: #e3c8f2;
+  background: #f8f0fc;
+  color: #8445a6;
+}
+
+.payment-method-indicator.yearly {
+  border-color: #bfe2ca;
+  background: #eef9f2;
+  color: #2f8750;
+}
+
+/* Monthly/Partial are the active status until their full balance is paid. */
+.payment-status-display.monthly {
+  border-color: #b9d8f5;
+  background: #edf6ff;
+  color: #246da8;
+}
+.payment-status-display.monthly .payment-status-dot { background: #3f8fc7; }
+
+.payment-status-display.partial {
+  border-color: #e3c8f2;
+  background: #f8f0fc;
+  color: #8445a6;
+}
+.payment-status-display.partial .payment-status-dot { background: #9a58bb; }
+
+/* Keep every Payment status on one centered vertical axis. */
+.payments-table th:nth-child(6),
+.payments-table td:nth-child(6) {
+  text-align: center !important;
+}
+
+.payment-status-cell {
+  width: 100% !important;
+  min-height: 28px;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+}
+
+.payment-status-display,
+.payment-status-control {
+  width: 96px !important;
+  min-width: 96px !important;
+  max-width: 96px !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+.payment-status-display.not-set {
+  border-style: dashed;
+  border-color: #d5dce3;
+  background: #f8fafb;
+  color: #8b96a1;
+}
+
+.payment-status-display.not-set .payment-status-dot {
+  background: #aeb7c0;
+}
+
+@media (max-width: 760px) {
+  .payment-status-cell { justify-content: flex-end !important; }
+  .payment-status-display,
+  .payment-status-control { margin-right: 0 !important; }
+}

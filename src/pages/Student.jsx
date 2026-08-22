@@ -31,6 +31,7 @@ const initialForm = {
   rollNo: "",
   parentName: "",
   dateOfBirth: "",
+  gender: "",
   phone: "",
   alternatePhone: "",
   email: "",
@@ -198,6 +199,10 @@ const Students = () => {
       (result, student) => {
         result.totalStudents += 1;
 
+        if (student.isActive !== false) {
+          result.activeStudents += 1;
+        }
+
         result.totalFees += Number(
           student.totalFee || 0
         );
@@ -214,6 +219,7 @@ const Students = () => {
       },
       {
         totalStudents: 0,
+        activeStudents: 0,
         totalFees: 0,
         totalPaid: 0,
         totalPending: 0,
@@ -242,6 +248,7 @@ const Students = () => {
       dateOfBirth: student.dateOfBirth
         ? new Date(student.dateOfBirth).toISOString().split("T")[0]
         : "",
+      gender: student.gender || "",
       phone: student.phone || "",
       alternatePhone:
         student.alternatePhone || "",
@@ -366,6 +373,10 @@ const Students = () => {
         errors.dateOfBirth =
           "Enter a valid date of birth";
       }
+    }
+
+    if (!formData.gender) {
+      errors.gender = "Please select the student's gender";
     }
 
     if (!formData.phone.trim()) {
@@ -507,6 +518,7 @@ const Students = () => {
       return "dateOfBirth";
     }
     if (text.includes("student name")) return "studentName";
+    if (text.includes("gender")) return "gender";
     if (text.includes("course")) return "course";
 
     if (text.includes("payment method")) {
@@ -527,6 +539,7 @@ const Students = () => {
       rollNo: formData.rollNo.trim(),
       parentName: formData.parentName.trim(),
       dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
       phone: formData.phone.trim(),
       alternatePhone:
         formData.alternatePhone.trim() || undefined,
@@ -851,50 +864,43 @@ const Students = () => {
     <div className="students-page">
       
 
-      <div className="student-summary-grid">
-        <div className="student-summary-card">
-          <div className="summary-icon">
-            <FiUsers />
+      <div className="student-payment-summary-grid">
+        <article className="student-payment-summary-card">
+          <div className="student-payment-summary-icon"><FiUsers /></div>
+          <div>
+            <span>Total Students</span>
+            <strong>{summary.totalStudents}</strong>
+            <small>Registered students</small>
           </div>
+        </article>
 
-          <div className="summary-content">
-            <span>
-              Total Students
-            </span>
-
-            <strong>
-              {summary.totalStudents}
-            </strong>
-
-            <small>
-              Registered students
-            </small>
-          </div>
-        </div>
-
-        <div className="student-summary-card">
-          <div className="summary-icon">
-            <FiBookOpen />
-          </div>
-
-          <div className="summary-content">
+        <article className="student-payment-summary-card">
+          <div className="student-payment-summary-icon"><FiBookOpen /></div>
+          <div>
             <span>Courses</span>
-
-            <strong>
-              {academicCourses.length || studentCourses.length}
-            </strong>
-
-            <small>
-              Active course categories
-            </small>
+            <strong>{academicCourses.length || studentCourses.length}</strong>
+            <small>Active course categories</small>
           </div>
-        </div>
+        </article>
 
+        <article className="student-payment-summary-card">
+          <div className="student-payment-summary-icon"><FiCalendar /></div>
+          <div>
+            <span>Batches</span>
+            <strong>{academicBatches.length}</strong>
+            <small>Available batch timings</small>
+          </div>
+        </article>
 
+        <article className="student-payment-summary-card">
+          <div className="student-payment-summary-icon"><FiUser /></div>
+          <div>
+            <span>Active Students</span>
+            <strong>{summary.activeStudents}</strong>
+            <small>Currently active records</small>
+          </div>
+        </article>
       </div>
-
-      
-
       <section className="students-list-section">
         <div className="students-toolbar">
           <div className="student-search">
@@ -1065,6 +1071,7 @@ const Students = () => {
                     <th>Student</th>
                     <th>Roll No</th>
                     <th>Course</th>
+                    <th>Gender</th>
                     <th>Phone</th>
                     <th>Aadhaar Number</th>
                     <th>Actions</th>
@@ -1123,6 +1130,10 @@ const Students = () => {
                               student.course
                             }
                           </span>
+                        </td>
+
+                        <td>
+                          {student.gender ? student.gender.charAt(0).toUpperCase() + student.gender.slice(1) : "-"}
                         </td>
 
                         <td>
@@ -1227,9 +1238,22 @@ const Students = () => {
                       setNewCourseName(event.target.value)
                     }
                     placeholder="Example: NEET"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        handleAddCourse();
+                      }
+                    }}
                   />
 
-
+                  <button
+                    type="button"
+                    className="setup-add-btn"
+                    onClick={handleAddCourse}
+                    disabled={isSetupSaving}
+                  >
+                    <FiPlus /> Add Course
+                  </button>
                 </div>
 
                 <div className="setup-items">
@@ -1299,7 +1323,14 @@ const Students = () => {
                     placeholder="End - 11:00 AM"
                   />
 
-
+                  <button
+                    type="button"
+                    className="setup-add-btn"
+                    onClick={handleAddBatch}
+                    disabled={isSetupSaving}
+                  >
+                    <FiPlus /> Add Batch
+                  </button>
                 </div>
 
                 <div className="setup-items">
@@ -1508,6 +1539,31 @@ const Students = () => {
                     {formErrors.dateOfBirth && (
                       <small className="form-error-text">
                         {formErrors.dateOfBirth}
+                      </small>
+                    )}
+                  </div>
+
+                  <div className="student-form-group">
+                    <label>
+                      Gender <span>*</span>
+                    </label>
+
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      required
+                      className={formErrors.gender ? "input-error" : ""}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="others">Others</option>
+                    </select>
+
+                    {formErrors.gender && (
+                      <small className="form-error-text">
+                        {formErrors.gender}
                       </small>
                     )}
                   </div>
@@ -1874,6 +1930,12 @@ const Students = () => {
                     label="Date of Birth"
                     value={formatDate(selectedStudent.dateOfBirth)}
                     icon={<FiCalendar />}
+                  />
+
+                  <ProfileDetail
+                    label="Gender"
+                    value={selectedStudent.gender ? selectedStudent.gender.charAt(0).toUpperCase() + selectedStudent.gender.slice(1) : "-"}
+                    icon={<FiUser />}
                   />
 
                   <ProfileDetail

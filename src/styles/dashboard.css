@@ -908,3 +908,6 @@
     animation: none;
   }
 }
+/* Match the compact Payments summary card height. */
+.dashboard-summary-card { height: 72px; min-height: 72px; padding: 10px 12px; }
+.dashboard-summary-icon { width: 34px; height: 34px; flex: 0 0 34px; }

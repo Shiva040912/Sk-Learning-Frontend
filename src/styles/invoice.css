@@ -1736,3 +1736,180 @@
     min-width: 55px !important;
   }
 }
+
+
+/* =========================================================
+   MONTHLY / PARTIAL INVOICE EXTENSIONS
+   ========================================================= */
+
+.sk-invoice-document.compact-invoice {
+  min-height: 1123px;
+  height: auto;
+  overflow: visible;
+}
+
+.compact-installment-block {
+  margin: 0 30px 20px;
+  padding: 14px;
+  border: 1px solid #e2e6ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.compact-installment-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.compact-installment-heading > div:first-child strong,
+.compact-installment-heading > div:first-child span {
+  display: block;
+}
+
+.compact-installment-heading > div:first-child strong {
+  color: #2f3943;
+  font-size: 11px;
+}
+
+.compact-installment-heading > div:first-child span {
+  margin-top: 3px;
+  color: #89929b;
+  font-size: 7px;
+}
+
+.compact-current-payable {
+  min-width: 150px;
+  padding: 8px 10px;
+  border: 1px solid #e1bd55;
+  border-radius: 7px;
+  background: #fff9e7;
+  text-align: right;
+}
+
+.compact-current-payable span,
+.compact-current-payable strong {
+  display: block;
+}
+
+.compact-current-payable span {
+  color: #947000;
+  font-size: 6.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.compact-current-payable strong {
+  margin-top: 3px;
+  color: #7d5b00;
+  font-size: 11px;
+}
+
+.compact-installment-table {
+  overflow: hidden;
+  border: 1px solid #e2e6ea;
+  border-radius: 7px;
+}
+
+.compact-installment-head,
+.compact-installment-row,
+.compact-partial-history-head,
+.compact-partial-history-row {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 0.8fr 1fr;
+  align-items: center;
+}
+
+.compact-installment-head,
+.compact-partial-history-head {
+  min-height: 34px;
+  background: #f4f6f8;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.compact-installment-head span,
+.compact-partial-history-head span {
+  padding: 0 10px;
+  color: #78828c;
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.compact-installment-row,
+.compact-partial-history-row {
+  min-height: 37px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.compact-installment-row:last-child,
+.compact-partial-history-row:last-child {
+  border-bottom: 0;
+}
+
+.compact-installment-row > *,
+.compact-partial-history-row > * {
+  padding: 8px 10px;
+  color: #4a5661;
+  font-size: 7.5px;
+}
+
+.compact-installment-row.current {
+  background: #fff9e7;
+}
+
+.compact-installment-row.paid {
+  background: #f5fbf7;
+}
+
+.compact-installment-status {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 6.5px;
+  font-weight: 800;
+}
+
+.compact-installment-status.paid {
+  border: 1px solid #c7e4d0;
+  background: #edf9f1;
+  color: #31844e;
+}
+
+.compact-installment-status.unpaid {
+  border: 1px solid #ead69c;
+  background: #fff8e7;
+  color: #9a7000;
+}
+
+@media (max-width: 560px) {
+  .compact-installment-block {
+    margin-right: 15px;
+    margin-left: 15px;
+  }
+
+  .compact-installment-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .compact-current-payable {
+    min-width: 0;
+    text-align: left;
+  }
+}
+
+@media print {
+  .compact-installment-block {
+    break-inside: avoid;
+  }
+
+  .sk-invoice-document.compact-invoice {
+    min-height: 297mm;
+    height: auto;
+    overflow: visible;
+  }
+}

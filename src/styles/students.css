@@ -3807,3 +3807,230 @@
   }
 }
 
+
+/* Match the compact Payments summary card height. */
+.student-summary-card { height: 72px !important; min-height: 72px !important; padding: 10px 12px !important; }
+.student-summary-card .summary-icon { width: 34px !important; height: 34px !important; flex: 0 0 34px !important; }
+
+/* Final desktop student layout: compact cards and eight columns that fit the viewport. */
+.student-summary-card,
+.student-summary-card:first-child {
+  height: 72px !important;
+  min-height: 72px !important;
+  padding: 10px 12px !important;
+  gap: 10px !important;
+}
+
+.student-summary-card .summary-icon {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  font-size: 14px !important;
+}
+
+.students-table {
+  width: 100% !important;
+  min-width: 980px !important;
+  table-layout: fixed !important;
+}
+
+.students-table th:nth-child(1),
+.students-table td:nth-child(1) { width: 6% !important; }
+.students-table th:nth-child(2),
+.students-table td:nth-child(2) { width: 22% !important; }
+.students-table th:nth-child(3),
+.students-table td:nth-child(3) { width: 12% !important; }
+.students-table th:nth-child(4),
+.students-table td:nth-child(4) { width: 12% !important; }
+.students-table th:nth-child(5),
+.students-table td:nth-child(5) { width: 9% !important; }
+.students-table th:nth-child(6),
+.students-table td:nth-child(6) { width: 14% !important; }
+.students-table th:nth-child(7),
+.students-table td:nth-child(7) { width: 17% !important; }
+.students-table th:nth-child(8),
+.students-table td:nth-child(8) {
+  width: 8% !important;
+  min-width: 92px !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 10px !important;
+}
+
+.students-table td:nth-child(6) {
+  font-size: 10px !important;
+  font-weight: 650 !important;
+}
+
+.student-actions {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+}
+
+/* Keep Phone and Aadhaar visually grouped without a large empty gap. */
+.students-table th:nth-child(1),
+.students-table td:nth-child(1) { width: 5% !important; }
+.students-table th:nth-child(2),
+.students-table td:nth-child(2) { width: 23% !important; }
+.students-table th:nth-child(3),
+.students-table td:nth-child(3) { width: 12% !important; }
+.students-table th:nth-child(4),
+.students-table td:nth-child(4) { width: 12% !important; }
+.students-table th:nth-child(5),
+.students-table td:nth-child(5) { width: 9% !important; }
+.students-table th:nth-child(6),
+.students-table td:nth-child(6) { width: 15% !important; }
+.students-table th:nth-child(7),
+.students-table td:nth-child(7) {
+  width: 16% !important;
+  text-align: left !important;
+}
+.students-table th:nth-child(8),
+.students-table td:nth-child(8) { width: 8% !important; }
+
+/* Settings-style Course and Batch add controls. */
+.setup-add-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+
+.setup-batch-grid {
+  grid-template-columns: minmax(150px, 1.35fr) minmax(120px, 1fr) minmax(120px, 1fr) auto !important;
+}
+
+.setup-add-btn {
+  min-width: 118px;
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: #ffb800;
+  color: #182231;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.setup-add-btn:hover { background: #f2ad00; }
+.setup-add-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .setup-batch-grid { grid-template-columns: 1fr 1fr !important; }
+  .setup-batch-grid input:first-child,
+  .setup-batch-grid .setup-add-btn { grid-column: 1 / -1; }
+}
+
+/* Keep setup controls inside each half of the modal. */
+.setup-modal,
+.setup-modal-body,
+.setup-section {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.setup-modal-body {
+  overflow-x: hidden !important;
+}
+
+.setup-add-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  width: 100% !important;
+}
+
+.setup-add-row input,
+.setup-batch-grid input {
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.setup-batch-grid {
+  width: 100% !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+.setup-batch-grid input:first-child,
+.setup-batch-grid .setup-add-btn {
+  grid-column: 1 / -1 !important;
+}
+
+.setup-batch-grid .setup-add-btn {
+  width: 100% !important;
+}
+
+.setup-add-btn {
+  height: 36px !important;
+  min-width: 105px !important;
+  padding: 0 12px !important;
+  font-size: 9px !important;
+}
+
+@media (max-width: 700px) {
+  .setup-add-row { grid-template-columns: 1fr !important; }
+  .setup-add-row .setup-add-btn { width: 100% !important; }
+}
+
+/* Student overview cards use the same compact geometry as Payments. */
+.student-payment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.student-payment-summary-card {
+  min-width: 0;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e1e5e9;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.025);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.student-payment-summary-card:hover {
+  border-color: #e3b63f;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.05);
+  transform: translateY(-1px);
+}
+
+.student-payment-summary-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5bd4e;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #b98500;
+  font-size: 14px;
+}
+
+.student-payment-summary-card > div:last-child { min-width: 0; }
+.student-payment-summary-card span,
+.student-payment-summary-card strong,
+.student-payment-summary-card small { display: block; }
+.student-payment-summary-card span { color: #727d89; font-size: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .45px; }
+.student-payment-summary-card strong { margin-top: 3px; color: #202a35; font-size: 14px; line-height: 1.1; }
+.student-payment-summary-card small { margin-top: 1px; overflow: hidden; color: #939ca6; font-size: 6px; white-space: nowrap; text-overflow: ellipsis; }
+
+@media (max-width: 900px) {
+  .student-payment-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .student-payment-summary-grid { gap: 7px; }
+  .student-payment-summary-card { min-height: 68px; gap: 8px; padding: 8px 9px; }
+  .student-payment-summary-icon { width: 31px; height: 31px; flex-basis: 31px; font-size: 13px; }
+}

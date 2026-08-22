@@ -23,9 +23,19 @@ import api from "../services/axios";
 import LoadingLogo from "../components/LoadingLogo";
 import "../styles/payments.css";
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
 const initialFeeForm = {
   totalFee: "",
   feeType: "",
+  feeStartingDate: "",
   feeEndingDate: "",
   selectedMonths: "",
 };
@@ -42,6 +52,10 @@ const Payments = () => {
     partialFeeEnabled: true,
     minimumPartialAmount: 10000,
     yearlyFeeEnabled: true,
+    commonFeeSetupEnabled: true,
+    courseWiseFeeSetupEnabled: true,
+    recurringFeeStartDay: 1,
+    recurringFeeDueDay: 10,
   });
 
   const [search, setSearch] = useState("");
@@ -59,6 +73,7 @@ const Payments = () => {
 
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReverseModal, setShowReverseModal] = useState(false);
 
@@ -78,6 +93,12 @@ const Payments = () => {
   const [bulkCourse, setBulkCourse] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
+
+  const [detailsPaymentMethod, setDetailsPaymentMethod] = useState("");
+  const [monthlyPaymentMethod, setMonthlyPaymentMethod] = useState("");
+  const [detailsPartialAmount, setDetailsPartialAmount] = useState("");
+  const [isDetailsPaymentSaving, setIsDetailsPaymentSaving] = useState(false);
+  const [isHistoryClearing, setIsHistoryClearing] = useState(false);
 
   const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -174,10 +195,25 @@ const Payments = () => {
         paidAmount: Number(student.paidAmount || 0),
         pendingAmount: Number(student.pendingAmount || 0),
         feeType: student.feeType || "",
+        feeStartingDate: student.feeStartingDate || null,
         feeEndingDate: student.feeEndingDate || null,
         feeSetupCompleted: Boolean(student.feeSetupCompleted),
         selectedMonths: Number(student.selectedMonths || 0),
         monthlyAmount: Number(student.monthlyAmount || 0),
+        monthlyInstallments: Array.isArray(student.monthlyInstallments)
+          ? student.monthlyInstallments
+              .map((installment) => ({
+                ...installment,
+                installmentNumber: Number(installment.installmentNumber || 0),
+                amount: Number(installment.amount || 0),
+                status: installment.status === "paid" ? "paid" : "unpaid",
+              }))
+              .sort(
+                (a, b) =>
+                  Number(a.installmentNumber || 0) -
+                  Number(b.installmentNumber || 0),
+              )
+          : [],
         paidMonths: Number(student.paidMonths || 0),
         paymentStatus: ["unpaid", "partial", "paid"].includes(
           student.paymentStatus,
@@ -326,6 +362,7 @@ const Payments = () => {
 
   const getEmptyFeeForm = () => ({
     ...initialFeeForm,
+    feeStartingDate: getTodayDateString(),
     selectedMonths: String(feeSettings.defaultMonths || 12),
   });
 
@@ -335,6 +372,9 @@ const Payments = () => {
         ? String(student.totalFee)
         : "",
     feeType: student?.feeType || "",
+    feeStartingDate: student?.feeStartingDate
+      ? new Date(student.feeStartingDate).toISOString().split("T")[0]
+      : getTodayDateString(),
     feeEndingDate: student?.feeEndingDate
       ? new Date(student.feeEndingDate).toISOString().split("T")[0]
       : "",
@@ -373,10 +413,34 @@ const Payments = () => {
   const handleFeeSetupModeChange = (mode) => {
     if (isFeeSaving) return;
 
+    if (
+      mode === "common" &&
+      !feeSettings.commonFeeSetupEnabled
+    ) {
+      toast.error("Common fee setup is disabled in Settings");
+      return;
+    }
+
+    if (
+      mode === "course" &&
+      !feeSettings.courseWiseFeeSetupEnabled
+    ) {
+      toast.error("Course Wise fee setup is disabled in Settings");
+      return;
+    }
+
     setFeeSetupMode(mode);
     setBulkCourse("");
     setSelectedStudent(null);
-    setFeeForm(getEmptyFeeForm());
+
+    const nextForm = getEmptyFeeForm();
+
+    if (mode === "common" || mode === "course") {
+      nextForm.feeType = "yearly";
+      nextForm.selectedMonths = "";
+    }
+
+    setFeeForm(nextForm);
   };
 
   const handleIndividualStudentChange = (event) => {
@@ -409,6 +473,14 @@ const Payments = () => {
         next.selectedMonths = "";
       }
 
+      if (
+        name === "feeStartingDate" &&
+        next.feeEndingDate &&
+        value > next.feeEndingDate
+      ) {
+        next.feeEndingDate = "";
+      }
+
       return next;
     });
   };
@@ -419,10 +491,199 @@ const Payments = () => {
     const totalFee = Number(feeForm.totalFee);
     const months = Number(feeForm.selectedMonths);
 
-    if (!totalFee || !months) return 0;
+    if (!Number.isInteger(totalFee) || !Number.isInteger(months) || months < 1) {
+      return 0;
+    }
 
-    return Number((totalFee / months).toFixed(2));
+    return Math.floor(totalFee / months);
   }, [feeForm.totalFee, feeForm.feeType, feeForm.selectedMonths]);
+
+  const monthlySetupPreview = useMemo(() => {
+    if (feeForm.feeType !== "monthly") return [];
+
+    const totalFee = Number(feeForm.totalFee);
+    const months = Number(feeForm.selectedMonths);
+
+    if (
+      !Number.isFinite(totalFee) ||
+      totalFee <= 0 ||
+      !Number.isInteger(totalFee) ||
+      !Number.isInteger(months) ||
+      months < 1 ||
+      totalFee < months
+    ) {
+      return [];
+    }
+
+    const baseAmount = Math.floor(totalFee / months);
+    const finalAmount = totalFee - baseAmount * (months - 1);
+
+    return Array.from({ length: months }, (_, index) => ({
+      installmentNumber: index + 1,
+      amount: index === months - 1 ? finalAmount : baseAmount,
+    }));
+  }, [feeForm.totalFee, feeForm.feeType, feeForm.selectedMonths]);
+
+  const getCurrentMonthlyInstallment = (student) => {
+    if (student?.feeType !== "monthly") return null;
+
+    return (
+      (student.monthlyInstallments || []).find(
+        (installment) => installment.status !== "paid",
+      ) || null
+    );
+  };
+
+  const syncSelectedStudentFromPaymentResult = (result) => {
+    const responseStudent = result?.student;
+    const payment = result?.payment;
+
+    if (!responseStudent) return;
+
+    setSelectedStudent((current) => {
+      if (!current) return current;
+
+      const nextRecords = payment
+        ? [
+            payment,
+            ...(current.paymentRecords || []).filter(
+              (record) => String(record._id) !== String(payment._id),
+            ),
+          ]
+        : current.paymentRecords || [];
+
+      return {
+        ...current,
+        ...responseStudent,
+        monthlyInstallments: Array.isArray(responseStudent.monthlyInstallments)
+          ? responseStudent.monthlyInstallments
+          : current.monthlyInstallments || [],
+        paymentRecords: nextRecords,
+        paymentMethod:
+          payment?.paymentMethod ||
+          responseStudent.paymentMethod ||
+          current.paymentMethod ||
+          "",
+        paymentDate:
+          payment?.paymentDate ||
+          responseStudent.paymentDate ||
+          current.paymentDate ||
+          null,
+      };
+    });
+  };
+
+  const handleMonthlyInstallmentPayment = async (installment) => {
+    if (!selectedStudent || selectedStudent.feeType !== "monthly") return;
+
+    if (installment.status === "paid") return;
+
+    const currentInstallment = getCurrentMonthlyInstallment(selectedStudent);
+
+    if (
+      !currentInstallment ||
+      Number(currentInstallment.installmentNumber) !==
+        Number(installment.installmentNumber)
+    ) {
+      toast.error(
+        currentInstallment
+          ? `Month ${currentInstallment.installmentNumber} must be paid first`
+          : "No unpaid installment available",
+      );
+      return;
+    }
+
+    if (!monthlyPaymentMethod) {
+      toast.error("Select payment method");
+      return;
+    }
+
+    try {
+      setIsDetailsPaymentSaving(true);
+
+      const response = await api.post(
+        `/payments/student/${selectedStudent._id}/collect`,
+        {
+          paymentMethod: monthlyPaymentMethod,
+          installmentNumber: Number(installment.installmentNumber),
+        },
+      );
+
+      toast.success(
+        response.data?.message ||
+          `Month ${installment.installmentNumber} payment collected`,
+      );
+
+      syncSelectedStudentFromPaymentResult(response.data || {});
+      setMonthlyPaymentMethod("");
+
+      await fetchPaymentPageData();
+    } catch (error) {
+      console.error(
+        "Monthly installment payment error:",
+        error?.response?.data || error,
+      );
+
+      toast.error(
+        getErrorMessage(error, "Failed to collect monthly installment"),
+      );
+    } finally {
+      setIsDetailsPaymentSaving(false);
+    }
+  };
+
+  const handlePartialPaymentFromDetails = async () => {
+    if (!selectedStudent || selectedStudent.feeType !== "partial") return;
+
+    const amount = Number(detailsPartialAmount);
+    const pendingAmount = Number(selectedStudent.pendingAmount || 0);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a valid paid amount");
+      return;
+    }
+
+    if (amount > pendingAmount) {
+      toast.error(
+        `Payment cannot be greater than balance ₹${formatMoney(pendingAmount)}`,
+      );
+      return;
+    }
+
+    if (!detailsPaymentMethod) {
+      toast.error("Select payment method");
+      return;
+    }
+
+    try {
+      setIsDetailsPaymentSaving(true);
+
+      const response = await api.post(
+        `/payments/student/${selectedStudent._id}/collect`,
+        {
+          paymentMethod: detailsPaymentMethod,
+          amount,
+        },
+      );
+
+      toast.success(response.data?.message || "Payment added successfully");
+
+      syncSelectedStudentFromPaymentResult(response.data || {});
+      setDetailsPartialAmount("");
+      setDetailsPaymentMethod("");
+
+      await fetchPaymentPageData();
+    } catch (error) {
+      console.error(
+        "Partial payment error:",
+        error?.response?.data || error,
+      );
+
+      toast.error(getErrorMessage(error, "Failed to add partial payment"));
+    } finally {
+      setIsDetailsPaymentSaving(false);
+    }
+  };
 
   const handleFeeSetup = async (event) => {
     event.preventDefault();
@@ -449,6 +710,16 @@ const Payments = () => {
       return;
     }
 
+    if (feeSetupMode !== "individual" && feeForm.feeType !== "yearly") {
+      toast.error("Common and Course Wise fee setup use Yearly payment only");
+      return;
+    }
+
+    if (feeForm.feeType === "monthly" && !Number.isInteger(totalFee)) {
+      toast.error("Monthly total fee must be a whole rupee amount");
+      return;
+    }
+
     if (!getFeeTypeEnabled(feeForm.feeType)) {
       toast.error(
         `${formatFeeType(feeForm.feeType)} payment is disabled in Settings`,
@@ -456,31 +727,53 @@ const Payments = () => {
       return;
     }
 
-    if (!feeForm.feeEndingDate) {
-      toast.error("Select fees ending date");
-      return;
-    }
-
     const payload = {
       totalFee,
       feeType: feeForm.feeType,
-      feeEndingDate: feeForm.feeEndingDate,
     };
 
-    if (feeForm.feeType === "monthly") {
-      const months = Number(feeForm.selectedMonths);
-      const minimumMonths = Number(feeSettings.minimumMonths || 3);
-      const maximumMonths = Number(feeSettings.maximumMonths || 12);
-
-      if (!Number.isInteger(months)) {
-        toast.error("Select a valid number of months");
+    if (feeForm.feeType === "yearly") {
+      if (!feeForm.feeStartingDate) {
+        toast.error("Select fees starting date");
         return;
       }
 
-      if (months < minimumMonths || months > maximumMonths) {
-        toast.error(
-          `Monthly duration must be between ${minimumMonths} and ${maximumMonths} months`,
-        );
+      if (!feeForm.feeEndingDate) {
+        toast.error("Select fees ending date");
+        return;
+      }
+
+      const todayDate = getTodayDateString();
+
+      if (feeForm.feeStartingDate < todayDate) {
+        toast.error("Fees starting date cannot be in the past");
+        return;
+      }
+
+      if (feeForm.feeEndingDate < todayDate) {
+        toast.error("Fees ending date cannot be in the past");
+        return;
+      }
+
+      if (feeForm.feeEndingDate < feeForm.feeStartingDate) {
+        toast.error("Fees ending date cannot be before the starting date");
+        return;
+      }
+
+      payload.feeStartingDate = feeForm.feeStartingDate;
+      payload.feeEndingDate = feeForm.feeEndingDate;
+    }
+
+    if (feeForm.feeType === "monthly") {
+      const months = Number(feeForm.selectedMonths);
+
+      if (!Number.isInteger(months) || months < 1) {
+        toast.error("Number of months must be a positive whole number");
+        return;
+      }
+
+      if (Math.round(totalFee * 100) < months) {
+        toast.error("Number of months is too high for the configured total fee");
         return;
       }
 
@@ -569,12 +862,7 @@ const Payments = () => {
     setSelectedPaymentMethod("");
 
     if (student.feeType === "partial") {
-      const suggested = Math.min(
-        Number(feeSettings.minimumPartialAmount || 0),
-        Number(student.pendingAmount || 0),
-      );
-
-      setPartialAmount(suggested > 0 ? String(suggested) : "");
+      setPartialAmount("");
     } else {
       setPartialAmount("");
     }
@@ -634,8 +922,6 @@ const Payments = () => {
     if (selectedStudent.feeType === "partial") {
       const amount = Number(partialAmount);
       const pendingAmount = Number(selectedStudent.pendingAmount || 0);
-      const minimumPartial = Number(feeSettings.minimumPartialAmount || 0);
-
       if (!Number.isFinite(amount) || amount <= 0) {
         toast.error("Enter a valid partial payment amount");
         return;
@@ -650,12 +936,6 @@ const Payments = () => {
         return;
       }
 
-      if (amount < minimumPartial && amount !== pendingAmount) {
-        toast.error(
-          `Minimum partial payment is ₹${formatMoney(minimumPartial)}`,
-        );
-        return;
-      }
 
       payload.amount = amount;
     }
@@ -944,11 +1224,98 @@ const Payments = () => {
   const openStudentDetails = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
+    setShowHistoryModal(false);
+    setDetailsPaymentMethod("");
+    setDetailsPartialAmount("");
   };
 
   const closeStudentDetails = () => {
+    if (isDetailsPaymentSaving || isHistoryClearing) return;
+
     setShowDetailsModal(false);
+    setShowHistoryModal(false);
     setSelectedStudent(null);
+    setDetailsPaymentMethod("");
+    setMonthlyPaymentMethod("");
+    setDetailsPartialAmount("");
+  };
+
+  const openPaymentHistory = () => {
+    if (!selectedStudent?.feeSetupCompleted) {
+      toast.error("Fee setup is not completed for this student");
+      return;
+    }
+
+    setShowDetailsModal(false);
+    setShowHistoryModal(true);
+    setDetailsPaymentMethod("");
+    setMonthlyPaymentMethod("");
+    setDetailsPartialAmount("");
+  };
+
+  const closePaymentHistory = () => {
+    if (isDetailsPaymentSaving || isHistoryClearing) return;
+
+    setShowHistoryModal(false);
+    setShowDetailsModal(true);
+    setDetailsPaymentMethod("");
+    setMonthlyPaymentMethod("");
+    setDetailsPartialAmount("");
+  };
+
+  const handleClearPaymentHistory = async () => {
+    if (!selectedStudent) return;
+
+    if ((selectedStudent.paymentRecords || []).length === 0) {
+      toast.success("Payment history is already empty");
+      return;
+    }
+
+    try {
+      setIsHistoryClearing(true);
+
+      const response = await api.delete(
+        `/payments/student/${selectedStudent._id}/history`,
+      );
+
+      toast.success(
+        response.data?.message || "Payment history cleared successfully",
+      );
+
+      setSelectedStudent((current) =>
+        current
+          ? {
+              ...current,
+              paymentRecords: [],
+              paymentMethod: "",
+              paymentDate: null,
+              monthlyInstallments: (current.monthlyInstallments || []).map(
+                (installment) => ({
+                  ...installment,
+                  paymentId: null,
+                  paidAt:
+                    installment.status === "paid"
+                      ? null
+                      : installment.paidAt,
+                }),
+              ),
+            }
+          : current,
+      );
+
+      await fetchPaymentPageData();
+    } catch (error) {
+      console.error(
+        "Clear payment history error:",
+        error?.response?.data || error,
+      );
+
+      toast.error(
+        getErrorMessage(error, "Failed to clear payment history"),
+      );
+    } finally {
+      setIsHistoryClearing(false);
+    }
   };
 
   return (
@@ -1183,25 +1550,55 @@ const Payments = () => {
                       </td>
 
                       <td data-label="Status">
-                        <button
-                          type="button"
-                          className={`payment-status-control ${student.paymentStatus}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openPaymentModal(student);
-                          }}
-                          disabled={
-                            !student.feeSetupCompleted ||
-                            student.paymentStatus === "paid"
-                          }
-                        >
-                          <span className="payment-switch-track">
-                            <span className="payment-switch-thumb" />
-                          </span>
-                          <span className="payment-switch-label">
-                            {getStatusLabel(student.paymentStatus)}
-                          </span>
-                        </button>
+                        <div className="payment-status-cell">
+                        {student.feeType === "yearly" ? (
+                          <button
+                            type="button"
+                            className={`payment-status-control ${student.paymentStatus}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openPaymentModal(student);
+                            }}
+                            disabled={
+                              !student.feeSetupCompleted ||
+                              student.paymentStatus === "paid"
+                            }
+                          >
+                            <span className="payment-switch-track">
+                              <span className="payment-switch-thumb" />
+                            </span>
+                            <span className="payment-switch-label">
+                              {getStatusLabel(student.paymentStatus)}
+                            </span>
+                          </button>
+                        ) : (
+                          <div
+                            className={`payment-status-display ${
+                              student.paymentStatus === "paid"
+                                ? "paid"
+                                : student.feeSetupCompleted
+                                  ? student.feeType || "unpaid"
+                                  : "not-set"
+                            }`}
+                            title={
+                              student.feeType === "monthly"
+                                ? "Open student details to manage monthly installments"
+                                : student.feeType === "partial"
+                                  ? "Open student details to add partial payments"
+                                  : ""
+                            }
+                          >
+                            <span className="payment-status-dot" />
+                            <span>
+                              {student.paymentStatus === "paid"
+                                ? "Paid"
+                                : student.feeSetupCompleted
+                                  ? formatFeeType(student.feeType)
+                                  : "Not Set"}
+                            </span>
+                          </div>
+                        )}
+                        </div>
                       </td>
 
                       <td data-label="Reverse">
@@ -1300,12 +1697,19 @@ const Payments = () => {
                     feeSetupMode === "common" ? "active" : ""
                   }`}
                   onClick={() => handleFeeSetupModeChange("common")}
-                  disabled={isFeeSaving}
+                  disabled={
+                    isFeeSaving ||
+                    !feeSettings.commonFeeSetupEnabled
+                  }
                 >
                   <span>02</span>
                   <div>
                     <strong>Common</strong>
-                    <small>All students</small>
+                    <small>
+                      {feeSettings.commonFeeSetupEnabled
+                        ? "All eligible students"
+                        : "Disabled in Settings"}
+                    </small>
                   </div>
                 </button>
 
@@ -1315,12 +1719,19 @@ const Payments = () => {
                     feeSetupMode === "course" ? "active" : ""
                   }`}
                   onClick={() => handleFeeSetupModeChange("course")}
-                  disabled={isFeeSaving}
+                  disabled={
+                    isFeeSaving ||
+                    !feeSettings.courseWiseFeeSetupEnabled
+                  }
                 >
                   <span>03</span>
                   <div>
                     <strong>Course Wise</strong>
-                    <small>Selected course</small>
+                    <small>
+                      {feeSettings.courseWiseFeeSetupEnabled
+                        ? "Eligible students in course"
+                        : "Disabled in Settings"}
+                    </small>
                   </div>
                 </button>
               </div>
@@ -1424,7 +1835,7 @@ const Payments = () => {
                   <input
                     type="number"
                     min="1"
-                    step="0.01"
+                    step={feeForm.feeType === "monthly" ? "1" : "0.01"}
                     name="totalFee"
                     value={feeForm.totalFee}
                     onChange={handleFeeFormChange}
@@ -1434,96 +1845,164 @@ const Payments = () => {
 
                 <div className="payment-form-group">
                   <label>Fee Type *</label>
-                  <select
-                    name="feeType"
-                    value={feeForm.feeType}
-                    onChange={handleFeeFormChange}
-                  >
-                    <option value="">Select fee type</option>
-                    <option
-                      value="monthly"
-                      disabled={!feeSettings.monthlyFeeEnabled}
+
+                  {feeSetupMode === "individual" ? (
+                    <select
+                      name="feeType"
+                      value={feeForm.feeType}
+                      onChange={handleFeeFormChange}
                     >
-                      Monthly
-                    </option>
-                    <option
-                      value="partial"
-                      disabled={!feeSettings.partialFeeEnabled}
-                    >
-                      Partial
-                    </option>
-                    <option
-                      value="yearly"
-                      disabled={!feeSettings.yearlyFeeEnabled}
-                    >
-                      Yearly
-                    </option>
-                  </select>
+                      <option value="">Select fee type</option>
+                      <option
+                        value="monthly"
+                        disabled={!feeSettings.monthlyFeeEnabled}
+                      >
+                        Monthly
+                      </option>
+                      <option
+                        value="partial"
+                        disabled={!feeSettings.partialFeeEnabled}
+                      >
+                        Partial
+                      </option>
+                      <option
+                        value="yearly"
+                        disabled={!feeSettings.yearlyFeeEnabled}
+                      >
+                        Yearly
+                      </option>
+                    </select>
+                  ) : (
+                    <div className="bulk-yearly-fixed-field">
+                      <strong>Yearly / Full Payment</strong>
+                      <span>
+                        Common and Course Wise setup always use Yearly payment.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {feeForm.feeType === "monthly" && (
                   <div className="payment-form-group">
-                    <label>Payment Duration *</label>
+                    <label>Number of Months *</label>
 
-                    <select
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
                       name="selectedMonths"
                       value={feeForm.selectedMonths}
                       onChange={handleFeeFormChange}
-                    >
-                      {Array.from(
-                        {
-                          length:
-                            Number(feeSettings.maximumMonths || 12) -
-                            Number(feeSettings.minimumMonths || 3) +
-                            1,
-                        },
-                        (_, index) =>
-                          Number(feeSettings.minimumMonths || 3) + index,
-                      ).map((month) => (
-                        <option key={month} value={month}>
-                          {month} Months
-                          {month === Number(feeSettings.defaultMonths)
-                            ? " (Default)"
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Example: 14"
+                      inputMode="numeric"
+                    />
+
+                    <small className="payment-field-hint">
+                      No fixed maximum. Enter the number of monthly installments
+                      required for this student.
+                    </small>
                   </div>
                 )}
 
-                <div className="payment-form-group">
-                  <label>Fees Ending Date *</label>
+                {feeForm.feeType === "yearly" && (
+                  <>
+                    <div className="payment-form-group">
+                      <label>Fees Starting Date *</label>
 
-                  <input
-                    type="date"
-                    name="feeEndingDate"
-                    value={feeForm.feeEndingDate}
-                    onChange={handleFeeFormChange}
-                  />
-                </div>
+                      <input
+                        type="date"
+                        name="feeStartingDate"
+                        value={feeForm.feeStartingDate}
+                        min={getTodayDateString()}
+                        onChange={handleFeeFormChange}
+                      />
+                    </div>
+
+                    <div className="payment-form-group">
+                      <label>Fees Ending Date *</label>
+
+                      <input
+                        type="date"
+                        name="feeEndingDate"
+                        value={feeForm.feeEndingDate}
+                        min={feeForm.feeStartingDate || getTodayDateString()}
+                        onChange={handleFeeFormChange}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {(feeForm.feeType === "monthly" ||
+                  feeForm.feeType === "partial") && (
+                  <div className="payment-form-group settings-cycle-info-field">
+                    <label>Monthly Fee Cycle</label>
+
+                    <div className="payment-common-cycle-box">
+                      <div>
+                        <span>Start Day</span>
+                        <strong>{feeSettings.recurringFeeStartDay}</strong>
+                      </div>
+
+                      <div>
+                        <span>Due / End Day</span>
+                        <strong>{feeSettings.recurringFeeDueDay}</strong>
+                      </div>
+                    </div>
+
+                    <small className="payment-field-hint">
+                      This recurring cycle comes from Settings and repeats every
+                      month for Monthly and Partial students.
+                    </small>
+                  </div>
+                )}
               </div>
 
               {feeForm.feeType === "monthly" && (
-                <div className="fee-rule-preview">
-                  <div>
-                    <span>Selected Duration</span>
-                    <strong>{feeForm.selectedMonths || "-"} Months</strong>
+                <>
+                  <div className="fee-rule-preview">
+                    <div>
+                      <span>Selected Duration</span>
+                      <strong>{feeForm.selectedMonths || "-"} Months</strong>
+                    </div>
+
+                    <div>
+                      <span>First Installment</span>
+                      <strong>
+                        ₹
+                        {formatMoney(
+                          monthlySetupPreview[0]?.amount || monthlyPreview,
+                        )}
+                      </strong>
+                    </div>
                   </div>
 
-                  <div>
-                    <span>Monthly Amount</span>
-                    <strong>₹{formatMoney(monthlyPreview)}</strong>
-                  </div>
-                </div>
+                  {monthlySetupPreview.length > 0 && (
+                    <div className="monthly-setup-preview">
+                      <div className="monthly-setup-preview-title">
+                        <strong>Installment Preview</strong>
+                        <span>{monthlySetupPreview.length} months</span>
+                      </div>
+
+                      <div className="monthly-setup-preview-list">
+                        {monthlySetupPreview.map((installment) => (
+                          <div
+                            key={installment.installmentNumber}
+                            className="monthly-setup-preview-row"
+                          >
+                            <span>Month {installment.installmentNumber}</span>
+                            <strong>₹{formatMoney(installment.amount)}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {feeForm.feeType === "partial" && (
                 <div className="fee-rule-note">
-                  Minimum partial payment will be{" "}
-                  <strong>
-                    ₹{formatMoney(feeSettings.minimumPartialAmount)}
-                  </strong>
-                  . Final remaining balance can be lower than this amount.
+                  Partial mode has no fixed installment count. The admin can add
+                  any received amount until the student's balance becomes ₹0.
                 </div>
               )}
 
@@ -1628,14 +2107,10 @@ const Payments = () => {
                     step="0.01"
                     value={partialAmount}
                     onChange={(event) => setPartialAmount(event.target.value)}
-                    placeholder={`Minimum ₹${formatMoney(
-                      feeSettings.minimumPartialAmount,
-                    )}`}
+                    placeholder="Enter received amount"
                   />
                   <small className="payment-field-hint">
-                    Minimum ₹{formatMoney(feeSettings.minimumPartialAmount)}. If
-                    final pending balance is lower, that exact balance is
-                    allowed.
+                    Enter any received amount up to the current remaining balance.
                   </small>
                 </div>
               )}
@@ -1992,14 +2467,27 @@ const Payments = () => {
                   {selectedStudent.rollNo} • {selectedStudent.course}
                 </p>
               </div>
-              <button
-                type="button"
-                className="payment-modal-close"
-                onClick={closeStudentDetails}
-                aria-label="Close details"
-              >
-                <FiX />
-              </button>
+              <div className="payment-details-header-actions">
+                {selectedStudent.feeSetupCompleted && (
+                  <button
+                    type="button"
+                    className="payment-view-history-btn"
+                    onClick={openPaymentHistory}
+                  >
+                    <FiClock />
+                    <span>View History</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="payment-modal-close"
+                  onClick={closeStudentDetails}
+                  aria-label="Close details"
+                >
+                  <FiX />
+                </button>
+              </div>
             </div>
 
             <div className="payment-details-body">
@@ -2077,36 +2565,273 @@ const Payments = () => {
                 <strong>{formatDate(selectedStudent.paymentDate)}</strong>
               </div>
               <div className="payment-detail-item">
+                <span>Fees Starting Date</span>
+                <strong>{formatDate(selectedStudent.feeStartingDate)}</strong>
+              </div>
+              <div className="payment-detail-item">
                 <span>Fees Ending Date</span>
                 <strong>{formatDate(selectedStudent.feeEndingDate)}</strong>
               </div>
             </div>
 
-            <div className="payment-history-list">
-              <div className="payment-history-title">
-                <strong>Payment History</strong>
-                <span>
-                  {selectedStudent.paymentRecords.length} transaction
-                  {selectedStudent.paymentRecords.length === 1 ? "" : "s"}
-                </span>
+            {selectedStudent.feeType === "monthly" &&
+              selectedStudent.paymentStatus !== "paid" && (
+                <div className="details-payment-actions-section">
+                  <div className="details-payment-actions-title">
+                    <div>
+                      <span>MONTHLY PAYMENT</span>
+                      <strong>Mark Installment as Paid</strong>
+                    </div>
+                    <small>
+                      Complete the current month before moving to the next month.
+                    </small>
+                  </div>
+
+                  <div className="details-monthly-installment-list">
+                    {(selectedStudent.monthlyInstallments || []).map(
+                      (installment) => {
+                        const currentInstallment =
+                          getCurrentMonthlyInstallment(selectedStudent);
+                        const isPaid = installment.status === "paid";
+                        const isCurrent =
+                          !isPaid &&
+                          Number(currentInstallment?.installmentNumber) ===
+                            Number(installment.installmentNumber);
+
+                        return (
+                          <div
+                            key={installment.installmentNumber}
+                            className={`details-monthly-installment-row ${
+                              isPaid ? "paid" : isCurrent ? "current" : "future"
+                            }`}
+                          >
+                            <div className="details-monthly-installment-info">
+                              <span>Month {installment.installmentNumber}</span>
+                              <strong>₹{formatMoney(installment.amount)}</strong>
+                            </div>
+
+                            {isPaid ? (
+                              <span className="installment-paid-badge">
+                                <FiCheckCircle /> Paid
+                              </span>
+                            ) : isCurrent ? (
+                              <div className="details-monthly-current-action">
+                                <select
+                                  value={monthlyPaymentMethod}
+                                  onChange={(event) =>
+                                    setMonthlyPaymentMethod(event.target.value)
+                                  }
+                                  disabled={isDetailsPaymentSaving}
+                                >
+                                  <option value="">Payment method</option>
+                                  <option value="cash">Cash</option>
+                                  <option value="bank">Bank</option>
+                                  <option value="upi">UPI</option>
+                                  <option value="qr">QR</option>
+                                </select>
+
+                                <button
+                                  type="button"
+                                  className="installment-pay-btn"
+                                  onClick={() =>
+                                    handleMonthlyInstallmentPayment(installment)
+                                  }
+                                  disabled={isDetailsPaymentSaving}
+                                >
+                                  {isDetailsPaymentSaving
+                                    ? "Saving..."
+                                    : "Mark Paid"}
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="future-installment-label">
+                                Unpaid
+                              </span>
+                            )}
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {selectedStudent.feeType === "partial" &&
+              selectedStudent.paymentStatus !== "paid" && (
+                <div className="details-payment-actions-section">
+                  <div className="details-payment-actions-title">
+                    <div>
+                      <span>PARTIAL PAYMENT</span>
+                      <strong>Add Received Amount</strong>
+                    </div>
+                    <small>
+                      Balance: ₹{formatMoney(selectedStudent.pendingAmount)}
+                    </small>
+                  </div>
+
+                  <div className="details-partial-payment-form">
+                    <div className="payment-form-group">
+                      <label>Paid Amount *</label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        max={selectedStudent.pendingAmount}
+                        value={detailsPartialAmount}
+                        onChange={(event) =>
+                          setDetailsPartialAmount(event.target.value)
+                        }
+                        placeholder="Example: 5000"
+                        disabled={isDetailsPaymentSaving}
+                      />
+                    </div>
+
+                    <div className="payment-form-group">
+                      <label>Payment Method *</label>
+                      <select
+                        value={detailsPaymentMethod}
+                        onChange={(event) =>
+                          setDetailsPaymentMethod(event.target.value)
+                        }
+                        disabled={isDetailsPaymentSaving}
+                      >
+                        <option value="">Select payment method</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank</option>
+                        <option value="upi">UPI</option>
+                        <option value="qr">QR</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="partial-add-payment-btn"
+                      onClick={handlePartialPaymentFromDetails}
+                      disabled={isDetailsPaymentSaving}
+                    >
+                      <FiPlus />
+                      {isDetailsPaymentSaving ? "Adding..." : "Add Payment"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            {selectedStudent.paymentStatus === "paid" &&
+              (selectedStudent.feeType === "monthly" ||
+                selectedStudent.feeType === "partial") && (
+                <div className="details-fee-complete-banner">
+                  <FiCheckCircle />
+                  <div>
+                    <strong>Fee Fully Paid</strong>
+                    <span>Remaining balance is ₹0.</span>
+                  </div>
+                </div>
+              )}
+
+          </div>
+        </div>
+      )}
+
+      {showHistoryModal && selectedStudent && (
+        <div className="payment-modal-overlay">
+          <div className="payment-modal payment-history-modal">
+            <div className="payment-modal-header">
+              <div>
+                <span>PAYMENT HISTORY</span>
+                <h2>{selectedStudent.studentName}</h2>
+                <p>
+                  {selectedStudent.rollNo} • {formatFeeType(selectedStudent.feeType)}
+                </p>
               </div>
 
+              <div className="payment-history-header-actions">
+                {(selectedStudent.paymentRecords || []).length > 0 && (
+                  <button
+                    type="button"
+                    className="payment-clear-history-btn"
+                    onClick={handleClearPaymentHistory}
+                    disabled={isHistoryClearing || isDetailsPaymentSaving}
+                  >
+                    <FiTrash2 />
+                    <span>
+                      {isHistoryClearing ? "Clearing..." : "Clear History"}
+                    </span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="payment-modal-close"
+                  onClick={closePaymentHistory}
+                  disabled={isHistoryClearing || isDetailsPaymentSaving}
+                  aria-label="Close payment history"
+                >
+                  <FiX />
+                </button>
+              </div>
+            </div>
+
+            <div className="payment-history-modal-summary">
+              <div>
+                <span>Total Fee</span>
+                <strong>₹{formatMoney(selectedStudent.totalFee)}</strong>
+              </div>
+
+              <div>
+                <span>Total Paid</span>
+                <strong>₹{formatMoney(selectedStudent.paidAmount)}</strong>
+              </div>
+
+              <div>
+                <span>Balance</span>
+                <strong>₹{formatMoney(selectedStudent.pendingAmount)}</strong>
+              </div>
+
+              <div>
+                <span>Status</span>
+                <strong className={`detail-status ${selectedStudent.paymentStatus}`}>
+                  {getStatusLabel(selectedStudent.paymentStatus)}
+                </strong>
+              </div>
+            </div>
+
+            <div className="payment-history-list payment-history-modal-list">
               {selectedStudent.paymentRecords.length === 0 ? (
                 <div className="payment-history-empty">
-                  No payment recorded yet.
+                  No payment history available.
                 </div>
               ) : (
                 selectedStudent.paymentRecords.map((record) => (
-                  <div key={record._id} className="payment-history-row">
-                    <div>
-                      <strong>₹{formatMoney(record.amount)}</strong>
-                      <span>
-                        {formatDate(record.paymentDate || record.createdAt)}
-                      </span>
+                  <div key={record._id} className="history-only-row">
+                    <div className="history-only-main">
+                      <strong>
+                        {record.installmentNumber
+                          ? `Month ${record.installmentNumber}`
+                          : `₹${formatMoney(record.amount)}`}
+                      </strong>
+                      {record.installmentNumber && (
+                        <span>₹{formatMoney(record.amount)}</span>
+                      )}
                     </div>
-                    <span className="payment-history-method">
-                      {formatPaymentMethod(record.paymentMethod)}
-                    </span>
+
+                    <div className="history-only-meta">
+                      <div>
+                        <span>Paid Date</span>
+                        <strong>
+                          {formatDate(record.paymentDate || record.createdAt)}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>Method</span>
+                        <strong>{formatPaymentMethod(record.paymentMethod)}</strong>
+                      </div>
+
+                      <div>
+                        <span>Status</span>
+                        <strong className="history-paid-status">Paid</strong>
+                      </div>
+                    </div>
                   </div>
                 ))
               )}
@@ -2114,6 +2839,7 @@ const Payments = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

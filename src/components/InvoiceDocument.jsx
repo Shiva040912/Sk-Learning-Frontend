@@ -67,6 +67,22 @@ const InvoiceDocument = forwardRef(
     const fee =
       invoice.fee || {};
 
+    const monthlyInstallments = Array.isArray(fee.monthlyInstallments)
+      ? fee.monthlyInstallments
+      : [];
+
+    const paymentHistory = Array.isArray(fee.paymentHistory)
+      ? fee.paymentHistory
+      : [];
+
+    const currentPayableAmount = Number(
+      fee.currentPayableAmount ?? invoice.invoiceAmount ?? 0
+    );
+
+    const currentInstallmentNumber = Number(
+      fee.currentInstallmentNumber || 0
+    );
+
     const totalFee = Number(
       fee.totalFee ||
         invoice.invoiceAmount ||
@@ -94,15 +110,9 @@ const InvoiceDocument = forwardRef(
 
     const feePlanText =
       fee.feeType === "monthly"
-        ? `₹${formatMoney(
-            fee.monthlyAmount
-          )} × ${
-            fee.selectedMonths || "-"
-          } months`
+        ? `${fee.selectedMonths || "-"} monthly installments`
         : fee.feeType === "partial"
-          ? `Minimum ₹${formatMoney(
-              fee.minimumPartialAmount
-            )}`
+          ? "Flexible partial payments"
           : "Full fee payment";
 
     return (
@@ -246,7 +256,7 @@ const InvoiceDocument = forwardRef(
               <strong>{formatFeeType(fee.feeType)}</strong>
               <strong>₹{formatMoney(totalFee)}</strong>
               <strong>₹{formatMoney(isReceipt ? paidAmount : 0)}</strong>
-              <strong>₹{formatMoney(isReceipt ? pendingAmount : totalFee)}</strong>
+              <strong>₹{formatMoney(pendingAmount)}</strong>
             </div>
           </div>
 
@@ -263,6 +273,104 @@ const InvoiceDocument = forwardRef(
               <div>
                 <span>Remaining Balance</span>
                 <strong>₹{formatMoney(pendingAmount)}</strong>
+              </div>
+            </div>
+          )}
+          {fee.feeType === "monthly" &&
+            monthlyInstallments.length > 0 && (
+              <div className="compact-installment-block">
+                <div className="compact-installment-heading">
+                  <div>
+                    <strong>Monthly Installment Schedule</strong>
+                    <span>
+                      {monthlyInstallments.filter(
+                        (item) => item.status === "paid"
+                      ).length}{" "}
+                      / {monthlyInstallments.length} paid
+                    </span>
+                  </div>
+
+                  <div className="compact-current-payable">
+                    <span>
+                      {currentInstallmentNumber > 0
+                        ? `Current • Month ${currentInstallmentNumber}`
+                        : "Current Payable"}
+                    </span>
+                    <strong>
+                      ₹{formatMoney(currentPayableAmount)}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="compact-installment-table">
+                  <div className="compact-installment-head">
+                    <span>Month</span>
+                    <span>Amount</span>
+                    <span>Status</span>
+                    <span>Paid Date</span>
+                  </div>
+
+                  {monthlyInstallments.map((installment) => (
+                    <div
+                      key={installment.installmentNumber}
+                      className={`compact-installment-row ${
+                        installment.status === "paid"
+                          ? "paid"
+                          : Number(installment.installmentNumber) ===
+                              currentInstallmentNumber
+                            ? "current"
+                            : ""
+                      }`}
+                    >
+                      <span>Month {installment.installmentNumber}</span>
+                      <strong>₹{formatMoney(installment.amount)}</strong>
+                      <span
+                        className={`compact-installment-status ${
+                          installment.status === "paid" ? "paid" : "unpaid"
+                        }`}
+                      >
+                        {installment.status === "paid" ? "Paid" : "Unpaid"}
+                      </span>
+                      <span>{formatDate(installment.paidAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {fee.feeType === "partial" && paymentHistory.length > 0 && (
+            <div className="compact-installment-block">
+              <div className="compact-installment-heading">
+                <div>
+                  <strong>Partial Payment History</strong>
+                  <span>{paymentHistory.length} transactions</span>
+                </div>
+
+                <div className="compact-current-payable">
+                  <span>Remaining Balance</span>
+                  <strong>₹{formatMoney(pendingAmount)}</strong>
+                </div>
+              </div>
+
+              <div className="compact-installment-table">
+                <div className="compact-partial-history-head">
+                  <span>Payment</span>
+                  <span>Amount</span>
+                  <span>Date</span>
+                  <span>Method</span>
+                </div>
+
+                {paymentHistory.map((item, index) => (
+                  <div
+                    key={`${item.paymentDate}-${index}`}
+                    className="compact-partial-history-row"
+                  >
+                    <span>Payment {index + 1}</span>
+                    <strong>₹{formatMoney(item.amount)}</strong>
+                    <span>{formatDate(item.paymentDate)}</span>
+                    <span>{formatPaymentMethod(item.paymentMethod)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

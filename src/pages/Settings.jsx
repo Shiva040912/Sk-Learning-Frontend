@@ -1,3 +1,6 @@
+
+
+
 import { useEffect, useMemo, useState } from "react";
 import {
   FiBell,
@@ -37,13 +40,18 @@ const initialPassword = {
 const initialSettings = {
   monthlyFeeEnabled: true,
   defaultMonths: 12,
-  minimumMonths: 3,
+  minimumMonths: 1,
   maximumMonths: 12,
 
   partialFeeEnabled: true,
   minimumPartialAmount: 10000,
 
   yearlyFeeEnabled: true,
+
+  commonFeeSetupEnabled: true,
+  courseWiseFeeSetupEnabled: true,
+  recurringFeeStartDay: 1,
+  recurringFeeDueDay: 10,
 
   whatsappEnabled: false,
   reminderDaysBeforeDue: 3,
@@ -64,7 +72,10 @@ const initialSettings = {
 
 const Settings = () => {
   const [mobileNavLayout, setMobileNavLayout] = useState(
-    () => localStorage.getItem("mobileNavLayout") || "drawer"
+    () => {
+      const savedLayout = localStorage.getItem("mobileNavLayout");
+      return savedLayout === "rail" ? "drawer" : savedLayout || "drawer";
+    }
   );
   const [activeTab, setActiveTab] = useState("profile");
   const [profile, setProfile] = useState(initialProfile);
@@ -291,13 +302,16 @@ const Settings = () => {
         name: profile.name.trim(),
         email: profile.email.trim().toLowerCase(),
         phone: profile.phone.trim() || undefined,
-        profileImage: profile.profileImage.trim() || undefined,
+        profileImage: profile.profileImage.trim(),
       });
 
       const updatedUser = response.data?.user;
 
       if (updatedUser) {
         localStorage.setItem("user", JSON.stringify(updatedUser));
+        window.dispatchEvent(new CustomEvent("profile-updated", {
+          detail: updatedUser,
+        }));
 
         setProfile({
           name: updatedUser.name || "",
@@ -405,35 +419,50 @@ const Settings = () => {
   };
 
   const handleSaveFeeSettings = () => {
-    const minimumMonths = Number(settings.minimumMonths);
-    const maximumMonths = Number(settings.maximumMonths);
-    const defaultMonths = Number(settings.defaultMonths);
-    const minimumPartialAmount = Number(settings.minimumPartialAmount);
+    const defaultMonths =
+      Number(
+        settings.defaultMonths,
+      );
 
-    if (!minimumMonths || minimumMonths < 1 || minimumMonths > 12) {
-      toast.error("Minimum months must be between 1 and 12");
-      return;
-    }
+    const recurringFeeStartDay =
+      Number(
+        settings.recurringFeeStartDay,
+      );
 
-    if (!maximumMonths || maximumMonths < 3 || maximumMonths > 12) {
-      toast.error("Maximum months must be between 3 and 12");
-      return;
-    }
+    const recurringFeeDueDay =
+      Number(
+        settings.recurringFeeDueDay,
+      );
 
-    if (minimumMonths > maximumMonths) {
-      toast.error("Minimum months cannot be greater than maximum months");
-      return;
-    }
-
-    if (defaultMonths < minimumMonths || defaultMonths > maximumMonths) {
+    if (
+      !Number.isInteger(defaultMonths) ||
+      defaultMonths < 1
+    ) {
       toast.error(
-        `Default months must be between ${minimumMonths} and ${maximumMonths}`
+        "Default months must be a positive whole number",
       );
       return;
     }
 
-    if (!minimumPartialAmount || minimumPartialAmount < 1) {
-      toast.error("Minimum partial amount must be greater than 0");
+    if (
+      !Number.isInteger(recurringFeeStartDay) ||
+      recurringFeeStartDay < 1 ||
+      recurringFeeStartDay > 31
+    ) {
+      toast.error(
+        "Monthly / Partial start day must be between 1 and 31",
+      );
+      return;
+    }
+
+    if (
+      !Number.isInteger(recurringFeeDueDay) ||
+      recurringFeeDueDay < 1 ||
+      recurringFeeDueDay > 31
+    ) {
+      toast.error(
+        "Monthly / Partial due day must be between 1 and 31",
+      );
       return;
     }
 
@@ -441,13 +470,14 @@ const Settings = () => {
       [
         "monthlyFeeEnabled",
         "defaultMonths",
-        "minimumMonths",
-        "maximumMonths",
         "partialFeeEnabled",
-        "minimumPartialAmount",
         "yearlyFeeEnabled",
+        "commonFeeSetupEnabled",
+        "courseWiseFeeSetupEnabled",
+        "recurringFeeStartDay",
+        "recurringFeeDueDay",
       ],
-      "Fee settings updated"
+      "Fee settings updated",
     );
   };
 
@@ -599,7 +629,6 @@ const Settings = () => {
 
   const mobileLayouts = [
     { id: "drawer", name: "Classic Drawer", description: "Menu opens smoothly from the left." },
-    { id: "rail", name: "Icon Rail", description: "Quick-access icons stay on the left." },
     { id: "bottom", name: "Bottom Dock", description: "Navigation stays within thumb reach." },
   ];
 
@@ -838,8 +867,8 @@ const Settings = () => {
                 <div>
                   <h2>Fee Settings</h2>
                   <p>
-                    Define the rules used when Monthly, Partial or Yearly fee
-                    plans are selected.
+                    Control fee setup options and the common recurring cycle used
+                    by Monthly and Partial students.
                   </p>
                 </div>
               </div>
@@ -850,10 +879,14 @@ const Settings = () => {
                     <div className="fee-rule-icon">
                       <span>M</span>
                     </div>
+
                     <div className="fee-rule-title">
                       <h3>Monthly Fees</h3>
-                      <p>Total fee is divided by the selected number of months.</p>
+                      <p>
+                        Allow monthly plans with any required number of months.
+                      </p>
                     </div>
+
                     <label className="settings-switch">
                       <input
                         type="checkbox"
@@ -865,41 +898,15 @@ const Settings = () => {
                     </label>
                   </div>
 
-                  <div className="fee-rule-fields three-columns">
+                  <div className="fee-rule-fields">
                     <div className="settings-field">
                       <label>Default Months</label>
                       <input
                         type="number"
-                        min={settings.minimumMonths || 1}
-                        max={settings.maximumMonths || 12}
+                        min="1"
+                        step="1"
                         name="defaultMonths"
                         value={settings.defaultMonths}
-                        onChange={handleSettingsChange}
-                        disabled={!settings.monthlyFeeEnabled}
-                      />
-                    </div>
-
-                    <div className="settings-field">
-                      <label>Minimum Months</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="12"
-                        name="minimumMonths"
-                        value={settings.minimumMonths}
-                        onChange={handleSettingsChange}
-                        disabled={!settings.monthlyFeeEnabled}
-                      />
-                    </div>
-
-                    <div className="settings-field">
-                      <label>Maximum Months</label>
-                      <input
-                        type="number"
-                        min="3"
-                        max="12"
-                        name="maximumMonths"
-                        value={settings.maximumMonths}
                         onChange={handleSettingsChange}
                         disabled={!settings.monthlyFeeEnabled}
                       />
@@ -907,9 +914,8 @@ const Settings = () => {
                   </div>
 
                   <div className="settings-rule-preview">
-                    Students can be configured between
-                    <strong> {settings.minimumMonths || "-"} and {settings.maximumMonths || "-"} months</strong>.
-                    Default selection is <strong>{settings.defaultMonths || "-"} months</strong>.
+                    There is <strong>no fixed maximum month limit</strong>. This
+                    value is only the default shown when Monthly is selected.
                   </div>
                 </div>
 
@@ -918,10 +924,15 @@ const Settings = () => {
                     <div className="fee-rule-icon">
                       <span>P</span>
                     </div>
+
                     <div className="fee-rule-title">
                       <h3>Partial Fees</h3>
-                      <p>Allow flexible payments above a minimum amount.</p>
+                      <p>
+                        Allow flexible payment amounts until the full balance is
+                        completed.
+                      </p>
                     </div>
+
                     <label className="settings-switch">
                       <input
                         type="checkbox"
@@ -933,27 +944,122 @@ const Settings = () => {
                     </label>
                   </div>
 
-                  <div className="fee-rule-fields">
+                  <div className="settings-rule-preview">
+                    Partial payments have <strong>no fixed installment count</strong>{" "}
+                    and no fixed minimum payment rule in the collection flow.
+                  </div>
+                </div>
+
+                <div className="fee-rule-card fee-cycle-rule-card">
+                  <div className="fee-rule-header">
+                    <div className="fee-rule-icon">
+                      <span>D</span>
+                    </div>
+
+                    <div className="fee-rule-title">
+                      <h3>Monthly / Partial Fee Cycle</h3>
+                      <p>
+                        Set one recurring start and due day for all Monthly and
+                        Partial students.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="fee-rule-fields two-columns">
                     <div className="settings-field">
-                      <label>Minimum Partial Amount</label>
-                      <div className="money-input-wrap">
-                        <span>₹</span>
-                        <input
-                          type="number"
-                          min="1"
-                          name="minimumPartialAmount"
-                          value={settings.minimumPartialAmount}
-                          onChange={handleSettingsChange}
-                          disabled={!settings.partialFeeEnabled}
-                        />
-                      </div>
+                      <label>Fee Start Day</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        step="1"
+                        name="recurringFeeStartDay"
+                        value={settings.recurringFeeStartDay}
+                        onChange={handleSettingsChange}
+                      />
+                    </div>
+
+                    <div className="settings-field">
+                      <label>Fee Due / End Day</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        step="1"
+                        name="recurringFeeDueDay"
+                        value={settings.recurringFeeDueDay}
+                        onChange={handleSettingsChange}
+                      />
                     </div>
                   </div>
 
                   <div className="settings-rule-preview">
-                    Each partial payment must be at least
-                    <strong> ₹{formatMoney(settings.minimumPartialAmount)}</strong>,
-                    except when the final pending balance is lower than this amount.
+                    Example: Start Day <strong>{settings.recurringFeeStartDay}</strong>{" "}
+                    and Due Day <strong>{settings.recurringFeeDueDay}</strong> means
+                    the same fee cycle repeats every month. Months with fewer days
+                    automatically use that month's last valid date.
+                  </div>
+                </div>
+
+                <div className="fee-rule-card bulk-fee-settings-card">
+                  <div className="fee-rule-header">
+                    <div className="fee-rule-icon">
+                      <span>B</span>
+                    </div>
+
+                    <div className="fee-rule-title">
+                      <h3>Bulk Fee Setup</h3>
+                      <p>
+                        Enable or disable Common and Course Wise fee setup on the
+                        Payment page.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bulk-fee-toggle-list">
+                    <div className="bulk-fee-toggle-row">
+                      <div>
+                        <strong>Common Fee Setup</strong>
+                        <span>
+                          Apply one fee setup to all eligible students.
+                        </span>
+                      </div>
+
+                      <label className="settings-switch">
+                        <input
+                          type="checkbox"
+                          name="commonFeeSetupEnabled"
+                          checked={settings.commonFeeSetupEnabled}
+                          onChange={handleSettingsChange}
+                        />
+                        <span />
+                      </label>
+                    </div>
+
+                    <div className="bulk-fee-toggle-row">
+                      <div>
+                        <strong>Course Wise Fee Setup</strong>
+                        <span>
+                          Apply one fee setup to eligible students in a course.
+                        </span>
+                      </div>
+
+                      <label className="settings-switch">
+                        <input
+                          type="checkbox"
+                          name="courseWiseFeeSetupEnabled"
+                          checked={settings.courseWiseFeeSetupEnabled}
+                          onChange={handleSettingsChange}
+                        />
+                        <span />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="settings-rule-preview">
+                    Students already using an active <strong>Monthly</strong> or{" "}
+                    <strong>Partial</strong> fee plan are automatically skipped
+                    during Common / Course Wise setup.
                   </div>
                 </div>
 
@@ -962,10 +1068,14 @@ const Settings = () => {
                     <div className="fee-rule-icon">
                       <span>Y</span>
                     </div>
+
                     <div className="fee-rule-title">
                       <h3>Yearly Fees</h3>
-                      <p>Collect the complete configured fee in one payment.</p>
+                      <p>
+                        Collect the complete configured fee in one payment.
+                      </p>
                     </div>
+
                     <label className="settings-switch">
                       <input
                         type="checkbox"
@@ -980,9 +1090,10 @@ const Settings = () => {
                   <div className="yearly-rule-status">
                     <FiCheckCircle />
                     <div>
-                      <strong>Single Full Payment</strong>
+                      <strong>Individual Start / End Date</strong>
                       <span>
-                        When Yearly is selected, the student pays the full fee amount.
+                        Yearly fee setup continues to use its own starting and
+                        ending date from the Payment page.
                       </span>
                     </div>
                   </div>

@@ -56,7 +56,7 @@ const Login = () => {
 
       toast.success("Login successful");
 
-      navigate("/students");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       toast.error(
         error.response?.data?.message ||

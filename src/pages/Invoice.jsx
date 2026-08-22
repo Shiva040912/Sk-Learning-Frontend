@@ -435,10 +435,10 @@ const Invoices = () => {
                   value={feeTypeFilter}
                   onChange={(event) => setFeeTypeFilter(event.target.value)}
                 >
-                  <option value="all">All Fee Types</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="partial">Partial</option>
-                  <option value="yearly">Yearly</option>
+                  <option value="all">All Invoices</option>
+                  <option value="monthly">Monthly Invoices</option>
+                  <option value="partial">Partial Invoices</option>
+                  <option value="yearly">Yearly Invoices</option>
                 </select>
               </div>
             </div>
@@ -584,7 +584,11 @@ const ReceiptColumn = ({
             const amount =
               status === "paid"
                 ? invoice.invoiceAmount || invoice.paidAmount
-                : invoice.pendingAmount || invoice.invoiceAmount;
+                : invoice.fee?.feeType === "monthly"
+                  ? invoice.fee?.currentPayableAmount ||
+                    invoice.invoiceAmount ||
+                    invoice.pendingAmount
+                  : invoice.pendingAmount || invoice.invoiceAmount;
 
             return (
               <div key={invoice._id} className={`receipt-list-row ${status}`}>

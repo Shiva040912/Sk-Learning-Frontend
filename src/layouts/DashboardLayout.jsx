@@ -8,7 +8,14 @@ import "../styles/layout.css";
 
 const DashboardLayout = () => {
   const [mobileNavLayout, setMobileNavLayout] = useState(
-    () => localStorage.getItem("mobileNavLayout") || "drawer"
+    () => {
+      const savedLayout = localStorage.getItem("mobileNavLayout");
+      if (savedLayout === "rail") {
+        localStorage.setItem("mobileNavLayout", "drawer");
+        return "drawer";
+      }
+      return savedLayout || "drawer";
+    }
   );
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] =
     useState(false);
