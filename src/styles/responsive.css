@@ -1527,3 +1527,16 @@ button {
     margin-bottom: 0 !important;
   }
 }
+/* Definitive Bottom Dock clearance: allow final rows to scroll fully above the dock. */
+@media (max-width: 768px) {
+  .mobile-nav-bottom .students-table-wrapper,
+  .mobile-nav-bottom .payment-table-wrapper {
+    box-sizing: border-box !important;
+    padding-bottom: 112px !important;
+    scroll-padding-bottom: 112px !important;
+  }
+  .mobile-nav-bottom .students-table,
+  .mobile-nav-bottom .payments-table {
+    margin-bottom: 0 !important;
+  }
+}
