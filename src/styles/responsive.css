@@ -1367,3 +1367,142 @@ button {
   .payment-table-wrapper::-webkit-scrollbar-track { background: #eef1f3 !important; }
   .payment-table-wrapper::-webkit-scrollbar-thumb { background: #aeb5bb !important; border-radius: 8px !important; }
 }
+/* =========================================================
+   FINAL MOBILE STICKY LISTS + CONSISTENT TYPOGRAPHY
+   ========================================================= */
+@media (max-width: 768px) {
+  /* Let each toolbar stick below the fixed application topbar. */
+  .students-list-section,
+  .payment-history-section {
+    overflow: visible !important;
+    margin-bottom: 0 !important;
+  }
+
+  .students-toolbar,
+  .payment-toolbar {
+    position: sticky !important;
+    top: var(--topbar-height, 61px) !important;
+    z-index: 80 !important;
+    border-radius: 0 !important;
+    background: rgba(250, 251, 252, .98) !important;
+    box-shadow: 0 3px 8px rgba(28, 37, 48, .08) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  /* Remaining viewport belongs to the rows; no page-sized blank tail. */
+  .students-table-card,
+  .payment-table-card {
+    overflow: hidden !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .students-table-wrapper {
+    width: 100% !important;
+    height: calc(100dvh - var(--topbar-height, 61px) - 112px) !important;
+    min-height: 330px !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #aeb5bb #eef1f3 !important;
+  }
+
+  .payment-table-wrapper {
+    width: 100% !important;
+    height: calc(100dvh - var(--topbar-height, 61px) - 166px) !important;
+    min-height: 330px !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .students-table-wrapper::-webkit-scrollbar,
+  .payment-table-wrapper::-webkit-scrollbar { width: 4px !important; }
+  .students-table-wrapper::-webkit-scrollbar-track,
+  .payment-table-wrapper::-webkit-scrollbar-track { background: #eef1f3 !important; }
+  .students-table-wrapper::-webkit-scrollbar-thumb,
+  .payment-table-wrapper::-webkit-scrollbar-thumb { background: #aeb5bb !important; border-radius: 8px !important; }
+
+  .students-table thead,
+  .payments-table thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 12 !important;
+  }
+  .students-table th,
+  .payments-table th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 12 !important;
+    height: 34px !important;
+    background: #f5f7f9 !important;
+    font-size: 7px !important;
+    font-weight: 750 !important;
+    letter-spacing: .32px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Equal visual scale for every table value. */
+  .students-table td,
+  .students-table .student-profile-cell strong,
+  .students-table .serial-number,
+  .students-table .roll-number-badge,
+  .students-table .course-badge,
+  .payments-table td,
+  .payments-table .payment-student strong,
+  .payments-table .payment-roll,
+  .payments-table .payment-course {
+    font-size: 8.5px !important;
+    font-weight: 650 !important;
+    line-height: 1.25 !important;
+  }
+  .students-table .student-profile-cell span,
+  .payments-table .payment-student span {
+    font-size: 7px !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+  }
+  .students-table td:nth-child(5) {
+    font-size: 8.5px !important;
+    font-weight: 650 !important;
+  }
+
+  /* Inputs and action labels share one readable mobile scale. */
+  .student-search input,
+  .payment-search input { font-size: 12px !important; }
+  .student-filter-button,
+  .student-setup-btn,
+  .add-student-btn,
+  .payment-filter-button,
+  .payment-upi-setup-btn,
+  .payment-main-setup-btn { font-size: 9px !important; }
+
+  .students-page,
+  .payments-page { padding-bottom: 0 !important; }
+}
+
+/* Consistent desktop table typography without oversized isolated values. */
+@media (min-width: 769px) {
+  .students-table td,
+  .students-table .student-profile-cell strong,
+  .students-table .serial-number,
+  .students-table .roll-number-badge,
+  .students-table .course-badge,
+  .students-table td:nth-child(5),
+  .payments-table td,
+  .payments-table .payment-student strong,
+  .payments-table .payment-roll,
+  .payments-table .payment-course {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+  }
+  .students-table .student-profile-cell span,
+  .payments-table .payment-student span {
+    font-size: 8px !important;
+    font-weight: 500 !important;
+  }
+}
