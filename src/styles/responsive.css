@@ -1540,3 +1540,30 @@ button {
     margin-bottom: 0 !important;
   }
 }
+/* Final small lift above Bottom Dock plus one-row Student form actions. */
+@media (max-width: 768px) {
+  .mobile-nav-bottom .students-table-wrapper,
+  .mobile-nav-bottom .payment-table-wrapper {
+    padding-bottom: 160px !important;
+    scroll-padding-bottom: 160px !important;
+  }
+
+  .student-admission-modal .student-admission-actions,
+  .student-admission-form .student-admission-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: auto !important;
+  }
+  .student-admission-modal .student-admission-actions .secondary-btn,
+  .student-admission-modal .student-admission-actions .primary-btn,
+  .student-admission-form .student-admission-actions .secondary-btn,
+  .student-admission-form .student-admission-actions .primary-btn {
+    flex: 1 1 0 !important;
+    width: 50% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+}
