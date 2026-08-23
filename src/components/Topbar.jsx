@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 
 import {
   FiChevronDown,
+  FiChevronRight,
   FiLogOut,
   FiMenu,
   FiUser,
@@ -186,12 +187,13 @@ const Topbar = ({ onMenuClick }) => {
         </div>
       </div>
 
-      <div className="topbar-divider" />
-
       <div className="topbar-page-info">
-        <div className="topbar-title-row">
-          <span className="topbar-accent" />
+        <span className="topbar-breadcrumb-home">
+          The SK Learnings
+        </span>
 
+        <FiChevronRight className="topbar-breadcrumb-separator" />
+        <div className="topbar-title-row">
           <h2>{page.title}</h2>
         </div>
 
@@ -206,6 +208,8 @@ const Topbar = ({ onMenuClick }) => {
           <button
             type="button"
             className="topbar-user"
+            aria-expanded={isProfileOpen}
+            aria-haspopup="menu"
             onClick={() =>
               setIsProfileOpen(
                 (current) => !current
