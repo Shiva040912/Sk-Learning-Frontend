@@ -1458,7 +1458,7 @@ const Payments = () => {
             title="UPI payment setup"
           >
             <FiSettings />
-            <span>UPI ID Setup</span>
+            <span>UPI Settings</span>
           </button>
 
           <button

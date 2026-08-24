@@ -109,6 +109,7 @@
 }
 
 .payment-toolbar {
+  --payment-toolbar-control-height: 34px;
   position: relative;
   z-index: 20;
   display: flex;
@@ -138,7 +139,7 @@
 
 .payment-search input {
   width: 100%;
-  height: 37px;
+  height: var(--payment-toolbar-control-height);
   padding: 0 11px 0 34px;
   border: 1px solid #dce1e6;
   border-radius: 8px;
@@ -163,7 +164,7 @@
 
 .payment-filter-button {
   position: relative;
-  height: 37px;
+  height: var(--payment-toolbar-control-height);
   min-width: 84px;
   display: inline-flex;
   align-items: center;
@@ -2261,7 +2262,7 @@
 }
 
 .payment-main-setup-btn {
-  height: 37px;
+  height: var(--payment-toolbar-control-height);
   min-width: 96px;
   flex-shrink: 0;
   display: inline-flex;
@@ -2276,6 +2277,22 @@
   font-size: 8.5px;
   font-weight: 750;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.payment-filter-button,
+.payment-upi-setup-btn,
+.payment-main-setup-btn {
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.payment-filter-button > span,
+.payment-upi-setup-btn > span,
+.payment-main-setup-btn > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -2574,7 +2591,7 @@
    ========================================================= */
 
 .payment-upi-setup-btn {
-  height: 37px;
+  height: var(--payment-toolbar-control-height);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
