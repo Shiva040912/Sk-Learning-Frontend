@@ -1,9 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:3000",
+  baseURL: "https://44-205-140-200.sslip.io",
 
   headers: {
     "Content-Type": "application/json",
