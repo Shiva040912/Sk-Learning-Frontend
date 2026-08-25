@@ -105,39 +105,12 @@ const Dashboard = () => {
     [dashboard]
   );
 
-  const feeStatusData = useMemo(
+  const studentDetailsData = useMemo(
     () =>
-      dashboard?.feeStatus || [],
+      dashboard?.studentDetails || dashboard?.feeStatus || [],
     [dashboard]
   );
 
-  const paidCount = useMemo(
-    () =>
-      feeStatusData.filter(
-        (student) =>
-          student.status === "paid"
-      ).length,
-    [feeStatusData]
-  );
-
-  const unpaidCount = useMemo(
-    () =>
-      feeStatusData.filter(
-        (student) =>
-          student.status === "unpaid"
-      ).length,
-    [feeStatusData]
-  );
-
-  const partialCount = useMemo(
-    () =>
-      feeStatusData.filter(
-        (student) =>
-          student.status ===
-          "partial"
-      ).length,
-    [feeStatusData]
-  );
 
   const handleCourseClick = (
     data
@@ -412,12 +385,12 @@ const Dashboard = () => {
           <div className="dashboard-panel-header">
             <div>
               <h2>
-                Fee Status
+                Student Details
               </h2>
 
               <p>
-                Live student payment
-                overview
+                Student name, roll number
+                and course
               </p>
             </div>
 
@@ -445,73 +418,15 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="dashboard-status-grid">
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  "/payments?status=paid"
-                )
-              }
-            >
-              <span className="dashboard-status-left">
-                <i className="dashboard-status-dot paid" />
-
-                Paid
-              </span>
-
-              <strong>
-                {paidCount}
-              </strong>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  "/payments?status=unpaid"
-                )
-              }
-            >
-              <span className="dashboard-status-left">
-                <i className="dashboard-status-dot unpaid" />
-
-                Unpaid
-              </span>
-
-              <strong>
-                {unpaidCount}
-              </strong>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  "/payments?status=partial"
-                )
-              }
-            >
-              <span className="dashboard-status-left">
-                <i className="dashboard-status-dot partial" />
-
-                Partial
-              </span>
-
-              <strong>
-                {partialCount}
-              </strong>
-            </button>
-          </div>
 
           <div className="dashboard-fee-header">
             <span>STUDENT</span>
             <span>ROLL NO</span>
-            <span>STATUS</span>
+            <span>COURSE</span>
           </div>
 
           <div className="dashboard-ticker-window">
-            {feeStatusData.length >
+            {studentDetailsData.length >
             0 ? (
               <div
                 className={`dashboard-ticker-track ${
@@ -521,8 +436,8 @@ const Dashboard = () => {
                 }`}
               >
                 {[
-                  ...feeStatusData,
-                  ...feeStatusData,
+                  ...studentDetailsData,
+                  ...studentDetailsData,
                 ].map(
                   (
                     student,
@@ -569,14 +484,8 @@ const Dashboard = () => {
                         }
                       </span>
 
-                      <span
-                        className={`dashboard-status-badge ${
-                          student.status ||
-                          "unpaid"
-                        }`}
-                      >
-                        {student.status ||
-                          "unpaid"}
+                      <span className="dashboard-course">
+                        {student.course || "-"}
                       </span>
                     </button>
                   )
@@ -584,7 +493,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="dashboard-empty">
-                No fee status available
+                No student details available
               </div>
             )}
           </div>
@@ -597,7 +506,7 @@ const Dashboard = () => {
             }
           >
             <span>
-              View payment details
+              View student details
             </span>
 
             <FiArrowRight />

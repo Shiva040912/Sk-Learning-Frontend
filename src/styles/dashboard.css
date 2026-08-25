@@ -911,3 +911,14 @@
 /* Match the compact Payments summary card height. */
 .dashboard-summary-card { height: 72px; min-height: 72px; padding: 10px 12px; }
 .dashboard-summary-icon { width: 34px; height: 34px; flex: 0 0 34px; }
+
+.dashboard-course {
+  min-width: 0;
+  overflow: hidden;
+  color: #66717d;
+  font-size: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: right;
+}
