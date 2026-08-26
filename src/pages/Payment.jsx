@@ -179,19 +179,32 @@ const Payments = () => {
   }, []);
 
   const paymentRows = useMemo(() => {
-    return students.map((student) => {
-      const records = paymentRecords
-        .filter(
-          (payment) =>
-            String(payment.studentId) === String(student._id) ||
-            String(payment.student?._id) === String(student._id),
-        )
-        .sort(
-          (a, b) =>
-            new Date(b.paymentDate || b.createdAt || 0) -
-            new Date(a.paymentDate || a.createdAt || 0),
-        );
+    const recordsByStudent = new Map();
 
+    paymentRecords.forEach((payment) => {
+      const studentId = String(
+        payment.studentId || payment.student?._id || "",
+      );
+
+      if (!studentId) return;
+
+      if (!recordsByStudent.has(studentId)) {
+        recordsByStudent.set(studentId, []);
+      }
+
+      recordsByStudent.get(studentId).push(payment);
+    });
+
+    recordsByStudent.forEach((records) => {
+      records.sort(
+        (a, b) =>
+          new Date(b.paymentDate || b.createdAt || 0) -
+          new Date(a.paymentDate || a.createdAt || 0),
+      );
+    });
+
+    return students.map((student) => {
+      const records = recordsByStudent.get(String(student._id)) || [];
       const latestPayment = records[0];
 
       return {
@@ -1647,7 +1660,8 @@ const Payments = () => {
 
                       <td data-label="Status">
                         <div className="payment-status-cell">
-                        {student.feeType === "yearly" ? (
+                        {student.feeType === "yearly" &&
+                        student.paymentStatus !== "paid" ? (
                           <button
                             type="button"
                             className={`payment-status-control ${student.paymentStatus}`}

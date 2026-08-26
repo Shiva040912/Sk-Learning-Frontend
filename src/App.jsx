@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+
 import {
   BrowserRouter,
   Navigate,
@@ -11,15 +13,15 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PopupKeyboardController from "./components/PopupKeyboardController";
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Student";
-import Users from "./pages/Users";
-import Payments from "./pages/Payment";
-import Notification from "./pages/Notification";
-import Settings from "./pages/Settings";
-import Invoices from "./pages/Invoice";
-import PayFees from "./pages/PayFees";
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Students = lazy(() => import("./pages/Student"));
+const Users = lazy(() => import("./pages/Users"));
+const Payments = lazy(() => import("./pages/Payment"));
+const Notification = lazy(() => import("./pages/Notification"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Invoices = lazy(() => import("./pages/Invoice"));
+const PayFees = lazy(() => import("./pages/PayFees"));
 
 const App = () => {
   return (
@@ -43,7 +45,8 @@ const App = () => {
         }}
       />
 
-      <Routes>
+      <Suspense fallback={<div className="route-loading">Loading...</div>}>
+        <Routes>
         <Route
           path="/"
           element={<Login />}
@@ -111,7 +114,8 @@ const App = () => {
             />
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 };
