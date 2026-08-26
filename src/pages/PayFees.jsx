@@ -47,11 +47,7 @@ const PayFees = () => {
   const [error, setError] = useState("");
   const [openingApp, setOpeningApp] = useState("");
 
-  /*
-   * ======================================================
-   * LOAD PUBLIC STUDENT PAYMENT DETAILS
-   * ======================================================
-   */
+  
 
   useEffect(() => {
     const loadPaymentDetails = async () => {
@@ -88,11 +84,7 @@ const PayFees = () => {
     loadPaymentDetails();
   }, [cleanStudentId]);
 
-  /*
-   * ======================================================
-   * DATA
-   * ======================================================
-   */
+ 
 
   const student = paymentData?.student || {};
   const payment = paymentData?.payment || {};
@@ -106,12 +98,7 @@ const PayFees = () => {
     student.paymentAmount || 0,
   );
 
-  /*
-   * ======================================================
-   * DUE DATE
-   * ======================================================
-   */
-
+ 
   const formattedDueDate = useMemo(() => {
     if (!payment.feeDueDate) {
       return "-";
@@ -135,11 +122,6 @@ const PayFees = () => {
     );
   }, [payment.feeDueDate]);
 
-  /*
-   * ======================================================
-   * AMOUNT INPUT
-   * ======================================================
-   */
 
   const handleAmountChange = (event) => {
     const value = event.target.value;
@@ -150,9 +132,7 @@ const PayFees = () => {
       return;
     }
 
-    /*
-     * Only number + maximum 2 decimals
-     */
+    
     if (!/^\d*\.?\d{0,2}$/.test(value)) {
       return;
     }
@@ -161,11 +141,7 @@ const PayFees = () => {
     setError("");
   };
 
-  /*
-   * ======================================================
-   * VALIDATE PAYMENT
-   * ======================================================
-   */
+  
 
   const validatePayment = () => {
     const enteredAmount = Number(amount);
@@ -189,10 +165,6 @@ const PayFees = () => {
       return false;
     }
 
-    /*
-     * Prevent over payment when pending
-     * amount is available.
-     */
 
     if (
       pendingAmount > 0 &&
@@ -228,11 +200,7 @@ const PayFees = () => {
     return true;
   };
 
-  /*
-   * ======================================================
-   * CREATE UPI PARAMETERS
-   * ======================================================
-   */
+  
 
   const getUpiQuery = () => {
     const enteredAmount = Number(
@@ -277,11 +245,7 @@ const PayFees = () => {
     return params.toString();
   };
 
-  /*
-   * ======================================================
-   * OPEN UPI APP
-   * ======================================================
-   */
+  
 
   const openPaymentApp = (method) => {
     if (!validatePayment()) {
@@ -318,11 +282,7 @@ const PayFees = () => {
     }, 1500);
   };
 
-  /*
-   * ======================================================
-   * LOADING
-   * ======================================================
-   */
+ 
 
   if (loading) {
     return (
@@ -347,12 +307,7 @@ const PayFees = () => {
     );
   }
 
-  /*
-   * ======================================================
-   * ERROR
-   * ======================================================
-   */
-
+  
   if (!paymentData) {
     return (
       <div className="public-payment-page">
@@ -374,15 +329,11 @@ const PayFees = () => {
     );
   }
 
-  /*
-   * ======================================================
-   * PAGE
-   * ======================================================
-   */
+ 
 
   return (
     <div className="public-payment-page">
-      {/* HEADER */}
+      
 
       <header className="public-payment-header">
         <div className="public-brand">
@@ -411,10 +362,10 @@ const PayFees = () => {
         </div>
       </header>
 
-      {/* CONTENT */}
+      
 
       <main className="public-payment-content">
-        {/* INTRO */}
+        
 
         <section className="payment-intro">
           <span className="payment-eyebrow">
@@ -440,7 +391,7 @@ const PayFees = () => {
           </p>
         </section>
 
-        {/* STUDENT DETAILS */}
+        
 
         <section className="student-payment-card">
           <div className="student-payment-heading">
