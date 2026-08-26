@@ -207,15 +207,36 @@ html, body, #root { width: 100%; min-height: 100%; margin: 0; }
 .login-copyright { margin: 18px 0 0; color: #8b949b; font-size: 10px; }
 
 @media (max-width: 520px) {
-  .login-page { justify-content: flex-start; padding: 20px 14px; }
-  .login-shell { margin-top: 4vh; padding: 0 22px 23px; border-radius: 15px; }
-  .login-brand { margin: 0 -22px; padding: 22px 18px; gap: 11px; border-radius: 14px 14px 0 0; }
-  .login-logo-wrap { width: 48px; height: 48px; flex-basis: 48px; }
+  .login-page { min-height: 100svh; justify-content: flex-start; padding: 14px 12px 18px; }
+  .login-shell { max-width: 400px; margin-top: 0; padding: 0 20px 20px; border-radius: 14px; box-shadow: 0 12px 34px rgba(23, 33, 43, 0.1); }
+  .login-brand { margin: 0 -20px; padding: 18px 16px; gap: 11px; border-radius: 13px 13px 0 0; }
+  .login-logo-wrap { width: 46px; height: 46px; flex-basis: 46px; }
   .login-brand h1 { font-size: 15px; }
-  .login-brand p { font-size: 7.2px; letter-spacing: 1.25px; }
-  .login-courses { font-size: 5.6px; letter-spacing: 0.15px; }
-  .login-divider { margin: 0 -22px 22px; }
-  .login-heading h2 { font-size: 24px; }
+  .login-brand p { margin-top: 4px; font-size: 7px; letter-spacing: 1.15px; }
+  .login-courses { margin-top: 5px; font-size: 5.5px; letter-spacing: 0.1px; }
+  .login-divider { margin: 0 -20px 19px; }
+  .login-heading > span { margin-bottom: 6px; font-size: 8.5px; }
+  .login-heading h2 { font-size: 23px; }
+  .login-heading p { margin-top: 6px; font-size: 11.5px; line-height: 1.4; }
+  .login-form { margin-top: 19px; gap: 13px; }
+  .form-group { gap: 6px; }
+  .form-group label { font-size: 11px; }
+  .input-box { height: 44px; }
+  .input-box input { font-size: 12px; }
+  .login-btn { height: 44px; margin-top: 2px; font-size: 12px; }
+  .login-security { margin-top: 17px; padding-top: 14px; font-size: 9.5px; }
+  .login-copyright { margin-top: 13px; font-size: 9px; }
+}
+
+@media (max-width: 360px) {
+  .login-page { padding-inline: 9px; }
+  .login-shell { padding-inline: 16px; }
+  .login-brand { margin-inline: -16px; padding-inline: 13px; gap: 9px; }
+  .login-divider { margin-inline: -16px; }
+  .login-logo-wrap { width: 42px; height: 42px; flex-basis: 42px; }
+  .login-brand h1 { font-size: 13px; }
+  .login-brand p { font-size: 6px; letter-spacing: 0.85px; }
+  .login-courses { font-size: 4.8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
