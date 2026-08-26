@@ -83,9 +83,12 @@ const PayFees = () => {
   const payment = paymentData?.payment || {};
 
   const paymentCompleted =
-    String(student.paymentStatus || "").toLowerCase() === "paid";
+    String(student.paymentStatus || "").toLowerCase() ===
+    "paid";
 
-  const pendingAmount = Number(student.paymentAmount || 0);
+  const pendingAmount = Number(
+    student.paymentAmount || 0,
+  );
 
   const formattedDueDate = useMemo(() => {
     if (!payment.feeDueDate) {
@@ -126,16 +129,26 @@ const PayFees = () => {
     const enteredAmount = Number(amount);
 
     if (!amount.trim()) {
-      setError("Please enter the amount you want to pay.");
+      setError(
+        "Please enter the amount you want to pay.",
+      );
       return false;
     }
 
-    if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) {
-      setError("Please enter a valid payment amount.");
+    if (
+      !Number.isFinite(enteredAmount) ||
+      enteredAmount <= 0
+    ) {
+      setError(
+        "Please enter a valid payment amount.",
+      );
       return false;
     }
 
-    if (pendingAmount > 0 && enteredAmount > pendingAmount) {
+    if (
+      pendingAmount > 0 &&
+      enteredAmount > pendingAmount
+    ) {
       setError(
         `Amount cannot be greater than ₹${pendingAmount.toLocaleString(
           "en-IN",
@@ -154,7 +167,10 @@ const PayFees = () => {
     }
 
     if (!payment.receiverName) {
-      setError("Payment receiver details are not configured.");
+      setError(
+        "Payment receiver details are not configured.",
+      );
+
       return false;
     }
 
@@ -178,7 +194,11 @@ const PayFees = () => {
         student.studentName ||
         student.rollNo ||
         "Student"
-      }${source === "reminder" ? " - Reminder" : ""}`,
+      }${
+        source === "reminder"
+          ? " - Reminder"
+          : ""
+      }`,
     );
 
     return params.toString();
@@ -221,120 +241,159 @@ const PayFees = () => {
 
   if (loading) {
     return (
-      <div className="pay-page-state">
-        <img src={logo} alt="SK Learnings" />
+      <div className="pay-state-page">
+        <img
+          src={logo}
+          alt="SK Learnings"
+        />
 
         <div className="pay-loader" />
 
-        <strong>Loading payment details</strong>
-        <span>Please wait...</span>
+        <strong>
+          Loading payment details
+        </strong>
+
+        <span>
+          Please wait...
+        </span>
       </div>
     );
   }
 
   if (!paymentData) {
     return (
-      <div className="pay-page-state">
+      <div className="pay-state-page">
         <div className="pay-error-icon">
           <FiShield />
         </div>
 
-        <strong>Payment Link Unavailable</strong>
+        <strong>
+          Payment Link Unavailable
+        </strong>
 
         <span>
-          {error || "Unable to load payment details."}
+          {error ||
+            "Unable to load payment details."}
         </span>
       </div>
     );
   }
 
   return (
-    <div className="new-payment-page">
+    <div className="payment-page">
       {/* HEADER */}
 
-      <header className="new-payment-header">
-        <div className="new-payment-brand">
-          <img src={logo} alt="The SK Learnings" />
+      <header className="payment-header">
+        <div className="payment-brand">
+          <img
+            src={logo}
+            alt="The SK Learnings"
+          />
 
-          <div>
-            <strong>THE SK LEARNINGS</strong>
-            <span>Private Educational Services</span>
+          <div className="payment-brand-text">
+            <strong>
+              THE SK LEARNINGS
+            </strong>
+
+            <span>
+              Private Educational Services
+            </span>
           </div>
         </div>
 
-        <div className="new-secure-badge">
+        <div className="header-secure">
           <FiLock />
+
           <span>Secure</span>
         </div>
       </header>
 
       {/* MAIN */}
 
-      <main className="new-payment-main">
-        {/* STUDENT */}
+      <main className="payment-container">
+        {/* STUDENT DETAILS */}
 
-        <section className="new-student-card">
-          <div className="new-card-title">
+        <section className="student-card">
+          <div className="student-card-top">
             <div>
-              <span>PAYMENT FOR</span>
+              <span className="section-tag">
+                PAYMENT FOR
+              </span>
 
-              <h1>{student.studentName || "-"}</h1>
+              <h1>
+                {student.studentName || "-"}
+              </h1>
             </div>
 
             {source === "reminder" && (
-              <span className="new-reminder-badge">
+              <span className="reminder-tag">
                 Fee Reminder
               </span>
             )}
           </div>
 
-          <div className="new-student-details">
-            <div className="new-detail">
+          <div className="student-details-row">
+            <div className="student-detail">
               <FiHash />
 
               <div>
                 <span>Roll No</span>
-                <strong>{student.rollNo || "-"}</strong>
+
+                <strong>
+                  {student.rollNo || "-"}
+                </strong>
               </div>
             </div>
 
-            <div className="new-detail">
+            <div className="student-detail">
               <FiBookOpen />
 
               <div>
                 <span>Course</span>
-                <strong>{student.course || "-"}</strong>
+
+                <strong>
+                  {student.course || "-"}
+                </strong>
               </div>
             </div>
 
-            <div className="new-detail">
+            <div className="student-detail">
               <FiClock />
 
               <div>
                 <span>Batch</span>
-                <strong>{student.batch || "-"}</strong>
+
+                <strong>
+                  {student.batch || "-"}
+                </strong>
               </div>
             </div>
 
-            <div className="new-detail">
+            <div className="student-detail">
               <FiCalendar />
 
               <div>
                 <span>Due Date</span>
-                <strong>{formattedDueDate}</strong>
+
+                <strong>
+                  {formattedDueDate}
+                </strong>
               </div>
             </div>
           </div>
         </section>
 
         {paymentCompleted ? (
-          <section className="new-completed-card">
-            <div className="new-completed-icon">
+          <section className="payment-completed">
+            <div className="completed-icon">
               <FiCheckCircle />
             </div>
 
             <div>
-              <strong>Payment Completed</strong>
+              <strong>
+                Payment Completed
+              </strong>
+
               <span>
                 No further fee payment is required.
               </span>
@@ -342,13 +401,18 @@ const PayFees = () => {
           </section>
         ) : (
           <>
-            {/* PAYMENT AREA */}
+            {/* PAYMENT */}
 
-            <section className="new-payment-box">
-              <div className="new-payment-box-heading">
+            <section className="payment-card">
+              <div className="payment-card-title">
                 <div>
-                  <span>PAYMENT METHOD</span>
-                  <strong>Pay using UPI</strong>
+                  <span className="section-tag">
+                    PAYMENT METHOD
+                  </span>
+
+                  <h2>
+                    Pay using UPI
+                  </h2>
                 </div>
 
                 <FiShield />
@@ -356,8 +420,10 @@ const PayFees = () => {
 
               {/* AMOUNT */}
 
-              <div className="new-amount-row">
-                <span className="new-rupee">₹</span>
+              <div className="amount-box">
+                <div className="rupee-box">
+                  ₹
+                </div>
 
                 <input
                   type="text"
@@ -371,10 +437,12 @@ const PayFees = () => {
                 {pendingAmount > 0 && (
                   <button
                     type="button"
+                    className="full-button"
                     onClick={() => {
                       setAmount(
                         String(pendingAmount),
                       );
+
                       setError("");
                     }}
                   >
@@ -384,110 +452,131 @@ const PayFees = () => {
               </div>
 
               {error && (
-                <div className="new-payment-error">
+                <div className="payment-error">
                   {error}
                 </div>
               )}
 
               {/* QR + APPS */}
 
-              <div className="new-payment-methods">
-                <div className="new-qr-side">
-                  <span className="new-section-label">
+              <div className="payment-options">
+                {/* QR */}
+
+                <div className="qr-column">
+                  <span className="payment-small-title">
                     SCAN &amp; PAY
                   </span>
 
                   {payment.upiQrImage ? (
-                    <div className="new-qr-box">
+                    <div className="qr-box">
                       <img
                         src={payment.upiQrImage}
                         alt="SK Learnings Payment QR"
                       />
                     </div>
                   ) : (
-                    <div className="new-qr-empty">
+                    <div className="qr-empty">
                       <FiShield />
-                      <span>QR unavailable</span>
+
+                      <span>
+                        QR unavailable
+                      </span>
                     </div>
                   )}
                 </div>
 
-                <div className="new-app-side">
-                  <span className="new-section-label">
+                {/* APPS */}
+
+                <div className="upi-column">
+                  <span className="payment-small-title">
                     PAY WITH APP
                   </span>
 
-                  <button
-                    type="button"
-                    className="new-upi-button"
-                    onClick={() =>
-                      openPaymentApp("gpay")
-                    }
-                  >
-                    <img
-                      src={gpayLogo}
-                      alt="Google Pay"
-                    />
+                  <div className="upi-buttons">
+                    <button
+                      type="button"
+                      className="upi-button"
+                      aria-label="Google Pay"
+                      onClick={() =>
+                        openPaymentApp("gpay")
+                      }
+                    >
+                      <img
+                        src={gpayLogo}
+                        alt="Google Pay"
+                      />
 
-                    <span>
-                      {openingApp === "gpay"
-                        ? "Opening..."
-                        : "Google Pay"}
-                    </span>
-                  </button>
+                      {openingApp ===
+                        "gpay" && (
+                        <span className="opening-dot">
+                          ...
+                        </span>
+                      )}
+                    </button>
 
-                  <button
-                    type="button"
-                    className="new-upi-button"
-                    onClick={() =>
-                      openPaymentApp("phonepe")
-                    }
-                  >
-                    <img
-                      src={phonePeLogo}
-                      alt="PhonePe"
-                    />
+                    <button
+                      type="button"
+                      className="upi-button"
+                      aria-label="PhonePe"
+                      onClick={() =>
+                        openPaymentApp(
+                          "phonepe",
+                        )
+                      }
+                    >
+                      <img
+                        src={phonePeLogo}
+                        alt="PhonePe"
+                      />
 
-                    <span>
-                      {openingApp === "phonepe"
-                        ? "Opening..."
-                        : "PhonePe"}
-                    </span>
-                  </button>
+                      {openingApp ===
+                        "phonepe" && (
+                        <span className="opening-dot">
+                          ...
+                        </span>
+                      )}
+                    </button>
 
-                  <button
-                    type="button"
-                    className="new-upi-button"
-                    onClick={() =>
-                      openPaymentApp("paytm")
-                    }
-                  >
-                    <img
-                      src={paytmLogo}
-                      alt="Paytm"
-                    />
+                    <button
+                      type="button"
+                      className="upi-button"
+                      aria-label="Paytm"
+                      onClick={() =>
+                        openPaymentApp("paytm")
+                      }
+                    >
+                      <img
+                        src={paytmLogo}
+                        alt="Paytm"
+                      />
 
-                    <span>
-                      {openingApp === "paytm"
-                        ? "Opening..."
-                        : "Paytm"}
-                    </span>
-                  </button>
+                      {openingApp ===
+                        "paytm" && (
+                        <span className="opening-dot">
+                          ...
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
 
             {/* RECEIVER */}
 
-            <section className="new-receiver-card">
-              <div className="new-receiver-title">
+            <section className="receiver-card">
+              <div className="receiver-heading">
                 <FiUser />
-                <span>PAYMENT RECEIVER</span>
+
+                <span>
+                  PAYMENT RECEIVER
+                </span>
               </div>
 
-              <div className="new-receiver-grid">
+              <div className="receiver-grid">
                 <div>
                   <span>Name</span>
+
                   <strong>
                     {payment.receiverName ||
                       "Not configured"}
@@ -496,6 +585,7 @@ const PayFees = () => {
 
                 <div>
                   <span>UPI ID</span>
+
                   <strong>
                     {payment.upiId ||
                       "Not configured"}
@@ -504,6 +594,7 @@ const PayFees = () => {
 
                 <div>
                   <span>Number</span>
+
                   <strong>
                     {payment.paymentPhone ||
                       "Not configured"}
@@ -516,21 +607,29 @@ const PayFees = () => {
 
         {/* SECURITY */}
 
-        <div className="new-security-row">
+        <section className="security-strip">
           <div>
             <FiShield />
-            <span>Secure UPI Payment</span>
+
+            <span>
+              Secure UPI Payment
+            </span>
           </div>
 
           <i />
 
           <div>
             <FiLock />
-            <span>Protected Transaction</span>
-          </div>
-        </div>
 
-        <footer className="new-payment-footer">
+            <span>
+              Protected Transaction
+            </span>
+          </div>
+        </section>
+
+        {/* FOOTER */}
+
+        <footer className="payment-footer">
           THE SK LEARNINGS
         </footer>
       </main>
