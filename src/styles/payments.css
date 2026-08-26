@@ -3996,3 +3996,408 @@
   .payment-status-display,
   .payment-status-control { margin-right: 0 !important; }
 }
+
+.payment-details-modal { max-width: 900px; }
+.payment-details-body { padding: 22px; gap: 12px; background: #f5f7f9; }
+.payment-detail-item { min-height: 96px; border: 1px solid #dbe2e8; border-radius: 14px; background: #fff; box-shadow: 0 3px 10px rgba(30,42,54,.04); }
+.payment-detail-item strong { color: #1f2b38; font-size: 15px; }
+.payment-edit-fee-btn { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; border: 1px solid #e1ad16; border-radius: 9px; background: #fff8df; color: #7d5b00; font-weight: 750; cursor: pointer; }
+.details-fee-edit-section, .details-payment-actions-section { margin: 20px 22px; padding: 18px; border: 1px solid #dce3e8; border-radius: 15px; background: #fff; box-shadow: 0 6px 18px rgba(30,42,54,.05); }
+.details-fee-edit-section { border-top: 4px solid #f2b400; }
+.details-payment-actions-section { border-top: 4px solid #3e8d60; background: #fbfefc; }
+.details-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid #e8ecef; }
+.details-section-heading span, .details-section-heading strong { display: block; }
+.details-section-heading span { color: #a77700; font-size: 10px; font-weight: 800; letter-spacing: .09em; }
+.details-section-heading strong { margin-top: 4px; color: #202d3a; font-size: 17px; }
+.details-section-heading small { color: #788491; }
+.details-fee-edit-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.details-fee-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+@media (max-width: 700px) { .details-fee-edit-form { grid-template-columns: 1fr; } .details-section-heading { align-items: flex-start; flex-direction: column; } .payment-edit-fee-btn span { display: none; } }
+/* Compact, scannable account overview */
+.payment-details-body { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px 22px 20px; gap: 10px; }
+.payment-detail-item { min-height: 78px; padding: 13px 15px; justify-content: center; }
+.payment-detail-item:nth-child(5) { background: #fff8e5; border-color: #efc65a; }
+.payment-detail-item:nth-child(7) { background: #edf9f1; border-color: #9fd1ae; }
+.payment-detail-item:nth-child(8) { background: #fff0ef; border-color: #e7aaa5; }
+.payment-detail-item:nth-child(9) { background: #f3f0ff; border-color: #bcb0e4; }
+.payment-detail-item:nth-child(5) strong,
+.payment-detail-item:nth-child(7) strong,
+.payment-detail-item:nth-child(8) strong { font-size: 18px; }
+.details-entry-side-actions { display: flex; align-items: center; gap: 12px; }
+.details-inline-edit-btn { min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid #d69f00; border-radius: 8px; background: #ffba00; color: #161b20; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 9px rgba(199,145,0,.2); }
+.details-inline-edit-btn:hover { background: #eaaa00; transform: translateY(-1px); }
+.details-inline-edit-btn svg { font-size: 14px; }
+@media (max-width: 900px) { .payment-details-body { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 620px) { .payment-details-body { grid-template-columns: repeat(2,minmax(0,1fr)); } .details-inline-edit-btn span { display: none; } }
+/* Professional management-style payment details */
+.payment-details-modal {
+  max-width: 920px;
+  border: 1px solid #d7dde3;
+  border-radius: 16px;
+  background: #f7f9fb;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
+}
+.payment-details-modal .payment-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e7eb;
+  background: #fff;
+}
+.payment-details-modal .payment-modal-header > div:first-child > span {
+  color: #9a7000;
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+.payment-details-modal .payment-modal-header h2 {
+  margin-top: 6px;
+  color: #17212b;
+  font-size: 23px;
+}
+.payment-details-body {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px 24px 22px;
+  background: #f7f9fb;
+}
+.payment-detail-item,
+.payment-detail-item:nth-child(5),
+.payment-detail-item:nth-child(7),
+.payment-detail-item:nth-child(8),
+.payment-detail-item:nth-child(9) {
+  min-height: 82px;
+  padding: 14px 16px;
+  border: 1px solid #dde3e8;
+  border-left: 1px solid #dde3e8;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: none;
+}
+.payment-detail-item:hover {
+  border-color: #c7d0d8;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, .045);
+}
+.payment-detail-item span {
+  color: #778391;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .065em;
+}
+.payment-detail-item strong,
+.payment-detail-item:nth-child(5) strong,
+.payment-detail-item:nth-child(7) strong,
+.payment-detail-item:nth-child(8) strong {
+  margin-top: 8px;
+  color: #202b36;
+  font-size: 14px;
+  font-weight: 750;
+}
+.payment-detail-item:nth-child(5),
+.payment-detail-item:nth-child(7),
+.payment-detail-item:nth-child(8) {
+  border-top: 3px solid #c89b22;
+}
+.payment-detail-item:nth-child(7) { border-top-color: #4f8a68; }
+.payment-detail-item:nth-child(8) { border-top-color: #b06a61; }
+.payment-detail-item .detail-status {
+  width: fit-content;
+  padding: 5px 9px;
+  border: 1px solid #e3c878;
+  border-radius: 999px;
+  background: #fff9e9;
+  color: #8a6500;
+  font-size: 11px;
+}
+.payment-view-history-btn {
+  min-height: 36px;
+  padding: 0 13px;
+  border-color: #d4dae0;
+  border-radius: 8px;
+  background: #fff;
+  color: #35414d;
+  box-shadow: none;
+}
+.payment-view-history-btn:hover {
+  border-color: #b7c0c8;
+  background: #f7f9fa;
+}
+.details-payment-actions-section,
+.details-fee-edit-section {
+  margin: 12px 24px 24px;
+  padding: 18px 20px;
+  border: 1px solid #dce2e7;
+  border-top: 1px solid #dce2e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(30, 41, 59, .045);
+}
+.details-payment-actions-section { border-left: 4px solid #4f8a68; }
+.details-fee-edit-section { border-left: 4px solid #b88a16; }
+.details-payment-actions-title {
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #edf0f2;
+}
+.details-payment-actions-title > div > span,
+.details-section-heading span {
+  color: #8a6500;
+  letter-spacing: .1em;
+}
+.details-entry-side-actions { gap: 14px; }
+.details-entry-side-actions small { color: #6f7b86; }
+.details-inline-edit-btn {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #c9d0d7;
+  border-radius: 8px;
+  background: #fff;
+  color: #36424d;
+  font-size: 10px;
+  font-weight: 750;
+  box-shadow: none;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.details-inline-edit-btn:hover {
+  transform: none;
+  border-color: #b38a25;
+  background: #fffaf0;
+  color: #765800;
+}
+.details-inline-edit-btn svg { color: #9a720b; font-size: 13px; }
+.details-fee-edit-actions .payment-primary-btn,
+.details-partial-payment-form .partial-add-payment-btn {
+  min-height: 40px;
+  border: 1px solid #c89200;
+  border-radius: 8px;
+  background: #e9ad0b;
+  color: #17202a;
+  box-shadow: none;
+  font-weight: 800;
+}
+.details-fee-edit-actions .payment-primary-btn:hover,
+.details-partial-payment-form .partial-add-payment-btn:hover {
+  background: #d99f04;
+}
+.details-fee-edit-actions .payment-secondary-btn {
+  min-height: 40px;
+  border-radius: 8px;
+  background: #fff;
+}
+@media (max-width: 760px) {
+  .payment-details-body { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; }
+  .details-payment-actions-section, .details-fee-edit-section { margin: 10px 14px 18px; }
+}
+@media (max-width: 480px) {
+  .payment-details-body { grid-template-columns: 1fr; }
+}
+/* Card-free management overview */
+.management-details-overview {
+  display: grid;
+  grid-template-columns: minmax(230px, .8fr) minmax(0, 1.7fr);
+  gap: 0;
+  margin: 0;
+  border-bottom: 1px solid #dfe4e8;
+  background: #fff;
+}
+.management-student-panel,
+.management-fee-panel { padding: 22px 24px; }
+.management-student-panel {
+  border-right: 1px solid #e1e6ea;
+  background: #fafbfc;
+}
+.management-section-label {
+  padding-bottom: 11px;
+  border-bottom: 1px solid #dfe4e8;
+  color: #8a6500;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .11em;
+}
+.management-info-list,
+.management-meta-list { margin: 0; }
+.management-info-list > div {
+  display: grid;
+  grid-template-columns: 95px minmax(0, 1fr);
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #e9edf0;
+}
+.management-info-list > div:last-child { border-bottom: 0; }
+.management-info-list dt,
+.management-meta-list dt {
+  color: #7b8792;
+  font-size: 10px;
+  font-weight: 650;
+}
+.management-info-list dd,
+.management-meta-list dd {
+  min-width: 0;
+  margin: 0;
+  color: #25313c;
+  font-size: 12px;
+  font-weight: 750;
+}
+.management-amount-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 17px 0 18px;
+  border-bottom: 1px solid #e2e7eb;
+}
+.management-amount-summary > div {
+  min-width: 0;
+  padding: 0 18px;
+  border-right: 1px solid #e2e7eb;
+}
+.management-amount-summary > div:first-child { padding-left: 0; }
+.management-amount-summary > div:last-child { border-right: 0; }
+.management-amount-summary span,
+.management-amount-summary strong { display: block; }
+.management-amount-summary span {
+  color: #7b8792;
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.management-amount-summary strong {
+  margin-top: 7px;
+  color: #1e2934;
+  font-size: 20px;
+  line-height: 1.15;
+}
+.management-amount-summary > div:nth-child(2) strong { color: #397153; }
+.management-amount-summary > div:nth-child(3) strong { color: #9b4e45; }
+.management-status-cell .detail-status {
+  display: inline-flex;
+  margin-top: 7px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+.management-meta-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+  padding-top: 7px;
+}
+.management-meta-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.management-meta-list > div:nth-last-child(-n+2) { border-bottom: 0; }
+.management-meta-list dd { text-align: right; }
+.payment-details-modal .details-payment-actions-section,
+.payment-details-modal .details-fee-edit-section {
+  margin-top: 18px;
+}
+@media (max-width: 780px) {
+  .management-details-overview { grid-template-columns: 1fr; }
+  .management-student-panel { border-right: 0; border-bottom: 1px solid #e1e6ea; }
+  .management-amount-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
+  .management-amount-summary > div:nth-child(2) { border-right: 0; }
+  .management-meta-list { grid-template-columns: 1fr; }
+  .management-meta-list > div:nth-last-child(-n+2) { border-bottom: 1px solid #edf0f2; }
+  .management-meta-list > div:last-child { border-bottom: 0; }
+}
+/* Final density and balance pass for the management details view */
+.payment-details-modal {
+  max-width: 980px;
+  max-height: 92vh;
+}
+.payment-details-modal .payment-modal-header {
+  min-height: 0;
+  padding: 14px 22px;
+}
+.payment-details-modal .payment-modal-header h2 {
+  margin: 3px 0 0;
+  font-size: 19px;
+  line-height: 1.2;
+}
+.payment-details-modal .payment-modal-header p {
+  margin: 5px 0 0;
+  font-size: 11px;
+}
+.payment-details-modal .payment-modal-close {
+  width: 38px;
+  height: 38px;
+}
+.payment-details-modal .payment-view-history-btn {
+  min-height: 36px;
+  padding: 0 12px;
+}
+.management-details-overview {
+  grid-template-columns: minmax(260px, .75fr) minmax(0, 1.8fr);
+  align-items: start;
+}
+.management-student-panel,
+.management-fee-panel {
+  align-self: stretch;
+  padding: 16px 20px;
+}
+.management-section-label {
+  padding-bottom: 8px;
+  font-size: 8px;
+}
+.management-info-list > div {
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 0;
+}
+.management-info-list dt,
+.management-meta-list dt {
+  font-size: 9px;
+}
+.management-info-list dd,
+.management-meta-list dd {
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+.management-amount-summary {
+  padding: 14px 0;
+}
+.management-amount-summary > div {
+  padding: 0 14px;
+}
+.management-amount-summary span {
+  font-size: 8px;
+}
+.management-amount-summary strong {
+  margin-top: 5px;
+  font-size: 17px;
+}
+.management-meta-list {
+  column-gap: 22px;
+  padding-top: 4px;
+}
+.management-meta-list > div {
+  padding: 8px 0;
+}
+.management-status-cell .detail-status {
+  margin-top: 5px;
+  padding: 3px 8px;
+  font-size: 9px;
+}
+.payment-details-modal .details-payment-actions-section,
+.payment-details-modal .details-fee-edit-section {
+  margin: 14px 22px 18px;
+  padding: 14px 16px;
+}
+.payment-details-modal .details-payment-actions-title,
+.payment-details-modal .details-section-heading {
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.payment-details-modal .details-payment-actions-title strong,
+.payment-details-modal .details-section-heading strong {
+  font-size: 14px;
+}
+.details-inline-edit-btn {
+  min-height: 32px;
+  padding: 0 10px;
+}
+@media (max-width: 780px) {
+  .management-details-overview { grid-template-columns: 1fr; }
+  .management-student-panel, .management-fee-panel { padding: 14px 16px; }
+}

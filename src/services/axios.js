@@ -1,7 +1,13 @@
 import axios from "axios";
 
+const isLocalFrontend =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
 const api = axios.create({
-  baseURL: "https://44-205-140-200.sslip.io",
+  baseURL: isLocalFrontend
+    ? "http://localhost:3000"
+    : "https://44-205-140-200.sslip.io",
 
   headers: {
     "Content-Type": "application/json",

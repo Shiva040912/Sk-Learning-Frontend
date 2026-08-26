@@ -4,6 +4,7 @@ import {
   FiClock,
   FiCreditCard,
   FiDollarSign,
+  FiEdit2,
   FiFilter,
   FiImage,
   FiPlus,
@@ -98,6 +99,14 @@ const Payments = () => {
   const [monthlyPaymentMethod, setMonthlyPaymentMethod] = useState("");
   const [detailsPartialAmount, setDetailsPartialAmount] = useState("");
   const [isDetailsPaymentSaving, setIsDetailsPaymentSaving] = useState(false);
+  const [isEditingFee, setIsEditingFee] = useState(false);
+  const [isFeeEditSaving, setIsFeeEditSaving] = useState(false);
+  const [editFeeForm, setEditFeeForm] = useState({
+    totalFee: "",
+    feeType: "partial",
+    feeStartingDate: "",
+    feeEndingDate: "",
+  });
   const [isHistoryClearing, setIsHistoryClearing] = useState(false);
 
   const getErrorMessage = (error, fallback) => {
@@ -486,7 +495,7 @@ const Payments = () => {
   };
 
   const monthlyPreview = useMemo(() => {
-    if (feeForm.feeType !== "monthly") return 0;
+    if (true) return 0;
 
     const totalFee = Number(feeForm.totalFee);
     const months = Number(feeForm.selectedMonths);
@@ -499,7 +508,7 @@ const Payments = () => {
   }, [feeForm.totalFee, feeForm.feeType, feeForm.selectedMonths]);
 
   const monthlySetupPreview = useMemo(() => {
-    if (feeForm.feeType !== "monthly") return [];
+    if (true) return [];
 
     const totalFee = Number(feeForm.totalFee);
     const months = Number(feeForm.selectedMonths);
@@ -534,7 +543,31 @@ const Payments = () => {
     );
   };
 
+  const syncPaymentPageFromResult = (result) => {
+    const responseStudent = result?.student;
+    const payment = result?.payment;
+
+    if (responseStudent) {
+      const responseStudentId = responseStudent.id || responseStudent._id;
+      setStudents((current) =>
+        current.map((student) =>
+          String(student._id) === String(responseStudentId)
+            ? { ...student, ...responseStudent, _id: student._id }
+            : student,
+        ),
+      );
+    }
+
+    if (payment) {
+      setPaymentRecords((current) => [
+        payment,
+        ...current.filter((record) => String(record._id) !== String(payment._id)),
+      ]);
+    }
+  };
   const syncSelectedStudentFromPaymentResult = (result) => {
+    syncPaymentPageFromResult(result);
+
     const responseStudent = result?.student;
     const payment = result?.payment;
 
@@ -617,7 +650,6 @@ const Payments = () => {
       syncSelectedStudentFromPaymentResult(response.data || {});
       setMonthlyPaymentMethod("");
 
-      await fetchPaymentPageData();
     } catch (error) {
       console.error(
         "Monthly installment payment error:",
@@ -671,8 +703,9 @@ const Payments = () => {
       syncSelectedStudentFromPaymentResult(response.data || {});
       setDetailsPartialAmount("");
       setDetailsPaymentMethod("");
+      setShowDetailsModal(false);
+      setSelectedStudent(null);
 
-      await fetchPaymentPageData();
     } catch (error) {
       console.error(
         "Partial payment error:",
@@ -715,7 +748,7 @@ const Payments = () => {
       return;
     }
 
-    if (feeForm.feeType === "monthly" && !Number.isInteger(totalFee)) {
+    if (false && !Number.isInteger(totalFee)) {
       toast.error("Monthly total fee must be a whole rupee amount");
       return;
     }
@@ -764,7 +797,7 @@ const Payments = () => {
       payload.feeEndingDate = feeForm.feeEndingDate;
     }
 
-    if (feeForm.feeType === "monthly") {
+    if (false) {
       const months = Number(feeForm.selectedMonths);
 
       if (!Number.isInteger(months) || months < 1) {
@@ -882,7 +915,7 @@ const Payments = () => {
   const paymentPreviewAmount = useMemo(() => {
     if (!selectedStudent) return 0;
 
-    if (selectedStudent.feeType === "monthly") {
+    if (false) {
       const nextMonth = Number(selectedStudent.paidMonths || 0) + 1;
 
       const isLastMonth =
@@ -949,13 +982,13 @@ const Payments = () => {
       );
 
       toast.success(response.data?.message || "Payment collected successfully");
+      syncPaymentPageFromResult(response.data || {});
 
       setShowPaymentModal(false);
       setSelectedStudent(null);
       setSelectedPaymentMethod("");
       setPartialAmount("");
 
-      await fetchPaymentPageData();
     } catch (error) {
       console.error("Collect payment error:", error?.response?.data || error);
 
@@ -1221,6 +1254,70 @@ const Payments = () => {
     }
   };
 
+  const startFeeEdit = () => {
+    if (!selectedStudent?.feeSetupCompleted) return;
+    setEditFeeForm({
+      totalFee: String(selectedStudent.totalFee || ""),
+      feeType: selectedStudent.feeType === "yearly" ? "yearly" : "partial",
+      feeStartingDate: selectedStudent.feeStartingDate
+        ? String(selectedStudent.feeStartingDate).slice(0, 10)
+        : getTodayDateString(),
+      feeEndingDate: selectedStudent.feeEndingDate
+        ? String(selectedStudent.feeEndingDate).slice(0, 10)
+        : "",
+    });
+    setIsEditingFee(true);
+  };
+
+  const handleEditFeeSave = async () => {
+    if (!selectedStudent) return;
+    const totalFee = Number(editFeeForm.totalFee);
+    if (!Number.isFinite(totalFee) || totalFee <= 0) {
+      toast.error("Enter a valid total fee");
+      return;
+    }
+    if (totalFee < Number(selectedStudent.paidAmount || 0)) {
+      toast.error("Total fee cannot be less than the already paid amount");
+      return;
+    }
+    if (
+      editFeeForm.feeType === "yearly" &&
+      (!editFeeForm.feeStartingDate || !editFeeForm.feeEndingDate)
+    ) {
+      toast.error("Select fee starting and ending dates");
+      return;
+    }
+
+    try {
+      setIsFeeEditSaving(true);
+      const response = await api.put(
+        `/payments/student/${selectedStudent._id}/fee-edit`,
+        {
+          totalFee,
+          feeType: editFeeForm.feeType,
+          feeStartingDate: editFeeForm.feeStartingDate || undefined,
+          feeEndingDate: editFeeForm.feeEndingDate || undefined,
+        },
+      );
+      const updated = response.data?.student;
+      if (updated) {
+        setStudents((current) =>
+          current.map((student) =>
+            String(student._id) === String(updated._id)
+              ? { ...student, ...updated }
+              : student,
+          ),
+        );
+        setSelectedStudent((current) => current ? { ...current, ...updated } : current);
+      }
+      setIsEditingFee(false);
+      toast.success(response.data?.message || "Fee details updated successfully");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to update fee details"));
+    } finally {
+      setIsFeeEditSaving(false);
+    }
+  };
   const openStudentDetails = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
@@ -1230,7 +1327,7 @@ const Payments = () => {
   };
 
   const closeStudentDetails = () => {
-    if (isDetailsPaymentSaving || isHistoryClearing) return;
+    if (isDetailsPaymentSaving || isHistoryClearing || isFeeEditSaving) return;
 
     setShowDetailsModal(false);
     setShowHistoryModal(false);
@@ -1254,7 +1351,7 @@ const Payments = () => {
   };
 
   const closePaymentHistory = () => {
-    if (isDetailsPaymentSaving || isHistoryClearing) return;
+    if (isDetailsPaymentSaving || isHistoryClearing || isFeeEditSaving) return;
 
     setShowHistoryModal(false);
     setShowDetailsModal(true);
@@ -1442,7 +1539,6 @@ const Payments = () => {
                     onChange={(event) => setFeeTypeFilter(event.target.value)}
                   >
                     <option value="all">All Types</option>
-                    <option value="monthly">Monthly</option>
                     <option value="partial">Partial</option>
                     <option value="yearly">Yearly</option>
                   </select>
@@ -1835,7 +1931,7 @@ const Payments = () => {
                   <input
                     type="number"
                     min="1"
-                    step={feeForm.feeType === "monthly" ? "1" : "0.01"}
+                    step={false ? "1" : "0.01"}
                     name="totalFee"
                     value={feeForm.totalFee}
                     onChange={handleFeeFormChange}
@@ -1853,12 +1949,6 @@ const Payments = () => {
                       onChange={handleFeeFormChange}
                     >
                       <option value="">Select fee type</option>
-                      <option
-                        value="monthly"
-                        disabled={!feeSettings.monthlyFeeEnabled}
-                      >
-                        Monthly
-                      </option>
                       <option
                         value="partial"
                         disabled={!feeSettings.partialFeeEnabled}
@@ -1882,7 +1972,7 @@ const Payments = () => {
                   )}
                 </div>
 
-                {feeForm.feeType === "monthly" && (
+                {false && (
                   <div className="payment-form-group">
                     <label>Number of Months *</label>
 
@@ -1932,10 +2022,10 @@ const Payments = () => {
                   </>
                 )}
 
-                {(feeForm.feeType === "monthly" ||
+                {(false ||
                   feeForm.feeType === "partial") && (
                   <div className="payment-form-group settings-cycle-info-field">
-                    <label>Monthly Fee Cycle</label>
+                    <label>Partial Fee Cycle</label>
 
                     <div className="payment-common-cycle-box">
                       <div>
@@ -1951,13 +2041,13 @@ const Payments = () => {
 
                     <small className="payment-field-hint">
                       This recurring cycle comes from Settings and repeats every
-                      month for Monthly and Partial students.
+                      month for Partial-payment students.
                     </small>
                   </div>
                 )}
               </div>
 
-              {feeForm.feeType === "monthly" && (
+              {false && (
                 <>
                   <div className="fee-rule-preview">
                     <div>
@@ -2083,7 +2173,7 @@ const Payments = () => {
                 </div>
               </div>
 
-              {selectedStudent.feeType === "monthly" && (
+              {false && (
                 <div className="payment-rule-box">
                   <span>Monthly Payment</span>
                   <strong>₹{formatMoney(paymentPreviewAmount)}</strong>
@@ -2468,6 +2558,7 @@ const Payments = () => {
                 </p>
               </div>
               <div className="payment-details-header-actions">
+
                 {selectedStudent.feeSetupCompleted && (
                   <button
                     type="button"
@@ -2490,91 +2581,50 @@ const Payments = () => {
               </div>
             </div>
 
-            <div className="payment-details-body">
-              <div className="payment-detail-item">
-                <span>Student Name</span>
-                <strong>{selectedStudent.studentName}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Roll No</span>
-                <strong>{selectedStudent.rollNo}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Course</span>
-                <strong>{selectedStudent.course}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Batch</span>
-                <strong>{selectedStudent.batch || "-"}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Total Fees</span>
-                <strong>
-                  {selectedStudent.feeSetupCompleted
-                    ? `₹${formatMoney(selectedStudent.totalFee)}`
-                    : "-"}
-                </strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Fee Type</span>
-                <strong>{formatFeeType(selectedStudent.feeType)}</strong>
-              </div>
+            <div className="management-details-overview">
+              <section className="management-student-panel">
+                <div className="management-section-label">STUDENT INFORMATION</div>
+                <dl className="management-info-list">
+                  <div><dt>Student</dt><dd>{selectedStudent.studentName}</dd></div>
+                  <div><dt>Roll Number</dt><dd>{selectedStudent.rollNo}</dd></div>
+                  <div><dt>Course</dt><dd>{selectedStudent.course}</dd></div>
+                  <div><dt>Batch</dt><dd>{selectedStudent.batch || "-"}</dd></div>
+                  <div><dt>Fee Method</dt><dd>{formatFeeType(selectedStudent.feeType)}</dd></div>
+                </dl>
+              </section>
 
-              {selectedStudent.feeType === "monthly" && (
-                <>
-                  <div className="payment-detail-item">
-                    <span>Monthly Amount</span>
-                    <strong>
-                      ₹{formatMoney(selectedStudent.monthlyAmount)}
-                    </strong>
-                  </div>
-                  <div className="payment-detail-item">
-                    <span>Months Paid</span>
-                    <strong>
-                      {selectedStudent.paidMonths} /{" "}
-                      {selectedStudent.selectedMonths}
-                    </strong>
-                  </div>
-                </>
-              )}
-
-              <div className="payment-detail-item">
-                <span>Paid Amount</span>
-                <strong>₹{formatMoney(selectedStudent.paidAmount)}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Pending Amount</span>
-                <strong>₹{formatMoney(selectedStudent.pendingAmount)}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Status</span>
-                <strong
-                  className={`detail-status ${selectedStudent.paymentStatus}`}
-                >
-                  {getStatusLabel(selectedStudent.paymentStatus)}
-                </strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Last Payment Method</span>
-                <strong>
-                  {formatPaymentMethod(selectedStudent.paymentMethod)}
-                </strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Last Payment Date</span>
-                <strong>{formatDate(selectedStudent.paymentDate)}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Fees Starting Date</span>
-                <strong>{formatDate(selectedStudent.feeStartingDate)}</strong>
-              </div>
-              <div className="payment-detail-item">
-                <span>Fees Ending Date</span>
-                <strong>{formatDate(selectedStudent.feeEndingDate)}</strong>
-              </div>
+              <section className="management-fee-panel">
+                <div className="management-section-label">FEE ACCOUNT</div>
+                <div className="management-amount-summary">
+                  <div><span>Total Fee</span><strong>{selectedStudent.feeSetupCompleted ? `₹${formatMoney(selectedStudent.totalFee)}` : "-"}</strong></div>
+                  <div><span>Paid</span><strong>₹{formatMoney(selectedStudent.paidAmount)}</strong></div>
+                  <div><span>Balance</span><strong>₹{formatMoney(selectedStudent.pendingAmount)}</strong></div>
+                  <div className="management-status-cell"><span>Status</span><strong className={`detail-status ${selectedStudent.paymentStatus}`}>{getStatusLabel(selectedStudent.paymentStatus)}</strong></div>
+                </div>
+                <dl className="management-meta-list">
+                  <div><dt>Last Payment Method</dt><dd>{formatPaymentMethod(selectedStudent.paymentMethod)}</dd></div>
+                  <div><dt>Last Payment Date</dt><dd>{formatDate(selectedStudent.paymentDate)}</dd></div>
+                  <div><dt>Fee Start</dt><dd>{formatDate(selectedStudent.feeStartingDate)}</dd></div>
+                  <div><dt>Fee End</dt><dd>{formatDate(selectedStudent.feeEndingDate)}</dd></div>
+                </dl>
+              </section>
             </div>
 
-            {selectedStudent.feeType === "monthly" &&
+            {isEditingFee && (
+              <section className="details-fee-edit-section">
+                <div className="details-section-heading">
+                  <div><span>CORRECT FEE ENTRY</span><strong>Edit amount and fee method</strong></div>
+                  <small>A corrected fee-generated message will be sent.</small>
+                </div>
+                <div className="details-fee-edit-form">
+                  <div className="payment-form-group"><label>Total Fee *</label><input type="number" min={Math.max(1, Number(selectedStudent.paidAmount || 0))} step="0.01" value={editFeeForm.totalFee} onChange={(event) => setEditFeeForm((current) => ({ ...current, totalFee: event.target.value }))} disabled={isFeeEditSaving} /></div>
+                  <div className="payment-form-group"><label>Fee Method *</label><select value={editFeeForm.feeType} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeType: event.target.value }))} disabled={isFeeEditSaving}><option value="partial">Partial Payment</option><option value="yearly">Full Payment (Yearly)</option></select></div>
+                  {editFeeForm.feeType === "yearly" && <><div className="payment-form-group"><label>Starting Date *</label><input type="date" value={editFeeForm.feeStartingDate} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeStartingDate: event.target.value }))} disabled={isFeeEditSaving} /></div><div className="payment-form-group"><label>Ending Date *</label><input type="date" min={editFeeForm.feeStartingDate} value={editFeeForm.feeEndingDate} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeEndingDate: event.target.value }))} disabled={isFeeEditSaving} /></div></>}
+                </div>
+                <div className="details-fee-edit-actions"><button type="button" className="payment-secondary-btn" onClick={() => setIsEditingFee(false)} disabled={isFeeEditSaving}>Cancel</button><button type="button" className="payment-primary-btn" onClick={handleEditFeeSave} disabled={isFeeEditSaving}><FiSave />{isFeeEditSaving ? "Updating..." : "Update & Send"}</button></div>
+              </section>
+            )}
+            {false &&
               selectedStudent.paymentStatus !== "paid" && (
                 <div className="details-payment-actions-section">
                   <div className="details-payment-actions-title">
@@ -2664,9 +2714,12 @@ const Payments = () => {
                       <span>PARTIAL PAYMENT</span>
                       <strong>Add Received Amount</strong>
                     </div>
-                    <small>
-                      Balance: ₹{formatMoney(selectedStudent.pendingAmount)}
-                    </small>
+                    <div className="details-entry-side-actions">
+                      <small>Balance: ₹{formatMoney(selectedStudent.pendingAmount)}</small>
+                      <button type="button" className="details-inline-edit-btn" onClick={startFeeEdit} aria-label="Edit fee amount and method" title="Edit fee">
+                        <FiEdit2 /><span>Edit Fee</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="details-partial-payment-form">
@@ -2717,7 +2770,7 @@ const Payments = () => {
               )}
 
             {selectedStudent.paymentStatus === "paid" &&
-              (selectedStudent.feeType === "monthly" ||
+              (false ||
                 selectedStudent.feeType === "partial") && (
                 <div className="details-fee-complete-banner">
                   <FiCheckCircle />

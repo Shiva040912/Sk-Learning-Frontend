@@ -276,7 +276,7 @@ const InvoiceDocument = forwardRef(
               </div>
             </div>
           )}
-          {fee.feeType === "monthly" &&
+          {false &&
             monthlyInstallments.length > 0 && (
               <div className="compact-installment-block">
                 <div className="compact-installment-heading">

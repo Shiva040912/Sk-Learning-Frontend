@@ -868,56 +868,12 @@ const Settings = () => {
                   <h2>Fee Settings</h2>
                   <p>
                     Control fee setup options and the common recurring cycle used
-                    by Monthly and Partial students.
+                    by Partial-payment students.
                   </p>
                 </div>
               </div>
 
               <div className="fee-settings-grid">
-                <div className="fee-rule-card">
-                  <div className="fee-rule-header">
-                    <div className="fee-rule-icon">
-                      <span>M</span>
-                    </div>
-
-                    <div className="fee-rule-title">
-                      <h3>Monthly Fees</h3>
-                      <p>
-                        Allow monthly plans with any required number of months.
-                      </p>
-                    </div>
-
-                    <label className="settings-switch">
-                      <input
-                        type="checkbox"
-                        name="monthlyFeeEnabled"
-                        checked={settings.monthlyFeeEnabled}
-                        onChange={handleSettingsChange}
-                      />
-                      <span />
-                    </label>
-                  </div>
-
-                  <div className="fee-rule-fields">
-                    <div className="settings-field">
-                      <label>Default Months</label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        name="defaultMonths"
-                        value={settings.defaultMonths}
-                        onChange={handleSettingsChange}
-                        disabled={!settings.monthlyFeeEnabled}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="settings-rule-preview">
-                    There is <strong>no fixed maximum month limit</strong>. This
-                    value is only the default shown when Monthly is selected.
-                  </div>
-                </div>
 
                 <div className="fee-rule-card">
                   <div className="fee-rule-header">
@@ -957,7 +913,7 @@ const Settings = () => {
                     </div>
 
                     <div className="fee-rule-title">
-                      <h3>Monthly / Partial Fee Cycle</h3>
+                      <h3>Partial Fee Cycle</h3>
                       <p>
                         Set one recurring start and due day for all Monthly and
                         Partial students.
