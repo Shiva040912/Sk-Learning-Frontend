@@ -52,7 +52,7 @@ const App = () => {
           element={<Login />}
         />
 
-        {/* PUBLIC STUDENT PAYMENT PAGE - NO ADMIN AUTH */}
+        
         <Route
           path="/pay-fees/:studentId"
           element={<PayFees />}
