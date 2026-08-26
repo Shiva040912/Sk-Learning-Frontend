@@ -48,7 +48,6 @@ const PayFees = () => {
   const [openingApp, setOpeningApp] = useState("");
 
   
-
   useEffect(() => {
     const loadPaymentDetails = async () => {
       if (!cleanStudentId) {
@@ -84,7 +83,7 @@ const PayFees = () => {
     loadPaymentDetails();
   }, [cleanStudentId]);
 
- 
+  
 
   const student = paymentData?.student || {};
   const payment = paymentData?.payment || {};
@@ -98,7 +97,8 @@ const PayFees = () => {
     student.paymentAmount || 0,
   );
 
- 
+  
+
   const formattedDueDate = useMemo(() => {
     if (!payment.feeDueDate) {
       return "-";
@@ -122,6 +122,7 @@ const PayFees = () => {
     );
   }, [payment.feeDueDate]);
 
+  
 
   const handleAmountChange = (event) => {
     const value = event.target.value;
@@ -141,8 +142,7 @@ const PayFees = () => {
     setError("");
   };
 
-  
-
+ 
   const validatePayment = () => {
     const enteredAmount = Number(amount);
 
@@ -165,7 +165,7 @@ const PayFees = () => {
       return false;
     }
 
-
+    
     if (
       pendingAmount > 0 &&
       enteredAmount > pendingAmount
@@ -200,7 +200,7 @@ const PayFees = () => {
     return true;
   };
 
-  
+ 
 
   const getUpiQuery = () => {
     const enteredAmount = Number(
@@ -307,7 +307,8 @@ const PayFees = () => {
     );
   }
 
-  
+ 
+
   if (!paymentData) {
     return (
       <div className="public-payment-page">
@@ -329,11 +330,10 @@ const PayFees = () => {
     );
   }
 
- 
-
+  
   return (
     <div className="public-payment-page">
-      
+      {/* HEADER */}
 
       <header className="public-payment-header">
         <div className="public-brand">
@@ -362,10 +362,10 @@ const PayFees = () => {
         </div>
       </header>
 
-      
+      {/* CONTENT */}
 
       <main className="public-payment-content">
-        
+        {/* INTRO */}
 
         <section className="payment-intro">
           <span className="payment-eyebrow">
@@ -391,7 +391,7 @@ const PayFees = () => {
           </p>
         </section>
 
-        
+        {/* STUDENT DETAILS */}
 
         <section className="student-payment-card">
           <div className="student-payment-heading">
