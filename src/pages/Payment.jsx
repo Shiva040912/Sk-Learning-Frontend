@@ -393,11 +393,11 @@ const Payments = () => {
         : String(feeSettings.defaultMonths || 12),
   });
 
-  const openFeeSetupModal = (student) => {
+  const openFeeSetupModal = (student, { startNewCycle = false } = {}) => {
     setFeeSetupMode("individual");
     setBulkCourse("");
     setSelectedStudent(student);
-    setFeeForm(getStudentFeeForm(student));
+    setFeeForm(startNewCycle ? getEmptyFeeForm() : getStudentFeeForm(student));
     setShowFeeModal(true);
   };
 
@@ -1718,13 +1718,30 @@ const Payments = () => {
 
                       <td data-label="Setup">
                         {student.feeSetupCompleted ? (
-                          <span
-                            className="fee-setup-completed"
-                            title="Fee setup completed"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <FiCheckCircle />
-                          </span>
+                          <div className="fee-setup-actions">
+                            <span
+                              className="fee-setup-completed"
+                              title="Fee setup completed"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <FiCheckCircle />
+                            </span>
+
+                            {student.paymentStatus === "paid" && (
+                              <button
+                                type="button"
+                                className="fee-setup-add fee-setup-next"
+                                title="Assign next fee"
+                                aria-label={`Assign next fee for ${student.studentName}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openFeeSetupModal(student, { startNewCycle: true });
+                                }}
+                              >
+                                <FiPlus />
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <button
                             type="button"

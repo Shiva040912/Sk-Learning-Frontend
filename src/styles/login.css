@@ -207,7 +207,12 @@ html, body, #root { width: 100%; min-height: 100%; margin: 0; }
 .login-copyright { margin: 18px 0 0; color: #8b949b; font-size: 10px; }
 
 @media (max-width: 520px) {
-  .login-page { min-height: 100svh; justify-content: flex-start; padding: 14px 12px 18px; }
+  .login-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    justify-content: center;
+    padding: 14px 12px 18px;
+  }
   .login-shell { max-width: 400px; margin-top: 0; padding: 0 20px 20px; border-radius: 14px; box-shadow: 0 12px 34px rgba(23, 33, 43, 0.1); }
   .login-brand { margin: 0 -20px; padding: 18px 16px; gap: 11px; border-radius: 13px 13px 0 0; }
   .login-logo-wrap { width: 46px; height: 46px; flex-basis: 46px; }
@@ -226,6 +231,10 @@ html, body, #root { width: 100%; min-height: 100%; margin: 0; }
   .login-btn { height: 44px; margin-top: 2px; font-size: 12px; }
   .login-security { margin-top: 17px; padding-top: 14px; font-size: 9.5px; }
   .login-copyright { margin-top: 13px; font-size: 9px; }
+}
+
+@media (max-width: 520px) and (max-height: 620px) {
+  .login-page { justify-content: flex-start; }
 }
 
 @media (max-width: 360px) {

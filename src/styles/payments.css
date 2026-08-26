@@ -495,7 +495,25 @@
   color: #2f8f50;
 }
 
-.fee-setup-add,
+.fee-setup-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.fee-setup-next {
+  border-color: #e1ad16;
+  background: #fff8df;
+  color: #a56f00;
+}
+
+.fee-setup-next:hover {
+  border-color: #cb9200;
+  background: #ffefb5;
+  color: #7d5300;
+}
+
 .fee-setup-completed {
   width: 30px;
   height: 30px;
@@ -4400,4 +4418,24 @@
 @media (max-width: 780px) {
   .management-details-overview { grid-template-columns: 1fr; }
   .management-student-panel, .management-fee-panel { padding: 14px 16px; }
+}
+/* Paid student: next fee action stays borderless until hover. */
+.fee-setup-actions .fee-setup-next {
+  border-color: transparent;
+  background: transparent;
+  color: #d28a00;
+  box-shadow: none;
+}
+
+.fee-setup-actions .fee-setup-next:hover {
+  border-color: transparent;
+  background: #fff1c7;
+  color: #9a6200;
+  box-shadow: 0 3px 9px rgba(210, 138, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.fee-setup-actions .fee-setup-next:active {
+  background: #ffe6a0;
+  transform: scale(0.92);
 }
