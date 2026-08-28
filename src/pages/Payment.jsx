@@ -94,10 +94,12 @@ const Payments = () => {
   const [bulkCourse, setBulkCourse] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
+  const [partialAmountError, setPartialAmountError] = useState("");
 
   const [detailsPaymentMethod, setDetailsPaymentMethod] = useState("");
   const [monthlyPaymentMethod, setMonthlyPaymentMethod] = useState("");
   const [detailsPartialAmount, setDetailsPartialAmount] = useState("");
+  const [detailsPartialAmountError, setDetailsPartialAmountError] = useState("");
   const [isDetailsPaymentSaving, setIsDetailsPaymentSaving] = useState(false);
   const [isEditingFee, setIsEditingFee] = useState(false);
   const [isFeeEditSaving, setIsFeeEditSaving] = useState(false);
@@ -287,6 +289,16 @@ const Payments = () => {
     ];
   }, [paymentRows]);
 
+  const individualStudentOptions = useMemo(() => {
+    return [...paymentRows].sort((a, b) =>
+      String(a.rollNo || "").localeCompare(
+        String(b.rollNo || ""),
+        undefined,
+        { numeric: true, sensitivity: "base" },
+      ),
+    );
+  }, [paymentRows]);
+
   const filteredStudents = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
@@ -351,8 +363,8 @@ const Payments = () => {
   const formatFeeType = (value) => {
     const values = {
       monthly: "Monthly",
-      partial: "Partial",
-      yearly: "Yearly",
+      partial: "Part Payment",
+      yearly: "One-Time Payment",
     };
 
     return values[value] || "-";
@@ -371,7 +383,7 @@ const Payments = () => {
 
   const getStatusLabel = (status) => {
     if (status === "paid") return "Paid";
-    if (status === "partial") return "Partial";
+    if (status === "partial") return "Part Payment";
     return "Unpaid";
   };
 
@@ -415,7 +427,7 @@ const Payments = () => {
   };
 
   const openFeeSetupManager = () => {
-    setFeeSetupMode("individual");
+    setFeeSetupMode("common");
     setBulkCourse("");
     setSelectedStudent(null);
     setFeeForm(getEmptyFeeForm());
@@ -453,7 +465,9 @@ const Payments = () => {
 
     setFeeSetupMode(mode);
     setBulkCourse("");
-    setSelectedStudent(null);
+    if (mode !== "individual") {
+      setSelectedStudent(null);
+    }
 
     const nextForm = getEmptyFeeForm();
 
@@ -721,11 +735,11 @@ const Payments = () => {
 
     } catch (error) {
       console.error(
-        "Partial payment error:",
+        "Part payment error:",
         error?.response?.data || error,
       );
 
-      toast.error(getErrorMessage(error, "Failed to add partial payment"));
+      toast.error(getErrorMessage(error, "Failed to add part payment"));
     } finally {
       setIsDetailsPaymentSaving(false);
     }
@@ -757,7 +771,7 @@ const Payments = () => {
     }
 
     if (feeSetupMode !== "individual" && feeForm.feeType !== "yearly") {
-      toast.error("Common and Course Wise fee setup use Yearly payment only");
+      toast.error("Common and Course Wise fee setup use One-Time Payment only");
       return;
     }
 
@@ -969,7 +983,7 @@ const Payments = () => {
       const amount = Number(partialAmount);
       const pendingAmount = Number(selectedStudent.pendingAmount || 0);
       if (!Number.isFinite(amount) || amount <= 0) {
-        toast.error("Enter a valid partial payment amount");
+        toast.error("Enter a valid part payment amount");
         return;
       }
 
@@ -1337,6 +1351,7 @@ const Payments = () => {
     setShowHistoryModal(false);
     setDetailsPaymentMethod("");
     setDetailsPartialAmount("");
+    setDetailsPartialAmountError("");
   };
 
   const closeStudentDetails = () => {
@@ -1348,6 +1363,7 @@ const Payments = () => {
     setDetailsPaymentMethod("");
     setMonthlyPaymentMethod("");
     setDetailsPartialAmount("");
+    setDetailsPartialAmountError("");
   };
 
   const openPaymentHistory = () => {
@@ -1361,6 +1377,7 @@ const Payments = () => {
     setDetailsPaymentMethod("");
     setMonthlyPaymentMethod("");
     setDetailsPartialAmount("");
+    setDetailsPartialAmountError("");
   };
 
   const closePaymentHistory = () => {
@@ -1371,6 +1388,7 @@ const Payments = () => {
     setDetailsPaymentMethod("");
     setMonthlyPaymentMethod("");
     setDetailsPartialAmount("");
+    setDetailsPartialAmountError("");
   };
 
   const handleClearPaymentHistory = async () => {
@@ -1433,6 +1451,17 @@ const Payments = () => {
       <div className="payments-summary-grid">
         <article className="payment-summary-card">
           <div className="payment-summary-icon">
+            <FiTrendingUp />
+          </div>
+          <div>
+            <span>Setup Completed</span>
+            <strong>{summary.configuredStudents}</strong>
+            <small>{paymentRows.length} total students</small>
+          </div>
+        </article>
+
+        <article className="payment-summary-card">
+          <div className="payment-summary-icon">
             <FiDollarSign />
           </div>
           <div>
@@ -1461,17 +1490,6 @@ const Payments = () => {
             <span>Pending</span>
             <strong>₹{formatMoney(summary.pending)}</strong>
             <small>Outstanding student fees</small>
-          </div>
-        </article>
-
-        <article className="payment-summary-card">
-          <div className="payment-summary-icon">
-            <FiTrendingUp />
-          </div>
-          <div>
-            <span>Setup Completed</span>
-            <strong>{summary.configuredStudents}</strong>
-            <small>{paymentRows.length} total students</small>
           </div>
         </article>
       </div>
@@ -1540,7 +1558,7 @@ const Payments = () => {
                   >
                     <option value="all">All Status</option>
                     <option value="unpaid">Unpaid</option>
-                    <option value="partial">Partial</option>
+                    <option value="partial">Part Payment</option>
                     <option value="paid">Paid</option>
                   </select>
                 </div>
@@ -1552,8 +1570,8 @@ const Payments = () => {
                     onChange={(event) => setFeeTypeFilter(event.target.value)}
                   >
                     <option value="all">All Types</option>
-                    <option value="partial">Partial</option>
-                    <option value="yearly">Yearly</option>
+                    <option value="partial">Part Payment</option>
+                    <option value="yearly">One-Time Payment</option>
                   </select>
                 </div>
               </div>
@@ -1694,7 +1712,7 @@ const Payments = () => {
                               student.feeType === "monthly"
                                 ? "Open student details to manage monthly installments"
                                 : student.feeType === "partial"
-                                  ? "Open student details to add partial payments"
+                                  ? "Open student details to add part payments"
                                   : ""
                             }
                           >
@@ -1803,6 +1821,7 @@ const Payments = () => {
 
             <form className="fee-setup-form" onSubmit={handleFeeSetup}>
               <div className="fee-setup-mode-grid">
+                {selectedStudent && (
                 <button
                   type="button"
                   className={`fee-setup-mode-card ${
@@ -1816,8 +1835,9 @@ const Payments = () => {
                     <strong>Individual</strong>
                     <small>One student</small>
                   </div>
-                </button>
+                </button>) }
 
+                {!selectedStudent && (
                 <button
                   type="button"
                   className={`fee-setup-mode-card ${
@@ -1838,8 +1858,9 @@ const Payments = () => {
                         : "Disabled in Settings"}
                     </small>
                   </div>
-                </button>
+                </button>) }
 
+                {!selectedStudent && (
                 <button
                   type="button"
                   className={`fee-setup-mode-card ${
@@ -1860,12 +1881,12 @@ const Payments = () => {
                         : "Disabled in Settings"}
                     </small>
                   </div>
-                </button>
+                </button>) }
               </div>
 
               {feeSetupMode === "individual" && (
                 <div className="fee-setup-target-card">
-                  <div className="payment-form-group fee-target-select">
+                  <div className="payment-form-group fee-target-select" hidden>
                     <label>Select Student *</label>
 
                     <select
@@ -1875,7 +1896,7 @@ const Payments = () => {
                     >
                       <option value="">Select student</option>
 
-                      {paymentRows.map((student) => (
+                      {individualStudentOptions.map((student) => (
                         <option key={student._id} value={student._id}>
                           {student.rollNo} - {student.studentName} - {student.course}
                         </option>
@@ -1984,20 +2005,20 @@ const Payments = () => {
                         value="partial"
                         disabled={!feeSettings.partialFeeEnabled}
                       >
-                        Partial
+                        Part Payment
                       </option>
                       <option
                         value="yearly"
                         disabled={!feeSettings.yearlyFeeEnabled}
                       >
-                        Yearly
+                        One-Time Payment
                       </option>
                     </select>
                   ) : (
                     <div className="bulk-yearly-fixed-field">
-                      <strong>Yearly / Full Payment</strong>
+                      <strong>One-Time Payment</strong>
                       <span>
-                        Common and Course Wise setup always use Yearly payment.
+                        Common and Course Wise setup always use One-Time Payment.
                       </span>
                     </div>
                   )}
@@ -2056,7 +2077,7 @@ const Payments = () => {
                 {(false ||
                   feeForm.feeType === "partial") && (
                   <div className="payment-form-group settings-cycle-info-field">
-                    <label>Partial Fee Cycle</label>
+                    <label>Part Payment Fee Cycle</label>
 
                     <div className="payment-common-cycle-box">
                       <div>
@@ -2072,7 +2093,7 @@ const Payments = () => {
 
                     <small className="payment-field-hint">
                       This recurring cycle comes from Settings and repeats every
-                      month for Partial-payment students.
+                      month for Part-payment students.
                     </small>
                   </div>
                 )}
@@ -2122,14 +2143,14 @@ const Payments = () => {
 
               {feeForm.feeType === "partial" && (
                 <div className="fee-rule-note">
-                  Partial mode has no fixed installment count. The admin can add
+                  Part Payment mode has no fixed installment count. The admin can add
                   any received amount until the student's balance becomes ₹0.
                 </div>
               )}
 
               {feeForm.feeType === "yearly" && (
                 <div className="fee-rule-note">
-                  Yearly mode collects the complete configured fee in one payment.
+                  One-Time Payment mode collects the complete configured fee in one payment.
                 </div>
               )}
 
@@ -2221,15 +2242,38 @@ const Payments = () => {
 
               {selectedStudent.feeType === "partial" && (
                 <div className="payment-form-group">
-                  <label>Partial Payment Amount *</label>
+                  <label>Part Payment Amount *</label>
                   <input
                     type="number"
                     min="1"
                     step="0.01"
+                    max={selectedStudent.pendingAmount}
                     value={partialAmount}
-                    onChange={(event) => setPartialAmount(event.target.value)}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setPartialAmount(value);
+
+                      const amount = Number(value);
+                      const balance = Number(selectedStudent.pendingAmount || 0);
+
+                      if (value !== "" && amount > balance) {
+                        setPartialAmountError(
+                          `Payment amount exceeds the remaining balance of ₹${formatMoney(balance)}.`
+                        );
+                      } else if (value !== "" && (!Number.isFinite(amount) || amount <= 0)) {
+                        setPartialAmountError("Enter a valid payment amount.");
+                      } else {
+                        setPartialAmountError("");
+                      }
+                    }}
                     placeholder="Enter received amount"
+                    className={partialAmountError ? "payment-input-error" : ""}
                   />
+                  {partialAmountError && (
+                    <small className="payment-validation-error">
+                      {partialAmountError}
+                    </small>
+                  )}
                   <small className="payment-field-hint">
                     Enter any received amount up to the current remaining balance.
                   </small>
@@ -2240,7 +2284,7 @@ const Payments = () => {
                 <div className="payment-rule-box">
                   <span>Full Payment</span>
                   <strong>₹{formatMoney(paymentPreviewAmount)}</strong>
-                  <small>Yearly fee will be closed with this payment.</small>
+                  <small>One-Time Payment fee will be closed with this payment.</small>
                 </div>
               )}
 
@@ -2649,7 +2693,7 @@ const Payments = () => {
                 </div>
                 <div className="details-fee-edit-form">
                   <div className="payment-form-group"><label>Total Fee *</label><input type="number" min={Math.max(1, Number(selectedStudent.paidAmount || 0))} step="0.01" value={editFeeForm.totalFee} onChange={(event) => setEditFeeForm((current) => ({ ...current, totalFee: event.target.value }))} disabled={isFeeEditSaving} /></div>
-                  <div className="payment-form-group"><label>Fee Method *</label><select value={editFeeForm.feeType} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeType: event.target.value }))} disabled={isFeeEditSaving}><option value="partial">Partial Payment</option><option value="yearly">Full Payment (Yearly)</option></select></div>
+                  <div className="payment-form-group"><label>Fee Method *</label><select value={editFeeForm.feeType} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeType: event.target.value }))} disabled={isFeeEditSaving}><option value="partial">Part Payment</option><option value="yearly">One-Time Payment</option></select></div>
                   {editFeeForm.feeType === "yearly" && <><div className="payment-form-group"><label>Starting Date *</label><input type="date" value={editFeeForm.feeStartingDate} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeStartingDate: event.target.value }))} disabled={isFeeEditSaving} /></div><div className="payment-form-group"><label>Ending Date *</label><input type="date" min={editFeeForm.feeStartingDate} value={editFeeForm.feeEndingDate} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeEndingDate: event.target.value }))} disabled={isFeeEditSaving} /></div></>}
                 </div>
                 <div className="details-fee-edit-actions"><button type="button" className="payment-secondary-btn" onClick={() => setIsEditingFee(false)} disabled={isFeeEditSaving}>Cancel</button><button type="button" className="payment-primary-btn" onClick={handleEditFeeSave} disabled={isFeeEditSaving}><FiSave />{isFeeEditSaving ? "Updating..." : "Update & Send"}</button></div>
@@ -2742,7 +2786,7 @@ const Payments = () => {
                 <div className="details-payment-actions-section">
                   <div className="details-payment-actions-title">
                     <div>
-                      <span>PARTIAL PAYMENT</span>
+                      <span>PART PAYMENT</span>
                       <strong>Add Received Amount</strong>
                     </div>
                     <div className="details-entry-side-actions">
@@ -2762,12 +2806,34 @@ const Payments = () => {
                         step="0.01"
                         max={selectedStudent.pendingAmount}
                         value={detailsPartialAmount}
-                        onChange={(event) =>
-                          setDetailsPartialAmount(event.target.value)
-                        }
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setDetailsPartialAmount(value);
+
+                          const amount = Number(value);
+                          const balance = Number(selectedStudent.pendingAmount || 0);
+
+                          if (value === "") {
+                            setDetailsPartialAmountError("");
+                          } else if (!Number.isFinite(amount) || amount <= 0) {
+                            setDetailsPartialAmountError("Enter a valid payment amount.");
+                          } else if (amount > balance) {
+                            setDetailsPartialAmountError(
+                              `Payment amount exceeds the remaining balance of ₹${formatMoney(balance)}.`
+                            );
+                          } else {
+                            setDetailsPartialAmountError("");
+                          }
+                        }}
                         placeholder="Example: 5000"
                         disabled={isDetailsPaymentSaving}
+                        className={detailsPartialAmountError ? "payment-input-error" : ""}
                       />
+                      {detailsPartialAmountError && (
+                        <small className="payment-validation-error">
+                          {detailsPartialAmountError}
+                        </small>
+                      )}
                     </div>
 
                     <div className="payment-form-group">
@@ -2793,8 +2859,8 @@ const Payments = () => {
                       onClick={handlePartialPaymentFromDetails}
                       disabled={isDetailsPaymentSaving}
                     >
-                      <FiPlus />
-                      {isDetailsPaymentSaving ? "Adding..." : "Add Payment"}
+                      <FiCheckCircle />
+                      {isDetailsPaymentSaving ? "Collecting..." : "Collected"}
                     </button>
                   </div>
                 </div>

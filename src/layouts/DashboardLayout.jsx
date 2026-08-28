@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
@@ -7,6 +7,7 @@ import Topbar from "../components/Topbar";
 import "../styles/layout.css";
 
 const DashboardLayout = () => {
+  const location = useLocation();
   const [mobileNavLayout, setMobileNavLayout] = useState(() => {
     const saved = localStorage.getItem("mobileNavLayout");
     return saved === "bottom" ? "bottom" : "drawer";
@@ -58,7 +59,7 @@ const DashboardLayout = () => {
         />
 
         <main className="dashboard-content">
-          <Outlet />
+          <Outlet key={location.key} />
         </main>
       </div>
     </div>

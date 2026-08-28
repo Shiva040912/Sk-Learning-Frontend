@@ -29,8 +29,8 @@ const formatDate = (value) => {
 const formatFeeType = (value) => {
   const labels = {
     monthly: "Monthly",
-    partial: "Partial",
-    yearly: "Yearly",
+    partial: "Part Payment",
+    yearly: "One-Time Payment",
   };
 
   return labels[value] || "-";
@@ -112,7 +112,7 @@ const InvoiceDocument = forwardRef(
       fee.feeType === "monthly"
         ? `${fee.selectedMonths || "-"} monthly installments`
         : fee.feeType === "partial"
-          ? "Flexible partial payments"
+          ? "Flexible part payments"
           : "Full fee payment";
 
     return (
@@ -199,9 +199,9 @@ const InvoiceDocument = forwardRef(
               {isReceipt
                 ? isFullyPaid
                   ? "Paid"
-                  : "Partial"
+                  : "Part Payment"
                 : invoice.paymentStatus === "partial"
-                  ? "Partial"
+                  ? "Part Payment"
                   : "Unpaid"}
             </strong>
           </div>
@@ -342,7 +342,7 @@ const InvoiceDocument = forwardRef(
             <div className="compact-installment-block">
               <div className="compact-installment-heading">
                 <div>
-                  <strong>Partial Payment History</strong>
+                  <strong>Part Payment History</strong>
                   <span>{paymentHistory.length} transactions</span>
                 </div>
 

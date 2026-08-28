@@ -99,8 +99,8 @@ const Invoices = () => {
   const formatFeeType = (value) => {
     const labels = {
       monthly: "Monthly",
-      partial: "Partial",
-      yearly: "Yearly",
+      partial: "Part Payment",
+      yearly: "One-Time Payment",
     };
 
     return labels[value] || "-";
@@ -436,8 +436,8 @@ const Invoices = () => {
                   onChange={(event) => setFeeTypeFilter(event.target.value)}
                 >
                   <option value="all">All Invoices</option>
-                  <option value="partial">Partial Invoices</option>
-                  <option value="yearly">Yearly Invoices</option>
+                  <option value="partial">Part Payment Invoices</option>
+                  <option value="yearly">One-Time Payment Invoices</option>
                 </select>
               </div>
             </div>
@@ -613,7 +613,7 @@ const ReceiptColumn = ({
                     {status === "paid"
                       ? "Paid"
                       : invoice.paymentStatus === "partial"
-                        ? "Partial"
+                        ? "Part Payment"
                         : "Unpaid"}
                   </span>
                 </div>

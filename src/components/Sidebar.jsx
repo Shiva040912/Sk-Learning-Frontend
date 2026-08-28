@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import {
   FiBell,
@@ -22,6 +22,8 @@ const Sidebar = ({
   onToggleExpand,
   mobileNavLayout,
 }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const user = JSON.parse(
     localStorage.getItem("user") || "{}"
   );
@@ -71,12 +73,20 @@ const Sidebar = ({
     },
   ];
 
-  const handleNavClick = () => {
+  const handleNavClick = (event, destination) => {
     if (
       window.innerWidth <= 900 &&
       mobileNavLayout === "drawer"
     ) {
       onClose();
+    }
+
+    if (location.pathname === destination) {
+      event.preventDefault();
+      navigate(destination, {
+        replace: true,
+        state: { sidebarReset: Date.now() },
+      });
     }
   };
 
@@ -149,7 +159,7 @@ const Sidebar = ({
                   isActive ? "active" : ""
                 }`
               }
-              onClick={handleNavClick}
+              onClick={(event) => handleNavClick(event, item.to)}
             >
               <span className="sidebar-icon">
                 {item.icon}

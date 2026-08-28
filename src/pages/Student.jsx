@@ -875,6 +875,15 @@ const Students = () => {
         </article>
 
         <article className="student-payment-summary-card">
+          <div className="student-payment-summary-icon"><FiUser /></div>
+          <div>
+            <span>Active Students</span>
+            <strong>{summary.activeStudents}</strong>
+            <small>Currently active records</small>
+          </div>
+        </article>
+
+        <article className="student-payment-summary-card">
           <div className="student-payment-summary-icon"><FiBookOpen /></div>
           <div>
             <span>Courses</span>
@@ -889,15 +898,6 @@ const Students = () => {
             <span>Batches</span>
             <strong>{academicBatches.length}</strong>
             <small>Available batch timings</small>
-          </div>
-        </article>
-
-        <article className="student-payment-summary-card">
-          <div className="student-payment-summary-icon"><FiUser /></div>
-          <div>
-            <span>Active Students</span>
-            <strong>{summary.activeStudents}</strong>
-            <small>Currently active records</small>
           </div>
         </article>
       </div>

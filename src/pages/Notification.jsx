@@ -31,6 +31,10 @@ const Notification = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSendingAll, setIsSendingAll] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendMode, setSendMode] = useState(null);
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [isSendingSelected, setIsSendingSelected] = useState(false);
   const [sendingStudentId, setSendingStudentId] = useState(null);
   const [openPreferenceId, setOpenPreferenceId] = useState(null);
   const [savingPreference, setSavingPreference] = useState(null);
@@ -76,6 +80,13 @@ const Notification = () => {
   const courseOptions = useMemo(() => [
     ...new Set(notifications.map((item) => item.course).filter(Boolean)),
   ].sort(), [notifications]);
+
+  const eligibleNotifications = useMemo(() => notifications.filter((item) => (
+    item.paymentStatus !== "paid" &&
+    Number(item.pendingAmount || 0) > 0 &&
+    !item.notificationPreferences?.muteAll &&
+    !item.notificationPreferences?.muteReminder
+  )), [notifications]);
 
   const filteredNotifications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -127,7 +138,7 @@ const Notification = () => {
   };
   const handleSendAll = async () => {
     if (Number(summary.unpaid || 0) === 0) return toast.error("No unpaid students available");
-    if (!window.confirm(`Send fee reminder to all ${summary.unpaid} unpaid/partial students?`)) return;
+    if (!window.confirm(`Send fee reminder to all ${summary.unpaid} unpaid/part-payment students?`)) return;
     try {
       setIsSendingAll(true);
       const response = await api.post("/notifications/send-all-unpaid");
@@ -135,9 +146,47 @@ const Notification = () => {
       if (Number(data.failed || 0) > 0) toast(data.message || "Reminder process completed");
       else toast.success(data.message || "Reminders sent successfully");
       await fetchNotifications();
+      setShowSendModal(false);
+      setSendMode(null);
+      setSelectedStudentIds([]);
     } catch (error) {
       toast.error(getErrorMessage(error, "Failed to send reminders"));
     } finally { setIsSendingAll(false); }
+  };
+
+  const openSendModal = () => {
+    if (eligibleNotifications.length === 0) return toast.error("No unpaid students available");
+    setSendMode(null);
+    setSelectedStudentIds([]);
+    setShowSendModal(true);
+  };
+
+  const closeSendModal = () => {
+    if (isSendingAll || isSendingSelected) return;
+    setShowSendModal(false);
+    setSendMode(null);
+    setSelectedStudentIds([]);
+  };
+
+  const toggleStudentSelection = (studentId) => {
+    setSelectedStudentIds((current) => current.includes(studentId)
+      ? current.filter((id) => id !== studentId)
+      : [...current, studentId]);
+  };
+
+  const handleSendSelected = async () => {
+    if (selectedStudentIds.length === 0) return toast.error("Select at least one student");
+    try {
+      setIsSendingSelected(true);
+      const response = await api.post("/notifications/send-selected", { studentIds: selectedStudentIds });
+      const data = response.data || {};
+      if (Number(data.failed || 0) > 0) toast(data.message || "Reminder process completed");
+      else toast.success(data.message || "Reminders sent successfully");
+      closeSendModal();
+      await fetchNotifications();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to send reminders"));
+    } finally { setIsSendingSelected(false); }
   };
 
   const handlePreferenceChange = async (item, key, value) => {
@@ -183,7 +232,7 @@ const Notification = () => {
             </div>}
           </div>
           <button type="button" className="notification-toolbar-btn" onClick={handleRefresh} disabled={isRefreshing}><FiRefreshCw />{isRefreshing ? "Refreshing..." : "Refresh"}</button>
-          <button type="button" className="notification-send-all-btn" onClick={handleSendAll} disabled={isSendingAll || !Number(summary.unpaid || 0)}><FiSend />{isSendingAll ? "Sending..." : "Send Notification"}</button>
+          <button type="button" className="notification-send-all-btn" onClick={openSendModal} disabled={!eligibleNotifications.length}><FiSend />Send Notification</button>
         </div>
 
         <div className="notification-table-card">
@@ -212,6 +261,20 @@ const Notification = () => {
             </table></div>}
         </div>
       </section>
+      {showSendModal && <div className="notification-send-modal-overlay">
+        <div className="notification-send-modal" role="dialog" aria-modal="true" aria-labelledby="notification-send-title">
+          <div className="notification-send-modal-head"><div><span>SEND NOTIFICATION</span><h2 id="notification-send-title">Choose recipients</h2><p>Send a fee reminder to all unpaid students or only selected students.</p></div><button type="button" onClick={closeSendModal} aria-label="Close"><FiX /></button></div>
+          {!sendMode ? <div className="notification-send-mode-grid">
+            <button type="button" onClick={() => setSendMode("all")}><FiSend /><strong>Send to All</strong><small>Send to all {eligibleNotifications.length} unpaid students</small></button>
+            <button type="button" onClick={() => setSendMode("individual")}><FiBell /><strong>Individual</strong><small>Select one or more students</small></button>
+          </div> : sendMode === "all" ? <div className="notification-send-confirm"><strong>Send to all {eligibleNotifications.length} unpaid students?</strong><p>This will send the reminder to every eligible student.</p><div><button type="button" onClick={() => setSendMode(null)} disabled={isSendingAll}>Back</button><button type="button" className="notification-send-all-btn" onClick={handleSendAll} disabled={isSendingAll}><FiSend />{isSendingAll ? "Sending..." : "Send to All"}</button></div></div> : <div className="notification-individual-picker">
+            <div className="notification-picker-actions"><strong>Select students</strong><button type="button" onClick={() => setSelectedStudentIds(selectedStudentIds.length === eligibleNotifications.length ? [] : eligibleNotifications.map((item) => item.studentId))}>{selectedStudentIds.length === eligibleNotifications.length ? "Clear all" : "Select all"}</button></div>
+            <div className="notification-picker-list">{eligibleNotifications.map((item) => <label key={item.studentId}><input type="checkbox" checked={selectedStudentIds.includes(item.studentId)} onChange={() => toggleStudentSelection(item.studentId)} /><span><strong>{item.studentName}</strong><small>{item.rollNo} · {item.course} · Pending ₹{formatMoney(item.pendingAmount)}</small></span></label>)}</div>
+            <div className="notification-send-confirm"><div><button type="button" onClick={() => setSendMode(null)} disabled={isSendingSelected}>Back</button><button type="button" className="notification-send-all-btn" onClick={handleSendSelected} disabled={isSendingSelected || selectedStudentIds.length === 0}><FiSend />{isSendingSelected ? "Sending..." : `Send to ${selectedStudentIds.length} Student${selectedStudentIds.length === 1 ? "" : "s"}`}</button></div></div>
+          </div>}
+        </div>
+      </div>}
+
     </div>
   );
 };

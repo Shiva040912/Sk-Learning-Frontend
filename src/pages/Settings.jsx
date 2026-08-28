@@ -450,7 +450,7 @@ const Settings = () => {
       recurringFeeStartDay > 31
     ) {
       toast.error(
-        "Monthly / Partial start day must be between 1 and 31",
+        "Monthly / Part Payment start day must be between 1 and 31",
       );
       return;
     }
@@ -461,7 +461,7 @@ const Settings = () => {
       recurringFeeDueDay > 31
     ) {
       toast.error(
-        "Monthly / Partial due day must be between 1 and 31",
+        "Monthly / Part Payment due day must be between 1 and 31",
       );
       return;
     }
@@ -868,7 +868,7 @@ const Settings = () => {
                   <h2>Fee Settings</h2>
                   <p>
                     Control fee setup options and the common recurring cycle used
-                    by Partial-payment students.
+                    by Part-payment students.
                   </p>
                 </div>
               </div>
@@ -882,7 +882,7 @@ const Settings = () => {
                     </div>
 
                     <div className="fee-rule-title">
-                      <h3>Partial Fees</h3>
+                      <h3>Part Payment Fees</h3>
                       <p>
                         Allow flexible payment amounts until the full balance is
                         completed.
@@ -901,7 +901,7 @@ const Settings = () => {
                   </div>
 
                   <div className="settings-rule-preview">
-                    Partial payments have <strong>no fixed installment count</strong>{" "}
+                    Part payments have <strong>no fixed installment count</strong>{" "}
                     and no fixed minimum payment rule in the collection flow.
                   </div>
                 </div>
@@ -913,10 +913,10 @@ const Settings = () => {
                     </div>
 
                     <div className="fee-rule-title">
-                      <h3>Partial Fee Cycle</h3>
+                      <h3>Part Payment Fee Cycle</h3>
                       <p>
                         Set one recurring start and due day for all Monthly and
-                        Partial students.
+                        Part Payment students.
                       </p>
                     </div>
                   </div>
@@ -1014,7 +1014,7 @@ const Settings = () => {
 
                   <div className="settings-rule-preview">
                     Students already using an active <strong>Monthly</strong> or{" "}
-                    <strong>Partial</strong> fee plan are automatically skipped
+                    <strong>Part Payment</strong> fee plan are automatically skipped
                     during Common / Course Wise setup.
                   </div>
                 </div>
@@ -1026,7 +1026,7 @@ const Settings = () => {
                     </div>
 
                     <div className="fee-rule-title">
-                      <h3>Yearly Fees</h3>
+                      <h3>One-Time Payment Fees</h3>
                       <p>
                         Collect the complete configured fee in one payment.
                       </p>
@@ -1048,7 +1048,7 @@ const Settings = () => {
                     <div>
                       <strong>Individual Start / End Date</strong>
                       <span>
-                        Yearly fee setup continues to use its own starting and
+                        One-Time Payment fee setup continues to use its own starting and
                         ending date from the Payment page.
                       </span>
                     </div>
