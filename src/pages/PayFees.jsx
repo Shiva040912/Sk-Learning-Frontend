@@ -117,7 +117,8 @@ const PayFees = () => {
 
   const hasPendingProof = proofSubmitted || Boolean(student.hasPendingProof);
 
-  const MAX_PROOF_FILE_SIZE = 4 * 1024 * 1024;
+  const MAX_PROOF_FILE_SIZE = 8 * 1024 * 1024;
+  const PROOF_MAX_DIMENSION = 1280;
 
   const handleProofFileChange = (event) => {
     const file = event.target.files?.[0];
@@ -131,7 +132,7 @@ const PayFees = () => {
     }
 
     if (file.size > MAX_PROOF_FILE_SIZE) {
-      setProofError("Image is too large. Please upload a smaller screenshot (max 4MB)");
+      setProofError("Image is too large. Please upload a smaller screenshot (max 8MB)");
       return;
     }
 
@@ -140,7 +141,29 @@ const PayFees = () => {
     const reader = new FileReader();
 
     reader.onload = () => {
-      setProofPreview(String(reader.result || ""));
+      const image = new Image();
+
+      image.onload = () => {
+        const scale = Math.min(
+          1,
+          PROOF_MAX_DIMENSION / Math.max(image.width, image.height),
+        );
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        setProofPreview(canvas.toDataURL("image/jpeg", 0.75));
+      };
+
+      image.onerror = () => {
+        setProofError("Failed to read the selected image. Please try again.");
+      };
+
+      image.src = String(reader.result || "");
     };
 
     reader.onerror = () => {
@@ -174,10 +197,19 @@ const PayFees = () => {
     } catch (err) {
       console.error("Payment proof upload error:", err?.response?.data || err);
 
-      setProofError(
-        err?.response?.data?.message ||
-          "Failed to submit payment proof. Please try again.",
-      );
+      if (typeof err?.response?.data?.message === "string") {
+        setProofError(err.response.data.message);
+      } else if (err?.response?.status === 413) {
+        setProofError(
+          "The screenshot is too large for the server to accept. Please try a smaller image.",
+        );
+      } else if (!err?.response) {
+        setProofError(
+          "Could not reach the server. Please check your connection and try again.",
+        );
+      } else {
+        setProofError("Failed to submit payment proof. Please try again.");
+      }
     } finally {
       setIsUploadingProof(false);
     }
