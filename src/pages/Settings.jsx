@@ -21,6 +21,8 @@ import toast from "react-hot-toast";
 
 import api from "../services/axios";
 import LoadingLogo from "../components/LoadingLogo";
+import { getCurrentUser } from "../utils/permissions";
+import { hasSettingsAction } from "../utils/settingsPermissions";
 
 import "../styles/settings.css";
 
@@ -71,13 +73,29 @@ const initialSettings = {
 };
 
 const Settings = () => {
+  const currentUser = getCurrentUser();
+
+  const canProfileSettings = hasSettingsAction(currentUser, "profileSettings");
+  const canFeeSettings = hasSettingsAction(currentUser, "feeSettings");
+  const canNotificationSettings = hasSettingsAction(
+    currentUser,
+    "notificationSettings"
+  );
+  const canInvoiceSettings = hasSettingsAction(currentUser, "invoiceSettings");
+
   const [mobileNavLayout, setMobileNavLayout] = useState(
     () => {
       const savedLayout = localStorage.getItem("mobileNavLayout");
       return savedLayout === "rail" ? "drawer" : savedLayout || "drawer";
     }
   );
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (canProfileSettings) return "profile";
+    if (canFeeSettings) return "fees";
+    if (canNotificationSettings) return "notifications";
+    if (canInvoiceSettings) return "invoice";
+    return "academic";
+  });
   const [profile, setProfile] = useState(initialProfile);
   const [passwordForm, setPasswordForm] = useState(initialPassword);
   const [settings, setSettings] = useState(initialSettings);
@@ -177,39 +195,50 @@ const Settings = () => {
   }, []);
 
   const tabs = useMemo(
-    () => [
-      {
-        id: "profile",
-        label: "Profile",
-        icon: <FiUser />,
-      },
-      {
-        id: "fees",
-        label: "Fee Settings",
-        icon: <FiCreditCard />,
-      },
-      {
-        id: "notifications",
-        label: "Notifications",
-        icon: <FiBell />,
-      },
-      {
-        id: "academic",
-        label: "Course & Batch",
-        icon: <FiBookOpen />,
-      },
-      {
-        id: "invoice",
-        label: "Invoice",
-        icon: <FiFileText />,
-      },
-      {
-        id: "appearance",
-        label: "Mobile Layout",
-        icon: <FiSmartphone />,
-      },
-    ],
-    []
+    () =>
+      [
+        canProfileSettings && {
+          id: "profile",
+          label: "Profile",
+          icon: <FiUser />,
+        },
+        canFeeSettings && {
+          id: "fees",
+          label: "Fee Settings",
+          icon: <FiCreditCard />,
+        },
+        canNotificationSettings && {
+          id: "notifications",
+          label: "Notifications",
+          icon: <FiBell />,
+        },
+        // Course & Batch has no permission of its own — it reuses the
+        // Students page's Add/Delete Course/Batch actions, always reachable
+        // from Settings page access alone.
+        {
+          id: "academic",
+          label: "Course & Batch",
+          icon: <FiBookOpen />,
+        },
+        canInvoiceSettings && {
+          id: "invoice",
+          label: "Invoice",
+          icon: <FiFileText />,
+        },
+        // Mobile Layout is a personal client-side preference with no
+        // backend call — always available regardless of permissions.
+        {
+          id: "appearance",
+          label: "Mobile Layout",
+          icon: <FiSmartphone />,
+        },
+      ].filter(Boolean),
+    [
+      canProfileSettings,
+      canFeeSettings,
+      canNotificationSettings,
+      canInvoiceSettings,
+    ]
   );
 
   const handleProfileChange = (event) => {
@@ -671,7 +700,7 @@ const Settings = () => {
         </aside>
 
         <section className="settings-content">
-          {activeTab === "profile" && (
+          {activeTab === "profile" && canProfileSettings && (
             <div className="settings-panel">
               <div className="settings-panel-header">
                 <div>
@@ -861,7 +890,7 @@ const Settings = () => {
             </div>
           )}
 
-          {activeTab === "fees" && (
+          {activeTab === "fees" && canFeeSettings && (
             <div className="settings-panel">
               <div className="settings-panel-header">
                 <div>
@@ -1070,7 +1099,7 @@ const Settings = () => {
             </div>
           )}
 
-          {activeTab === "notifications" && (
+          {activeTab === "notifications" && canNotificationSettings && (
             <div className="settings-panel">
               <div className="settings-panel-header">
                 <div>
@@ -1346,7 +1375,7 @@ const Settings = () => {
             </div>
           )}
 
-          {activeTab === "invoice" && (
+          {activeTab === "invoice" && canInvoiceSettings && (
             <div className="settings-panel">
               <div className="settings-panel-header">
                 <div>

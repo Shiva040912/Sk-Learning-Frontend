@@ -33,6 +33,7 @@ export const PAYMENT_FIELD_DEFINITIONS = [
   { key: "rollNo", label: "Roll No" },
   { key: "course", label: "Course" },
   { key: "batch", label: "Batch" },
+  { key: "feeDetails", label: "Fee Details" },
   { key: "totalFee", label: "Total Fee" },
   { key: "feeType", label: "Fee Type" },
   { key: "feeStartingDate", label: "Fee Starting Date" },
@@ -43,6 +44,26 @@ export const PAYMENT_FIELD_DEFINITIONS = [
   { key: "paymentStatus", label: "Payment Status" },
   { key: "paymentMethod", label: "Payment Method" },
   { key: "paymentDate", label: "Payment Date" },
+];
+
+// "Fee Details" is a master financial-information visibility switch on top
+// of the individual field flags above — mirrors FEE_DETAIL_FIELD_KEYS on the
+// backend (payment-permission-keys.ts). studentName/rollNo/course/batch/
+// paymentStatus/paymentMethod/paymentDate are not fee/financial amounts or
+// configuration, so they are deliberately excluded and stay independently
+// controlled. feeSetupCompleted is ALSO deliberately excluded: it's a plain
+// readiness flag (no amount/date disclosed), and Payment.jsx uses its raw
+// boolean value to decide whether Collect Payment, Reverse/Reset, Edit Fee,
+// Assign Next Fee and View History are even reachable for a student —
+// gating it here broke every one of those for any Fee-Details-off user
+// regardless of their actual action permissions.
+export const FEE_DETAIL_FIELD_KEYS = [
+  "totalFee",
+  "feeType",
+  "feeStartingDate",
+  "feeEndingDate",
+  "paidAmount",
+  "pendingAmount",
 ];
 
 export const PAYMENT_UPI_FIELD_DEFINITIONS = [
@@ -81,6 +102,27 @@ export const createDefaultPaymentPermissions = () => ({
   upiSettings: createDefaultPaymentUpiFields(),
 });
 
+// "Fee Details" master switch: when off, none of FEE_DETAIL_FIELD_KEYS may
+// be visible regardless of their own individual flag (master AND
+// individual, never OR). This is the single reusable answer to "can this
+// user see fee details on Payments?" — applied once here so every consumer
+// of getPaymentPermissions (hasPaymentField, getVisiblePaymentFields, and
+// therefore every `visibleFields.has(...)` check across Payment.jsx)
+// automatically respects it with no per-call-site changes needed.
+const resolveEffectivePaymentFields = (fields) => {
+  if (fields.feeDetails === true) {
+    return fields;
+  }
+
+  const effective = { ...fields };
+
+  FEE_DETAIL_FIELD_KEYS.forEach((key) => {
+    effective[key] = false;
+  });
+
+  return effective;
+};
+
 const getPaymentPermissions = (user) => {
   const permissions = user?.granularPermissions?.payments;
 
@@ -89,10 +131,10 @@ const getPaymentPermissions = (user) => {
       ...createDefaultPaymentActions(),
       ...(permissions?.actions || {}),
     },
-    fields: {
+    fields: resolveEffectivePaymentFields({
       ...createDefaultPaymentFields(),
       ...(permissions?.fields || {}),
-    },
+    }),
     upiSettings: {
       ...createDefaultPaymentUpiFields(),
       ...(permissions?.upiSettings || {}),

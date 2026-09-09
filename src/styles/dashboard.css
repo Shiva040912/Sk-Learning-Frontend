@@ -24,7 +24,7 @@
 
   gap: 12px;
 
-  height: 92px;
+  height: 72px;
 
   margin-bottom: 12px;
 }
@@ -164,7 +164,7 @@
   gap: 12px;
 
   height: calc(
-    100% - 104px
+    100% - 84px
   );
 
   min-height: 0;

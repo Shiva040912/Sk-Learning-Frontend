@@ -20,10 +20,25 @@ import jsPDF from "jspdf";
 import api from "../services/axios";
 import InvoiceDocument from "../components/InvoiceDocument";
 import LoadingLogo from "../components/LoadingLogo";
+import { getCurrentUser } from "../utils/permissions";
+import {
+  hasInvoiceAction,
+  getVisibleInvoiceFields,
+} from "../utils/invoicePermissions";
 
 import "../styles/invoice.css";
 
 const Invoices = () => {
+  const currentUser = getCurrentUser();
+
+  const canSearch = hasInvoiceAction(currentUser, "search");
+  const canFilter = hasInvoiceAction(currentUser, "filter");
+  const canViewInvoice = hasInvoiceAction(currentUser, "viewInvoice");
+  const canDownloadInvoice = hasInvoiceAction(currentUser, "downloadInvoice");
+  const canPrintInvoice = hasInvoiceAction(currentUser, "printInvoice");
+  const canClearInvoices = hasInvoiceAction(currentUser, "clearInvoices");
+  const visibleFields = getVisibleInvoiceFields(currentUser);
+
   const [invoices, setInvoices] = useState([]);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -242,6 +257,11 @@ const Invoices = () => {
   }, [receiptBoard]);
 
   const handleClearInvoices = async () => {
+    if (!canClearInvoices) {
+      toast.error("You do not have permission to clear invoices");
+      return;
+    }
+
     if (!invoices.length || isClearing) return;
 
     const shouldClear = window.confirm(
@@ -272,6 +292,11 @@ const Invoices = () => {
   };
 
   const openInvoice = (invoice) => {
+    if (!canViewInvoice) {
+      toast.error("You do not have permission to view invoices");
+      return;
+    }
+
     setSelectedInvoice(invoice);
     setShowInvoiceModal(true);
   };
@@ -284,10 +309,20 @@ const Invoices = () => {
   };
 
   const handlePrint = () => {
+    if (!canPrintInvoice) {
+      toast.error("You do not have permission to print invoices");
+      return;
+    }
+
     window.print();
   };
 
   const handleDownloadPdf = async () => {
+    if (!canDownloadInvoice) {
+      toast.error("You do not have permission to download invoices");
+      return;
+    }
+
     if (!invoiceRef.current || !selectedInvoice) {
       return;
     }
@@ -353,17 +388,20 @@ const Invoices = () => {
       </div>
 
       <div className="receipt-board-toolbar receipt-board-toolbar-inline">
-        <div className="invoice-search">
-          <FiSearch />
+        {canSearch && (
+          <div className="invoice-search">
+            <FiSearch />
 
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search student, roll no, invoice no, course or batch..."
-          />
-        </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search student, roll no, invoice no, course or batch..."
+            />
+          </div>
+        )}
 
+        {canFilter && (
         <div className="receipt-filter-wrapper">
           <button
             type="button"
@@ -443,7 +481,9 @@ const Invoices = () => {
             </div>
           )}
         </div>
+        )}
 
+        {canClearInvoices && (
         <button
           type="button"
           className="invoice-clear-all-btn toolbar-clear-btn"
@@ -453,6 +493,7 @@ const Invoices = () => {
           <FiTrash2 />
           {isClearing ? "Clearing..." : "Clear"}
         </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -471,6 +512,8 @@ const Invoices = () => {
             emptyTitle="No unpaid receipts"
             emptyText="New fee setup receipts will appear here."
             openInvoice={openInvoice}
+            canViewInvoice={canViewInvoice}
+            visibleFields={visibleFields}
             formatMoney={formatMoney}
             formatDate={formatDate}
             getInvoiceTypeLabel={getInvoiceTypeLabel}
@@ -485,6 +528,8 @@ const Invoices = () => {
             emptyTitle="No paid receipts"
             emptyText="Completed payments will move here."
             openInvoice={openInvoice}
+            canViewInvoice={canViewInvoice}
+            visibleFields={visibleFields}
             formatMoney={formatMoney}
             formatDate={formatDate}
             getInvoiceTypeLabel={getInvoiceTypeLabel}
@@ -497,26 +542,32 @@ const Invoices = () => {
           <div className="invoice-modal-shell">
             <div className="invoice-modal-actions-bar">
               <div>
-                <strong>{selectedInvoice.invoiceNumber}</strong>
+                {visibleFields.has("invoiceNumber") && (
+                  <strong>{selectedInvoice.invoiceNumber}</strong>
+                )}
 
                 <span>{getInvoiceTypeLabel(selectedInvoice.invoiceType)}</span>
               </div>
 
               <div className="invoice-modal-buttons">
-                <button type="button" onClick={handlePrint}>
-                  <FiPrinter />
-                  Print
-                </button>
+                {canPrintInvoice && (
+                  <button type="button" onClick={handlePrint}>
+                    <FiPrinter />
+                    Print
+                  </button>
+                )}
 
-                <button
-                  type="button"
-                  onClick={handleDownloadPdf}
-                  disabled={isDownloading}
-                >
-                  <FiDownload />
+                {canDownloadInvoice && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadPdf}
+                    disabled={isDownloading}
+                  >
+                    <FiDownload />
 
-                  {isDownloading ? "Downloading..." : "Download PDF"}
-                </button>
+                    {isDownloading ? "Downloading..." : "Download PDF"}
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -529,7 +580,11 @@ const Invoices = () => {
             </div>
 
             <div className="invoice-document-scroll">
-              <InvoiceDocument ref={invoiceRef} invoice={selectedInvoice} />
+              <InvoiceDocument
+                ref={invoiceRef}
+                invoice={selectedInvoice}
+                visibleFields={visibleFields}
+              />
             </div>
           </div>
         </div>
@@ -547,6 +602,8 @@ const ReceiptColumn = ({
   emptyTitle,
   emptyText,
   openInvoice,
+  canViewInvoice,
+  visibleFields,
   formatMoney,
 }) => {
   return (
@@ -568,7 +625,7 @@ const ReceiptColumn = ({
         <span>Student</span>
         <span>Course</span>
         <span>Amount</span>
-        <span>Action</span>
+        {canViewInvoice && <span>Action</span>}
       </div>
 
       <div className="receipt-column-body">
@@ -585,6 +642,13 @@ const ReceiptColumn = ({
                 ? invoice.invoiceAmount || invoice.paidAmount
                 : invoice.pendingAmount || invoice.invoiceAmount;
 
+            const showAmount =
+              status === "paid"
+                ? visibleFields.has("totalAmount") ||
+                  visibleFields.has("paidAmount")
+                : visibleFields.has("pendingAmount") ||
+                  visibleFields.has("totalAmount");
+
             return (
               <div key={invoice._id} className={`receipt-list-row ${status}`}>
                 <div className="receipt-row-student">
@@ -594,38 +658,50 @@ const ReceiptColumn = ({
                   </div>
 
                   <div>
-                    <strong>{invoice.student?.studentName || "-"}</strong>
+                    {visibleFields.has("studentName") && (
+                      <strong>{invoice.student?.studentName || "-"}</strong>
+                    )}
 
-                    <span>{invoice.student?.rollNo || "-"}</span>
+                    {visibleFields.has("rollNo") && (
+                      <span>{invoice.student?.rollNo || "-"}</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="receipt-row-course">
-                  <strong>{invoice.student?.course || "-"}</strong>
+                  {visibleFields.has("course") && (
+                    <strong>{invoice.student?.course || "-"}</strong>
+                  )}
 
-                  <span>{invoice.student?.batch || "-"}</span>
+                  {visibleFields.has("batch") && (
+                    <span>{invoice.student?.batch || "-"}</span>
+                  )}
                 </div>
 
                 <div className="receipt-row-amount">
-                  <strong>₹{formatMoney(amount)}</strong>
+                  {showAmount && <strong>₹{formatMoney(amount)}</strong>}
 
-                  <span className={`receipt-row-status ${status}`}>
-                    {status === "paid"
-                      ? "Paid"
-                      : invoice.paymentStatus === "partial"
-                        ? "Part Payment"
-                        : "Unpaid"}
-                  </span>
+                  {visibleFields.has("paymentStatus") && (
+                    <span className={`receipt-row-status ${status}`}>
+                      {status === "paid"
+                        ? "Paid"
+                        : invoice.paymentStatus === "partial"
+                          ? "Part Payment"
+                          : "Unpaid"}
+                    </span>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  className="receipt-view-btn"
-                  onClick={() => openInvoice(invoice)}
-                >
-                  <FiEye />
-                  View
-                </button>
+                {canViewInvoice && (
+                  <button
+                    type="button"
+                    className="receipt-view-btn"
+                    onClick={() => openInvoice(invoice)}
+                  >
+                    <FiEye />
+                    View
+                  </button>
+                )}
               </div>
             );
           })

@@ -1360,13 +1360,13 @@
 .payments-table th {
   height: 32px;
   padding: 0 9px;
-  font-size: 5.8px;
+  font-size: 7px;
 }
 
 .payments-table td {
   height: 47px;
   padding: 5px 9px;
-  font-size: 8px;
+  font-size: 8.5px;
 }
 
 .payment-avatar {
@@ -1442,41 +1442,45 @@
   min-width: 900px;
 }
 
-.payments-table th:nth-child(1),
-.payments-table td:nth-child(1) {
+/* Column widths are keyed to a stable per-column class (pay-col-*), not
+   nth-child position — Fields/Actions permissions can hide any of the
+   Student/Roll No/Course/Total Fees/Status/Reverse/Setup columns, which
+   shifts every following column's position but never its class. */
+.payments-table th.pay-col-serial,
+.payments-table td.pay-col-serial {
   width: 6%;
   text-align: center;
 }
 
-.payments-table th:nth-child(2),
-.payments-table td:nth-child(2) {
+.payments-table th.pay-col-student,
+.payments-table td.pay-col-student {
   width: 22%;
 }
 
-.payments-table th:nth-child(3),
-.payments-table td:nth-child(3) {
+.payments-table th.pay-col-roll,
+.payments-table td.pay-col-roll {
   width: 12%;
 }
 
-.payments-table th:nth-child(4),
-.payments-table td:nth-child(4) {
+.payments-table th.pay-col-course,
+.payments-table td.pay-col-course {
   width: 14%;
 }
 
-.payments-table th:nth-child(5),
-.payments-table td:nth-child(5) {
+.payments-table th.pay-col-fee,
+.payments-table td.pay-col-fee {
   width: 17%;
 }
 
-.payments-table th:nth-child(6),
-.payments-table td:nth-child(6) {
+.payments-table th.pay-col-status,
+.payments-table td.pay-col-status {
   width: 15%;
 }
 
-.payments-table th:nth-child(7),
-.payments-table td:nth-child(7),
-.payments-table th:nth-child(8),
-.payments-table td:nth-child(8) {
+.payments-table th.pay-col-reverse,
+.payments-table td.pay-col-reverse,
+.payments-table th.pay-col-setup,
+.payments-table td.pay-col-setup {
   width: 7%;
   text-align: center;
 }
@@ -1816,7 +1820,7 @@
   }
 
   .payment-summary-card span {
-    font-size: 5.5px;
+    font-size: 6.8px;
     letter-spacing: 0.35px;
   }
 
@@ -1827,7 +1831,7 @@
 
   .payment-summary-card small {
     margin-top: 1px;
-    font-size: 5.2px;
+    font-size: 6.5px;
   }
 
   .payment-history-section {
@@ -1928,11 +1932,11 @@
   }
 
   .payments-table th {
-    height: 29px !important;
+    height: 31px !important;
     padding: 0 2px !important;
     background: #f6f8fa;
     color: #727d87;
-    font-size: 4.7px !important;
+    font-size: 7px !important;
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: 0;
@@ -1944,8 +1948,8 @@
   .payments-table td {
     padding: 6px 2px !important;
     color: #46525e;
-    font-size: 5.7px !important;
-    line-height: 1.15;
+    font-size: 7.8px !important;
+    line-height: 1.2;
     text-align: left !important;
   }
 
@@ -1954,41 +1958,41 @@
     content: none !important;
   }
 
-  .payments-table th:nth-child(1),
-  .payments-table td:nth-child(1) {
+  .payments-table th.pay-col-serial,
+  .payments-table td.pay-col-serial {
     width: 6% !important;
     text-align: center !important;
   }
 
-  .payments-table th:nth-child(2),
-  .payments-table td:nth-child(2) {
+  .payments-table th.pay-col-student,
+  .payments-table td.pay-col-student {
     width: 25% !important;
   }
 
-  .payments-table th:nth-child(3),
-  .payments-table td:nth-child(3) {
+  .payments-table th.pay-col-roll,
+  .payments-table td.pay-col-roll {
     width: 11% !important;
   }
 
-  .payments-table th:nth-child(4),
-  .payments-table td:nth-child(4) {
+  .payments-table th.pay-col-course,
+  .payments-table td.pay-col-course {
     width: 12% !important;
   }
 
-  .payments-table th:nth-child(5),
-  .payments-table td:nth-child(5) {
+  .payments-table th.pay-col-fee,
+  .payments-table td.pay-col-fee {
     width: 17% !important;
   }
 
-  .payments-table th:nth-child(6),
-  .payments-table td:nth-child(6) {
+  .payments-table th.pay-col-status,
+  .payments-table td.pay-col-status {
     width: 15% !important;
   }
 
-  .payments-table th:nth-child(7),
-  .payments-table td:nth-child(7),
-  .payments-table th:nth-child(8),
-  .payments-table td:nth-child(8) {
+  .payments-table th.pay-col-reverse,
+  .payments-table td.pay-col-reverse,
+  .payments-table th.pay-col-setup,
+  .payments-table td.pay-col-setup {
     width: 7% !important;
     text-align: center !important;
   }
@@ -1997,7 +2001,7 @@
     width: 18px;
     height: 18px;
     border-radius: 4px;
-    font-size: 5px;
+    font-size: 6.5px;
   }
 
   .payment-student {
@@ -2020,7 +2024,7 @@
 
   .payment-student strong {
     max-width: 100%;
-    font-size: 6px;
+    font-size: 7.5px;
     line-height: 1.15;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -2030,7 +2034,7 @@
     max-width: 100%;
     margin-top: 1px;
     overflow: hidden;
-    font-size: 4.7px;
+    font-size: 6.3px;
     line-height: 1.1;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -2043,8 +2047,8 @@
     max-width: 100%;
     padding: 2px 2px;
     border-radius: 3px;
-    font-size: 4.8px;
-    line-height: 1.1;
+    font-size: 6.5px;
+    line-height: 1.2;
     white-space: normal;
     overflow-wrap: anywhere;
     text-align: center;
@@ -2056,22 +2060,22 @@
   }
 
   .payment-fee-cell strong {
-    font-size: 5.5px;
-    line-height: 1.1;
+    font-size: 7px;
+    line-height: 1.15;
     white-space: nowrap;
   }
 
   .payment-fee-cell span {
     margin-top: 1px;
-    font-size: 4.3px;
-    line-height: 1.1;
+    font-size: 6px;
+    line-height: 1.15;
     white-space: normal;
   }
 
   .payment-not-set {
     padding: 2px 2px;
     border-radius: 3px;
-    font-size: 4.5px;
+    font-size: 6.3px;
     white-space: nowrap;
   }
 
@@ -2104,7 +2108,7 @@
   .payment-switch-label {
     min-width: 0;
     overflow: hidden;
-    font-size: 4.6px;
+    font-size: 6.3px;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
@@ -2176,56 +2180,56 @@
   }
 
   .payments-table th {
-    font-size: 4.25px !important;
+    font-size: 6.3px !important;
     padding: 0 1px !important;
   }
 
   .payments-table td {
     padding: 5px 1px !important;
-    font-size: 5.2px !important;
+    font-size: 7px !important;
   }
 
-  .payments-table th:nth-child(1),
-  .payments-table td:nth-child(1) {
+  .payments-table th.pay-col-serial,
+  .payments-table td.pay-col-serial {
     width: 5% !important;
   }
 
-  .payments-table th:nth-child(2),
-  .payments-table td:nth-child(2) {
+  .payments-table th.pay-col-student,
+  .payments-table td.pay-col-student {
     width: 26% !important;
   }
 
-  .payments-table th:nth-child(3),
-  .payments-table td:nth-child(3) {
+  .payments-table th.pay-col-roll,
+  .payments-table td.pay-col-roll {
     width: 10% !important;
   }
 
-  .payments-table th:nth-child(4),
-  .payments-table td:nth-child(4) {
+  .payments-table th.pay-col-course,
+  .payments-table td.pay-col-course {
     width: 12% !important;
   }
 
-  .payments-table th:nth-child(5),
-  .payments-table td:nth-child(5) {
+  .payments-table th.pay-col-fee,
+  .payments-table td.pay-col-fee {
     width: 18% !important;
   }
 
-  .payments-table th:nth-child(6),
-  .payments-table td:nth-child(6) {
+  .payments-table th.pay-col-status,
+  .payments-table td.pay-col-status {
     width: 15% !important;
   }
 
-  .payments-table th:nth-child(7),
-  .payments-table td:nth-child(7),
-  .payments-table th:nth-child(8),
-  .payments-table td:nth-child(8) {
+  .payments-table th.pay-col-reverse,
+  .payments-table td.pay-col-reverse,
+  .payments-table th.pay-col-setup,
+  .payments-table td.pay-col-setup {
     width: 7% !important;
   }
 
   .payment-serial {
     width: 16px;
     height: 16px;
-    font-size: 4.5px;
+    font-size: 6.3px;
   }
 
   .payment-avatar {
@@ -2237,24 +2241,24 @@
   }
 
   .payment-student strong {
-    font-size: 5.5px;
+    font-size: 7px;
   }
 
   .payment-student span {
-    font-size: 4.3px;
+    font-size: 6px;
   }
 
   .payment-roll,
   .payment-course {
-    font-size: 4.4px;
+    font-size: 6.2px;
   }
 
   .payment-fee-cell strong {
-    font-size: 5px;
+    font-size: 6.5px;
   }
 
   .payment-fee-cell span {
-    font-size: 4px;
+    font-size: 6px;
   }
 
   .payment-status-control {
@@ -3315,7 +3319,7 @@
     min-height: 22px;
     gap: 4px;
     padding: 0 5px;
-    font-size: 5.8px;
+    font-size: 7px;
   }
 
   .payment-status-dot {
@@ -3801,14 +3805,36 @@
   padding-top: 14px !important;
 }
 
-/* History is read-only: payment date, method and status. */
+/* ==================================================
+   COMPACT HISTORY TABLE
+   Due | Screenshot | Amount | Method | Action — one line per record.
+   Header and rows share the same conditional columns (Method gated by
+   the paymentMethod field permission, Action by clearPaymentHistory) so
+   they always stay aligned with each other for any given user.
+================================================== */
+
+.history-table-header {
+  display: grid;
+  grid-template-columns:
+    78px 60px minmax(0, 1fr) minmax(56px, auto) minmax(72px, auto);
+  align-items: center;
+  gap: 10px;
+  padding: 0 11px 7px;
+  color: #929aa3;
+  font-size: 6.5px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
 .history-only-row {
   display: grid;
-  grid-template-columns: minmax(110px, 0.8fr) minmax(0, 2fr);
+  grid-template-columns:
+    78px 60px minmax(0, 1fr) minmax(56px, auto) minmax(72px, auto);
   align-items: center;
-  gap: 12px;
-  min-height: 58px;
-  padding: 9px 11px;
+  gap: 10px;
+  min-height: 68px;
+  padding: 8px 11px;
   border: 1px solid #e5e9ed;
   border-radius: 9px;
   background: #fff;
@@ -3818,17 +3844,189 @@
   margin-top: 7px;
 }
 
-.history-only-main strong {
-  display: block;
+.history-due-label {
+  min-width: 0;
+  overflow: hidden;
   color: #35414c;
-  font-size: 8.5px;
+  font-size: 8px;
+  font-weight: 750;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.history-only-main span {
+.history-screenshot-thumb,
+.history-screenshot-empty {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
+.history-screenshot-thumb {
   display: block;
-  margin-top: 3px;
-  color: #8e979f;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #e1e5e9;
+  background: #f7f8fa;
+  cursor: pointer;
+}
+
+.history-screenshot-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.history-screenshot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #dde2e7;
+  background: #fafbfc;
+  color: #c3c9ce;
+  font-size: 13px;
+}
+
+.history-amount {
+  min-width: 0;
+  color: #35414c;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.history-method {
+  min-width: 0;
+  overflow: hidden;
+  color: #4a5661;
+  font-size: 7.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid #f1c5c5;
+  border-radius: 7px;
+  background: #fff5f5;
+  color: #c62828;
   font-size: 7px;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.history-delete-btn:hover:not(:disabled) {
+  background: #ffe9e9;
+}
+
+.history-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .history-table-header,
+  .history-only-row {
+    grid-template-columns:
+      58px 46px minmax(0, 1fr) minmax(0, auto) minmax(0, auto);
+    gap: 6px;
+    padding: 7px 8px;
+  }
+
+  .history-screenshot-thumb,
+  .history-screenshot-empty {
+    width: 46px;
+    height: 46px;
+  }
+
+  .history-delete-btn span {
+    display: none;
+  }
+
+  .history-delete-btn {
+    padding: 6px;
+  }
+}
+
+/* ==================================================
+   IMAGE PREVIEW MODAL (lightbox)
+   Opened by clicking a history screenshot thumbnail. Independent of
+   showHistoryModal — closing it never closes the History modal beneath.
+================================================== */
+
+.payment-image-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(13, 18, 24, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.payment-image-lightbox {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.payment-image-lightbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-bottom: 1px solid #e8ecef;
+}
+
+.payment-image-lightbox-header span {
+  color: #28333e;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.payment-image-lightbox-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #f4f5f7;
+  overflow: auto;
+}
+
+.payment-image-lightbox-body img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 92px);
+  border-radius: 8px;
+  object-fit: contain;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 480px) {
+  .payment-image-lightbox-overlay {
+    padding: 10px;
+  }
+
+  .payment-image-lightbox-body {
+    padding: 10px;
+  }
 }
 
 .history-only-meta {
@@ -3887,10 +4085,6 @@
 
   .payment-history-modal-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .history-only-row {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -3992,8 +4186,8 @@
 }
 
 /* Keep every Payment status on one centered vertical axis. */
-.payments-table th:nth-child(6),
-.payments-table td:nth-child(6) {
+.payments-table th.pay-col-status,
+.payments-table td.pay-col-status {
   text-align: center !important;
 }
 
@@ -4563,7 +4757,7 @@
   width: 38px;
   height: 38px;
 }
-.payment-details-modal .payment-view-history-btn {
+.payment-collect-modal .payment-view-history-btn {
   min-height: 36px;
   padding: 0 12px;
 }

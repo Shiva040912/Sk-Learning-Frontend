@@ -78,6 +78,12 @@ const Payments = () => {
   const visibleUpiFields = getVisiblePaymentUpiFields(currentUser);
   const showSetupColumn = canFeeSetupIndividual || canAssignNextFee;
 
+  // Master financial-information visibility switch — used at the handful of
+  // spots (summary cards, Collect Payment's fee summary, history amounts)
+  // that don't map to one of the individual fee-field permissions above but
+  // must still respect the same master gate.
+  const showFeeDetails = visibleFields.has("feeDetails");
+
   const [students, setStudents] = useState([]);
   const [paymentRecords, setPaymentRecords] = useState([]);
 
@@ -136,6 +142,8 @@ const Payments = () => {
   const [pendingProofs, setPendingProofs] = useState([]);
   const [selectedProof, setSelectedProof] = useState(null);
   const [isProofLoading, setIsProofLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [deletingHistoryId, setDeletingHistoryId] = useState("");
   const [isEditingFee, setIsEditingFee] = useState(false);
   const [isFeeEditSaving, setIsFeeEditSaving] = useState(false);
   const [editFeeForm, setEditFeeForm] = useState({
@@ -435,6 +443,18 @@ const Payments = () => {
     if (status === "paid") return "Paid";
     if (status === "partial") return "Part Payment";
     return "Unpaid";
+  };
+
+  const getOrdinalDueLabel = (position) => {
+    const remainder10 = position % 10;
+    const remainder100 = position % 100;
+
+    let suffix = "th";
+    if (remainder10 === 1 && remainder100 !== 11) suffix = "st";
+    else if (remainder10 === 2 && remainder100 !== 12) suffix = "nd";
+    else if (remainder10 === 3 && remainder100 !== 13) suffix = "rd";
+
+    return `${position}${suffix} Due`;
   };
 
   const getEmptyFeeForm = () => ({
@@ -862,14 +882,6 @@ const Payments = () => {
       return;
     }
 
-    if (
-      (student.paymentStatus === "paid" || student.pendingAmount <= 0) &&
-      !student.hasPendingProof
-    ) {
-      toast.success("This student fee is already fully paid");
-      return;
-    }
-
     setSelectedStudent(student);
     setSelectedPaymentMethod("");
     setPartialAmount("");
@@ -938,20 +950,28 @@ const Payments = () => {
     };
 
     const amount = Number(partialAmount);
-    const pendingAmount = Number(selectedStudent.pendingAmount || 0);
 
     if (!Number.isFinite(amount) || amount <= 0) {
       toast.error("Enter a valid payment amount");
       return;
     }
 
-    if (amount > pendingAmount) {
-      toast.error(
-        `Payment cannot be greater than pending amount ₹${formatMoney(
-          pendingAmount,
-        )}`,
-      );
-      return;
+    // pendingAmount is redacted from the API whenever its own field
+    // permission (or the Fee Details master switch) is off, so it is not a
+    // real "0 balance" here — skip the client-side cap and let the server
+    // (which always reads the live, unredacted value) be the sole
+    // authority on whether this amount is valid.
+    if (visibleFields.has("pendingAmount")) {
+      const pendingAmount = Number(selectedStudent.pendingAmount || 0);
+
+      if (amount > pendingAmount) {
+        toast.error(
+          `Payment cannot be greater than pending amount ₹${formatMoney(
+            pendingAmount,
+          )}`,
+        );
+        return;
+      }
     }
 
     payload.amount = amount;
@@ -1370,7 +1390,7 @@ const Payments = () => {
       return;
     }
 
-    setShowDetailsModal(false);
+    setShowPaymentModal(false);
     setShowHistoryModal(true);
     setMonthlyPaymentMethod("");
   };
@@ -1379,7 +1399,7 @@ const Payments = () => {
     if (isDetailsPaymentSaving || isHistoryClearing || isFeeEditSaving) return;
 
     setShowHistoryModal(false);
-    setShowDetailsModal(true);
+    setShowPaymentModal(true);
     setMonthlyPaymentMethod("");
   };
 
@@ -1443,8 +1463,68 @@ const Payments = () => {
     }
   };
 
+  const handleDeleteHistoryRecord = async (record) => {
+    if (!canClearPaymentHistory) {
+      toast.error("You do not have permission to delete payment history");
+      return;
+    }
+
+    if (!selectedStudent) return;
+
+    try {
+      setDeletingHistoryId(record._id);
+
+      const response = await api.delete(`/payments/history/${record._id}`);
+
+      toast.success(
+        response.data?.message ||
+          "Payment history record deleted successfully",
+      );
+
+      const updatedStudent = response.data?.student;
+
+      setSelectedStudent((current) =>
+        current
+          ? {
+              ...current,
+              ...(updatedStudent || {}),
+              paymentRecords: (current.paymentRecords || []).filter(
+                (item) => String(item._id) !== String(record._id),
+              ),
+            }
+          : current,
+      );
+
+      setPaymentRecords((current) =>
+        current.filter((item) => String(item._id) !== String(record._id)),
+      );
+
+      if (updatedStudent) {
+        setStudents((current) =>
+          current.map((student) =>
+            String(student._id) === String(updatedStudent.id)
+              ? { ...student, ...updatedStudent, _id: student._id }
+              : student,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Delete payment history record error:",
+        error?.response?.data || error,
+      );
+
+      toast.error(
+        getErrorMessage(error, "Failed to delete payment history record"),
+      );
+    } finally {
+      setDeletingHistoryId("");
+    }
+  };
+
   return (
     <div className="payments-page">
+      {showFeeDetails && (
       <div className="payments-summary-grid">
         <article className="payment-summary-card">
           <div className="payment-summary-icon">
@@ -1490,6 +1570,7 @@ const Payments = () => {
           </div>
         </article>
       </div>
+      )}
 
       <section className="payment-history-section">
         <div className="payment-toolbar">
@@ -1608,14 +1689,28 @@ const Payments = () => {
               <table className="payments-table">
                 <thead>
                   <tr>
-                    <th>S.No</th>
-                    {visibleFields.has("studentName") && <th>Student</th>}
-                    {visibleFields.has("rollNo") && <th>Roll No</th>}
-                    {visibleFields.has("course") && <th>Course</th>}
-                    {visibleFields.has("totalFee") && <th>Total Fees</th>}
-                    {visibleFields.has("paymentStatus") && <th>Status</th>}
-                    {canReverseResetFeeSetup && <th>Reverse</th>}
-                    {showSetupColumn && <th>Setup</th>}
+                    <th className="pay-col-serial">S.No</th>
+                    {visibleFields.has("studentName") && (
+                      <th className="pay-col-student">Student</th>
+                    )}
+                    {visibleFields.has("rollNo") && (
+                      <th className="pay-col-roll">Roll No</th>
+                    )}
+                    {visibleFields.has("course") && (
+                      <th className="pay-col-course">Course</th>
+                    )}
+                    {visibleFields.has("totalFee") && (
+                      <th className="pay-col-fee">Total Fees</th>
+                    )}
+                    {visibleFields.has("paymentStatus") && (
+                      <th className="pay-col-status">Status</th>
+                    )}
+                    {canReverseResetFeeSetup && (
+                      <th className="pay-col-reverse">Reverse</th>
+                    )}
+                    {showSetupColumn && (
+                      <th className="pay-col-setup">Setup</th>
+                    )}
                   </tr>
                 </thead>
 
@@ -1630,12 +1725,12 @@ const Payments = () => {
                       }
                       onClick={() => openStudentDetails(student)}
                     >
-                      <td data-label="S.No">
+                      <td className="pay-col-serial" data-label="S.No">
                         <span className="payment-serial">{index + 1}</span>
                       </td>
 
                       {visibleFields.has("studentName") && (
-                      <td data-label="Name">
+                      <td className="pay-col-student" data-label="Name">
                         <div className="payment-student">
                           <div className="payment-avatar">
                             {student.studentName?.charAt(0)?.toUpperCase() ||
@@ -1649,19 +1744,19 @@ const Payments = () => {
                       )}
 
                       {visibleFields.has("rollNo") && (
-                      <td data-label="Roll No">
+                      <td className="pay-col-roll" data-label="Roll No">
                         <span className="payment-roll">{student.rollNo}</span>
                       </td>
                       )}
 
                       {visibleFields.has("course") && (
-                      <td data-label="Course">
+                      <td className="pay-col-course" data-label="Course">
                         <span className="payment-course">{student.course}</span>
                       </td>
                       )}
 
                       {visibleFields.has("totalFee") && (
-                      <td data-label="Total Fees">
+                      <td className="pay-col-fee" data-label="Total Fees">
                         {student.feeSetupCompleted ? (
                           <div className="payment-fee-cell">
                             <strong>₹{formatMoney(student.totalFee)}</strong>
@@ -1679,7 +1774,7 @@ const Payments = () => {
                       )}
 
                       {visibleFields.has("paymentStatus") && (
-                      <td data-label="Status">
+                      <td className="pay-col-status" data-label="Status">
                         <div className="payment-status-cell">
                         {student.feeSetupCompleted &&
                         (student.paymentStatus !== "paid" || student.hasPendingProof) &&
@@ -1729,7 +1824,7 @@ const Payments = () => {
                       )}
 
                       {canReverseResetFeeSetup && (
-                      <td data-label="Reverse">
+                      <td className="pay-col-reverse" data-label="Reverse">
                         <button
                           type="button"
                           className="payment-reverse-btn"
@@ -1750,7 +1845,7 @@ const Payments = () => {
                       )}
 
                       {showSetupColumn && (
-                      <td data-label="Setup">
+                      <td className="pay-col-setup" data-label="Setup">
                         {student.feeSetupCompleted ? (
                           <div className="fee-setup-actions">
                             {visibleFields.has("feeSetupCompleted") && (
@@ -2132,18 +2227,33 @@ const Payments = () => {
               <div>
                 <span>COLLECT PAYMENT</span>
                 <h2>{selectedStudent.studentName}</h2>
+                {visibleFields.has("pendingAmount") && (
                 <p>
                   Pending ₹{formatMoney(selectedStudent.pendingAmount)}
                 </p>
+                )}
               </div>
-              <button
-                type="button"
-                className="payment-modal-close"
-                onClick={closePaymentModal}
-                aria-label="Close payment"
-              >
-                <FiX />
-              </button>
+              <div className="payment-details-header-actions">
+                {selectedStudent.feeSetupCompleted && canViewPaymentHistory && (
+                  <button
+                    type="button"
+                    className="payment-view-history-btn"
+                    onClick={openPaymentHistory}
+                  >
+                    <FiClock />
+                    <span>View History</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="payment-modal-close"
+                  onClick={closePaymentModal}
+                  aria-label="Close payment"
+                >
+                  <FiX />
+                </button>
+              </div>
             </div>
 
             <div className="payment-collect-body">
@@ -2168,7 +2278,7 @@ const Payments = () => {
                         alt="Payment proof screenshot"
                         className="payment-proof-image"
                       />
-                      {selectedProof.amountClaimed != null && (
+                      {showFeeDetails && selectedProof.amountClaimed != null && (
                         <small className="payment-field-hint">
                           Student claimed to have paid ₹
                           {formatMoney(selectedProof.amountClaimed)}
@@ -2179,22 +2289,32 @@ const Payments = () => {
                 </div>
               )}
 
+              {(visibleFields.has("totalFee") ||
+                visibleFields.has("paidAmount") ||
+                visibleFields.has("pendingAmount")) && (
               <div className="collect-summary">
+                {visibleFields.has("totalFee") && (
                 <div>
                   <span>Total Fee</span>
                   <strong>₹{formatMoney(selectedStudent.totalFee)}</strong>
                 </div>
+                )}
+                {visibleFields.has("paidAmount") && (
                 <div>
                   <span>Already Paid</span>
                   <strong>₹{formatMoney(selectedStudent.paidAmount)}</strong>
                 </div>
+                )}
+                {visibleFields.has("pendingAmount") && (
                 <div>
                   <span>Pending</span>
                   <strong>₹{formatMoney(selectedStudent.pendingAmount)}</strong>
                 </div>
+                )}
               </div>
+              )}
 
-              {selectedStudent.pendingAmount <= 0 ? (
+              {selectedStudent.paymentStatus === "paid" && selectedProof ? (
                 <>
                   <div className="details-fee-complete-banner">
                     <FiCheckCircle />
@@ -2227,6 +2347,14 @@ const Payments = () => {
                     </button>
                   </div>
                 </>
+              ) : selectedStudent.paymentStatus === "paid" ? (
+                <div className="details-fee-complete-banner">
+                  <FiCheckCircle />
+                  <div>
+                    <strong>Fee Fully Paid</strong>
+                    {visibleFields.has("pendingAmount") && <span>Remaining balance is ₹0.</span>}
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="payment-form-group">
@@ -2235,18 +2363,27 @@ const Payments = () => {
                       type="number"
                       min="1"
                       step="0.01"
-                      max={selectedStudent.pendingAmount}
+                      max={visibleFields.has("pendingAmount") ? selectedStudent.pendingAmount : undefined}
                       value={partialAmount}
                       onChange={(event) => {
                         const value = event.target.value;
                         setPartialAmount(value);
 
                         const amount = Number(value);
-                        const balance = Number(selectedStudent.pendingAmount || 0);
 
-                        if (value !== "" && amount > balance) {
+                        // pendingAmount is redacted whenever its own field
+                        // permission (or Fee Details) is off — skip this
+                        // client-side check in that case (the server always
+                        // enforces the real cap).
+                        if (
+                          visibleFields.has("pendingAmount") &&
+                          value !== "" &&
+                          amount > Number(selectedStudent.pendingAmount || 0)
+                        ) {
                           setPartialAmountError(
-                            `Payment amount exceeds the remaining balance of ₹${formatMoney(balance)}.`
+                            `Payment amount exceeds the remaining balance of ₹${formatMoney(
+                              Number(selectedStudent.pendingAmount || 0),
+                            )}.`
                           );
                         } else if (value !== "" && (!Number.isFinite(amount) || amount <= 0)) {
                           setPartialAmountError("Enter a valid payment amount.");
@@ -2629,17 +2766,6 @@ const Payments = () => {
               </div>
               <div className="payment-details-header-actions">
 
-                {selectedStudent.feeSetupCompleted && canViewPaymentHistory && (
-                  <button
-                    type="button"
-                    className="payment-view-history-btn"
-                    onClick={openPaymentHistory}
-                  >
-                    <FiClock />
-                    <span>View History</span>
-                  </button>
-                )}
-
                 <button
                   type="button"
                   className="payment-modal-close"
@@ -2810,9 +2936,11 @@ const Payments = () => {
                   <div className="details-payment-actions-title">
                     <div>
                       <span>FEE ACCOUNT</span>
+                      {visibleFields.has("pendingAmount") && (
                       <strong>
                         Balance ₹{formatMoney(selectedStudent.pendingAmount)}
                       </strong>
+                      )}
                     </div>
                     <div className="details-entry-side-actions">
                       <button type="button" className="details-inline-edit-btn" onClick={startFeeEdit} aria-label="Edit fee amount and method" title="Edit fee">
@@ -2828,7 +2956,7 @@ const Payments = () => {
                 <FiCheckCircle />
                 <div>
                   <strong>Fee Fully Paid</strong>
-                  <span>Remaining balance is ₹0.</span>
+                  {visibleFields.has("pendingAmount") && <span>Remaining balance is ₹0.</span>}
                 </div>
               </div>
             )}
@@ -2915,44 +3043,104 @@ const Payments = () => {
                   No payment history available.
                 </div>
               ) : (
-                selectedStudent.paymentRecords.map((record) => (
-                  <div key={record._id} className="history-only-row">
-                    <div className="history-only-main">
-                      <strong>
-                        {record.installmentNumber
-                          ? `Month ${record.installmentNumber}`
-                          : `₹${formatMoney(record.amount)}`}
-                      </strong>
-                      {record.installmentNumber && (
-                        <span>₹{formatMoney(record.amount)}</span>
-                      )}
-                    </div>
-
-                    <div className="history-only-meta">
-                      {visibleFields.has("paymentDate") && (
-                      <div>
-                        <span>Paid Date</span>
-                        <strong>
-                          {formatDate(record.paymentDate || record.createdAt)}
-                        </strong>
-                      </div>
-                      )}
-
-                      {visibleFields.has("paymentMethod") && (
-                      <div>
-                        <span>Method</span>
-                        <strong>{formatPaymentMethod(record.paymentMethod)}</strong>
-                      </div>
-                      )}
-
-                      <div>
-                        <span>Status</span>
-                        <strong className="history-paid-status">Paid</strong>
-                      </div>
-                    </div>
+                <>
+                  <div className="history-table-header">
+                    <span>Due</span>
+                    <span>Screenshot</span>
+                    {showFeeDetails && <span>Amount</span>}
+                    {visibleFields.has("paymentMethod") && <span>Method</span>}
+                    {canClearPaymentHistory && <span>Action</span>}
                   </div>
-                ))
+
+                  {[...selectedStudent.paymentRecords]
+                    .reverse()
+                    .map((record, index) => (
+                      <div key={record._id} className="history-only-row">
+                        <span className="history-due-label">
+                          {getOrdinalDueLabel(index + 1)}
+                        </span>
+
+                        {record.screenshotImage ? (
+                          <button
+                            type="button"
+                            className="history-screenshot-thumb"
+                            onClick={() =>
+                              setPreviewImage(record.screenshotImage)
+                            }
+                            aria-label="View payment screenshot"
+                          >
+                            <img
+                              src={record.screenshotImage}
+                              alt="Payment proof screenshot"
+                            />
+                          </button>
+                        ) : (
+                          <div
+                            className="history-screenshot-empty"
+                            aria-hidden="true"
+                          >
+                            —
+                          </div>
+                        )}
+
+                        {showFeeDetails && (
+                        <span className="history-amount">
+                          ₹{formatMoney(record.amount)}
+                        </span>
+                        )}
+
+                        {visibleFields.has("paymentMethod") && (
+                          <span className="history-method">
+                            {formatPaymentMethod(record.paymentMethod)}
+                          </span>
+                        )}
+
+                        {canClearPaymentHistory && (
+                          <button
+                            type="button"
+                            className="history-delete-btn"
+                            onClick={() => handleDeleteHistoryRecord(record)}
+                            disabled={deletingHistoryId === record._id}
+                          >
+                            <FiTrash2 />
+                            <span>
+                              {deletingHistoryId === record._id
+                                ? "Deleting..."
+                                : "Delete"}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewImage && (
+        <div
+          className="payment-image-lightbox-overlay"
+          onClick={() => setPreviewImage("")}
+        >
+          <div
+            className="payment-image-lightbox"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="payment-image-lightbox-header">
+              <span>Payment Screenshot</span>
+              <button
+                type="button"
+                className="payment-modal-close"
+                onClick={() => setPreviewImage("")}
+                aria-label="Close screenshot preview"
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className="payment-image-lightbox-body">
+              <img src={previewImage} alt="Payment proof screenshot preview" />
             </div>
           </div>
         </div>

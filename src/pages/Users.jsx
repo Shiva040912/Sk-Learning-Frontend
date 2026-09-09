@@ -41,6 +41,15 @@ import {
   NOTIFICATION_FIELD_DEFINITIONS,
   createDefaultNotificationPermissions,
 } from "../utils/notificationPermissions";
+import {
+  INVOICE_ACTION_DEFINITIONS,
+  INVOICE_FIELD_DEFINITIONS,
+  createDefaultInvoicePermissions,
+} from "../utils/invoicePermissions";
+import {
+  SETTINGS_ACTION_DEFINITIONS,
+  createDefaultSettingsPermissions,
+} from "../utils/settingsPermissions";
 import "../styles/users.css";
 
 const initialForm = {
@@ -53,6 +62,8 @@ const initialForm = {
     students: createDefaultStudentPermissions(),
     payments: createDefaultPaymentPermissions(),
     notifications: createDefaultNotificationPermissions(),
+    invoices: createDefaultInvoicePermissions(),
+    settings: createDefaultSettingsPermissions(),
   },
 };
 
@@ -70,6 +81,14 @@ const ALL_NOTIFICATION_ACTION_KEYS = [
   ...NOTIFICATION_ACTION_DEFINITIONS,
   ...SEND_NOTIFICATION_SUB_ACTION_DEFINITIONS,
 ].map((item) => item.key);
+
+const ALL_INVOICE_ACTION_KEYS = INVOICE_ACTION_DEFINITIONS.map(
+  (item) => item.key
+);
+
+const ALL_SETTINGS_ACTION_KEYS = SETTINGS_ACTION_DEFINITIONS.map(
+  (item) => item.key
+);
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -145,6 +164,12 @@ const Users = () => {
     const savedNotificationPermissions =
       user.granularPermissions?.notifications || {};
 
+    const defaultInvoicePermissions = createDefaultInvoicePermissions();
+    const savedInvoicePermissions = user.granularPermissions?.invoices || {};
+
+    const defaultSettingsPermissions = createDefaultSettingsPermissions();
+    const savedSettingsPermissions = user.granularPermissions?.settings || {};
+
     setFormData({
       name: user.name || "",
       email: user.email || "",
@@ -187,6 +212,22 @@ const Users = () => {
           fields: {
             ...defaultNotificationPermissions.fields,
             ...(savedNotificationPermissions.fields || {}),
+          },
+        },
+        invoices: {
+          actions: {
+            ...defaultInvoicePermissions.actions,
+            ...(savedInvoicePermissions.actions || {}),
+          },
+          fields: {
+            ...defaultInvoicePermissions.fields,
+            ...(savedInvoicePermissions.fields || {}),
+          },
+        },
+        settings: {
+          actions: {
+            ...defaultSettingsPermissions.actions,
+            ...(savedSettingsPermissions.actions || {}),
           },
         },
       },
@@ -581,6 +622,156 @@ const Users = () => {
           fields: NOTIFICATION_FIELD_DEFINITIONS.reduce((fields, item) => {
             fields[item.key] = false;
             return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const handleInvoiceActionToggle = (actionKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        invoices: {
+          ...current.granularPermissions.invoices,
+          actions: {
+            ...current.granularPermissions.invoices.actions,
+            [actionKey]: !current.granularPermissions.invoices.actions[
+              actionKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const handleInvoiceFieldToggle = (fieldKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        invoices: {
+          ...current.granularPermissions.invoices,
+          fields: {
+            ...current.granularPermissions.invoices.fields,
+            [fieldKey]: !current.granularPermissions.invoices.fields[
+              fieldKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const selectAllInvoiceActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        invoices: {
+          ...current.granularPermissions.invoices,
+          actions: ALL_INVOICE_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = true;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllInvoiceActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        invoices: {
+          ...current.granularPermissions.invoices,
+          actions: ALL_INVOICE_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = false;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const selectAllInvoiceFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        invoices: {
+          ...current.granularPermissions.invoices,
+          fields: INVOICE_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = true;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllInvoiceFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        invoices: {
+          ...current.granularPermissions.invoices,
+          fields: INVOICE_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = false;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const handleSettingsActionToggle = (actionKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        settings: {
+          ...current.granularPermissions.settings,
+          actions: {
+            ...current.granularPermissions.settings.actions,
+            [actionKey]: !current.granularPermissions.settings.actions[
+              actionKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const selectAllSettingsActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        settings: {
+          ...current.granularPermissions.settings,
+          actions: ALL_SETTINGS_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = true;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllSettingsActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        settings: {
+          ...current.granularPermissions.settings,
+          actions: ALL_SETTINGS_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = false;
+            return actions;
           }, {}),
         },
       },
@@ -1422,6 +1613,154 @@ const Users = () => {
                           </label>
                         ))}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+              {formData.role !== "admin" &&
+                formData.pagePermissions.invoices && (
+                  <div className="user-form-group student-permissions-panel">
+                    <label>Invoices — Granular Permissions</label>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Actions</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllInvoiceActions}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllInvoiceActions}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {INVOICE_ACTION_DEFINITIONS.map((action) => (
+                          <label
+                            key={action.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.invoices
+                                  .actions[action.key]
+                              )}
+                              onChange={() =>
+                                handleInvoiceActionToggle(action.key)
+                              }
+                            />
+                            <span>{action.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Fields</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllInvoiceFields}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllInvoiceFields}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {INVOICE_FIELD_DEFINITIONS.map((field) => (
+                          <label
+                            key={field.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.invoices.fields[
+                                  field.key
+                                ]
+                              )}
+                              onChange={() =>
+                                handleInvoiceFieldToggle(field.key)
+                              }
+                            />
+                            <span>{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {formData.role !== "admin" &&
+                formData.pagePermissions.settings && (
+                  <div className="user-form-group student-permissions-panel">
+                    <label>Settings — Granular Permissions</label>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Sections</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllSettingsActions}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllSettingsActions}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {SETTINGS_ACTION_DEFINITIONS.map((action) => (
+                          <label
+                            key={action.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.settings
+                                  .actions[action.key]
+                              )}
+                              onChange={() =>
+                                handleSettingsActionToggle(action.key)
+                              }
+                            />
+                            <span>{action.label}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <p className="password-help">
+                        Course & Batch and Mobile Layout have no separate
+                        permission — Course & Batch follows the Students
+                        page's Add/Delete Course/Batch permissions, and
+                        Mobile Layout is a personal device preference.
+                      </p>
                     </div>
                   </div>
                 )}

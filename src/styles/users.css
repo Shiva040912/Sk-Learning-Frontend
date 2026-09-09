@@ -609,14 +609,22 @@
 .user-form-modal {
   max-width: 480px;
 
-  /* The Students granular permissions panel can make this form much taller
-     than the viewport — without this the modal simply overflowed the
-     screen with no way to reach the rest of the fields or the Save button. */
+  /* The form can hold up to five granular-permission panels and grow far
+     taller than the viewport. Rather than scrolling the whole modal (which
+     scrolls the header/close button out of reach), the modal is a fixed-
+     height flex column: the header stays pinned (flex-shrink: 0 below) and
+     only the form body (.user-form, flex: 1 + overflow-y: auto below)
+     scrolls internally. */
+  display: flex;
+  flex-direction: column;
+
   max-height: calc(100dvh - 30px);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .user-modal-header {
+  flex-shrink: 0;
+
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -702,6 +710,11 @@
   gap: 13px;
 
   padding: 18px;
+
+  /* Scrolls independently of the modal header — see .user-form-modal. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .user-form-group {
@@ -1588,7 +1601,6 @@
   .user-form-modal {
     max-width: 360px;
     max-height: calc(100dvh - 14px);
-    overflow-y: auto;
   }
 
   .user-modal-header {
@@ -2004,7 +2016,11 @@
   }
 
   .user-form-modal {
-    max-width: 420px;
+    /* Previously 420px — narrower than the unmedia-queried 480px base rule
+       it was silently overriding on every viewport >= 701px, which is
+       exactly where the five granular-permission panels need the most
+       room. Widened so 2-3 checkbox columns fit without cramping. */
+    max-width: 680px;
   }
 
   .user-modal-header {
@@ -2387,7 +2403,13 @@
 
 .user-permission-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Adapts the column count to the modal's actual width instead of a fixed
+     2-up grid: 1 column on narrow phones, 2 on wider phones/the old modal
+     width, 3 once the widened desktop modal (see .user-form-modal) gives it
+     room — used identically by every panel (Page Access, Students,
+     Payments, Notifications, Invoices, Settings) so they all wrap the same
+     way at every width. */
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 8px;
 }
 
@@ -2433,6 +2455,7 @@
   flex-direction: column;
   gap: 14px;
   padding: 12px;
+  margin: 3px 0;
   border: 1px solid #dce1e6;
   border-radius: 10px;
   background: #fafbfc;
@@ -2511,4 +2534,14 @@
   font-size: 8px;
   color: #8a95a0;
   font-weight: 400;
+}
+
+/* Settings is the smallest/newest panel — just one checkbox grid plus this
+   explanatory note. Without a separator the note reads as a stray sentence
+   floating under the checkboxes instead of a deliberate part of the panel,
+   which is what made it feel disconnected next to the denser panels above. */
+.student-permission-section > .password-help {
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px dashed #e5e8ec;
 }

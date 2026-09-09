@@ -4,6 +4,9 @@ const isLocalFrontend =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
 
+// Railway is the active production backend (used on Vercel).
+// EC2 backend (kept for future use, not currently active):
+// "https://44-205-140-200.sslip.io"
 const api = axios.create({
   baseURL: isLocalFrontend
     ? "http://localhost:3000"

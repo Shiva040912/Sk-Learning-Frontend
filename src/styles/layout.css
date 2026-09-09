@@ -263,7 +263,7 @@ textarea {
 
   color: #f2f3f4;
 
-  font-size: 8.5px;
+  font-size: 12px;
 
   white-space: nowrap;
 
@@ -275,7 +275,7 @@ textarea {
 
   color: #747d87;
 
-  font-size: 6px;
+  font-size: 10px;
 }
 
 .profile-chevron {
@@ -361,7 +361,7 @@ textarea {
 .profile-dropdown-info strong {
   color: #f1f2f3;
 
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .profile-dropdown-info span {
@@ -369,7 +369,7 @@ textarea {
 
   color: #737c86;
 
-  font-size: 6px;
+  font-size: 11px;
 }
 
 .profile-logout {
@@ -394,7 +394,7 @@ textarea {
 
   color: #abb2ba;
 
-  font-size: 8px;
+  font-size: 12.5px;
 
   cursor: pointer;
 }
@@ -1270,8 +1270,8 @@ textarea {
   .topbar-user { min-height: 46px; gap: 10px; padding: 4px 11px 4px 5px; border-color: rgba(255,255,255,.075); border-radius: 12px; background: #171a21; transition: border-color .18s ease, background .18s ease; }
   .topbar-user:hover { border-color: rgba(255,184,0,.28); background: #1b1f27; }
   .topbar-user-avatar { width: 36px; height: 36px; flex-basis: 36px; border-radius: 9px; }
-  .topbar-user-info strong { font-size: 10px; }
-  .topbar-user-info span { font-size: 7px; }
+  .topbar-user-info strong { font-size: 12px; }
+  .topbar-user-info span { font-size: 10px; }
   .sidebar { top: var(--topbar-height); width: var(--sidebar-collapsed); height: calc(100vh - var(--topbar-height)); padding: 12px 10px 14px; background: #101218; border-right: 0; }
   .sidebar.expanded { width: var(--sidebar-expanded); }
   .sidebar-top { min-height: 44px; padding: 0 0 11px; border-bottom: 0; }

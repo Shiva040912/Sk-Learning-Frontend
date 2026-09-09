@@ -304,7 +304,7 @@ body {
 .student-detail {
   min-width: 0;
 
-  height: 60px;
+  min-height: 60px;
 
   padding: 9px 6px;
 
@@ -1310,7 +1310,7 @@ body {
   }
 
   .student-detail {
-    height: 51px;
+    min-height: 51px;
 
     padding: 7px 4px;
 
@@ -1409,7 +1409,7 @@ body {
   }
 
   .receiver-grid strong {
-    font-size: 6.5px;
+    font-size: 7px;
   }
 
   .security-strip {
@@ -1499,7 +1499,7 @@ body {
   }
 
   .student-detail {
-    height: 40px;
+    min-height: 40px;
 
     padding: 4px;
   }
@@ -1511,7 +1511,7 @@ body {
   .student-detail strong {
     margin-top: 2px;
 
-    font-size: 6.8px;
+    font-size: 7.2px;
   }
 
   .payment-card {
@@ -1640,7 +1640,7 @@ body {
   .receiver-grid strong {
     margin-top: 1px;
 
-    font-size: 6px;
+    font-size: 6.8px;
   }
 
   .security-strip {

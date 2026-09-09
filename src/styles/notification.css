@@ -71,7 +71,7 @@
 
 .notification-summary-card span {
   color: #8b949d;
-  font-size: 6px;
+  font-size: 7px;
   font-weight: 700;
 }
 
@@ -217,7 +217,7 @@
   display: block;
   margin-top: 8px;
   color: #7c8791;
-  font-size: 6px;
+  font-size: 7px;
   font-weight: 750;
   text-transform: uppercase;
 }
@@ -263,7 +263,7 @@
   border-bottom: 1px solid #e6eaed;
   background: #f7f9fa;
   color: #7f8993;
-  font-size: 5.5px;
+  font-size: 6.8px;
   font-weight: 800;
   text-align: left;
   text-transform: uppercase;
@@ -366,14 +366,14 @@
 .notification-subtext {
   margin-top: 2px;
   color: #969ea6;
-  font-size: 5.5px;
+  font-size: 7px;
 }
 
 .notification-status {
   display: inline-flex;
   padding: 3px 5px;
   border-radius: 5px;
-  font-size: 5.5px;
+  font-size: 6.8px;
   font-weight: 800;
 }
 
@@ -413,7 +413,7 @@
   border-radius: 6px;
   background: #fff8df;
   color: #8a6500;
-  font-size: 5.8px;
+  font-size: 6.8px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -429,7 +429,7 @@
   align-items: center;
   gap: 3px;
   color: #408a57;
-  font-size: 6px;
+  font-size: 7.2px;
   font-weight: 750;
 }
 

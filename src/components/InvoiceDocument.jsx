@@ -47,10 +47,28 @@ const formatPaymentMethod = (value) => {
   return labels[value] || "-";
 };
 
+const ALL_FIELDS_VISIBLE = new Set([
+  "studentName",
+  "rollNo",
+  "course",
+  "batch",
+  "parentName",
+  "phone",
+  "invoiceNumber",
+  "invoiceDate",
+  "dueDate",
+  "totalAmount",
+  "paidAmount",
+  "pendingAmount",
+  "paymentStatus",
+  "paymentMethod",
+]);
+
 const InvoiceDocument = forwardRef(
   (
     {
       invoice,
+      visibleFields = ALL_FIELDS_VISIBLE,
     },
     ref
   ) => {
@@ -165,14 +183,19 @@ const InvoiceDocument = forwardRef(
         </header>
 
         <section className="compact-invoice-meta-bar">
+          {visibleFields.has("invoiceNumber") && (
           <div>
             <span>Invoice No</span>
             <strong>{invoice.invoiceNumber || "-"}</strong>
           </div>
+          )}
+          {visibleFields.has("invoiceDate") && (
           <div>
             <span>Invoice Date</span>
             <strong>{formatDate(invoice.invoiceDate)}</strong>
           </div>
+          )}
+          {visibleFields.has("dueDate") && (
           <div>
             <span>
               {isReceipt ? "Payment Date" : "Due Date"}
@@ -185,6 +208,8 @@ const InvoiceDocument = forwardRef(
               )}
             </strong>
           </div>
+          )}
+          {visibleFields.has("paymentStatus") && (
           <div>
             <span>Status</span>
             <strong
@@ -205,6 +230,7 @@ const InvoiceDocument = forwardRef(
                   : "Unpaid"}
             </strong>
           </div>
+          )}
         </section>
 
         <section className="compact-party-grid">
@@ -213,12 +239,24 @@ const InvoiceDocument = forwardRef(
               Student Details
             </div>
             <div className="compact-detail-grid">
-              <CompactDetail label="Student" value={student.studentName} />
-              <CompactDetail label="Roll No" value={student.rollNo} />
-              <CompactDetail label="Course" value={student.course} />
-              <CompactDetail label="Batch" value={student.batch || "-"} />
-              <CompactDetail label="Parent" value={student.parentName} />
-              <CompactDetail label="Phone" value={student.phone} />
+              {visibleFields.has("studentName") && (
+                <CompactDetail label="Student" value={student.studentName} />
+              )}
+              {visibleFields.has("rollNo") && (
+                <CompactDetail label="Roll No" value={student.rollNo} />
+              )}
+              {visibleFields.has("course") && (
+                <CompactDetail label="Course" value={student.course} />
+              )}
+              {visibleFields.has("batch") && (
+                <CompactDetail label="Batch" value={student.batch || "-"} />
+              )}
+              {visibleFields.has("parentName") && (
+                <CompactDetail label="Parent" value={student.parentName} />
+              )}
+              {visibleFields.has("phone") && (
+                <CompactDetail label="Phone" value={student.phone} />
+              )}
             </div>
           </div>
 
@@ -243,37 +281,51 @@ const InvoiceDocument = forwardRef(
             <div className="compact-fee-head">
               <span>Description</span>
               <span>Fee Type</span>
-              <span>Total</span>
-              <span>Paid</span>
-              <span>Pending</span>
+              {visibleFields.has("totalAmount") && <span>Total</span>}
+              {visibleFields.has("paidAmount") && <span>Paid</span>}
+              {visibleFields.has("pendingAmount") && <span>Pending</span>}
             </div>
 
             <div className="compact-fee-row">
               <div>
-                <strong>{student.course || "Course Fee"}</strong>
+                {visibleFields.has("course") && (
+                  <strong>{student.course || "Course Fee"}</strong>
+                )}
                 <span>{feePlanText}</span>
               </div>
               <strong>{formatFeeType(fee.feeType)}</strong>
-              <strong>₹{formatMoney(totalFee)}</strong>
-              <strong>₹{formatMoney(isReceipt ? paidAmount : 0)}</strong>
-              <strong>₹{formatMoney(pendingAmount)}</strong>
+              {visibleFields.has("totalAmount") && (
+                <strong>₹{formatMoney(totalFee)}</strong>
+              )}
+              {visibleFields.has("paidAmount") && (
+                <strong>₹{formatMoney(isReceipt ? paidAmount : 0)}</strong>
+              )}
+              {visibleFields.has("pendingAmount") && (
+                <strong>₹{formatMoney(pendingAmount)}</strong>
+              )}
             </div>
           </div>
 
           {isReceipt && (
             <div className="compact-payment-meta">
-              <div>
-                <span>This Payment</span>
-                <strong>₹{formatMoney(invoice.invoiceAmount)}</strong>
-              </div>
-              <div>
-                <span>Payment Method</span>
-                <strong>{formatPaymentMethod(invoice.paymentMethod)}</strong>
-              </div>
-              <div>
-                <span>Remaining Balance</span>
-                <strong>₹{formatMoney(pendingAmount)}</strong>
-              </div>
+              {visibleFields.has("totalAmount") && (
+                <div>
+                  <span>This Payment</span>
+                  <strong>₹{formatMoney(invoice.invoiceAmount)}</strong>
+                </div>
+              )}
+              {visibleFields.has("paymentMethod") && (
+                <div>
+                  <span>Payment Method</span>
+                  <strong>{formatPaymentMethod(invoice.paymentMethod)}</strong>
+                </div>
+              )}
+              {visibleFields.has("pendingAmount") && (
+                <div>
+                  <span>Remaining Balance</span>
+                  <strong>₹{formatMoney(pendingAmount)}</strong>
+                </div>
+              )}
             </div>
           )}
           {false &&
@@ -346,18 +398,20 @@ const InvoiceDocument = forwardRef(
                   <span>{paymentHistory.length} transactions</span>
                 </div>
 
-                <div className="compact-current-payable">
-                  <span>Remaining Balance</span>
-                  <strong>₹{formatMoney(pendingAmount)}</strong>
-                </div>
+                {visibleFields.has("pendingAmount") && (
+                  <div className="compact-current-payable">
+                    <span>Remaining Balance</span>
+                    <strong>₹{formatMoney(pendingAmount)}</strong>
+                  </div>
+                )}
               </div>
 
               <div className="compact-installment-table">
                 <div className="compact-partial-history-head">
                   <span>Payment</span>
-                  <span>Amount</span>
+                  {visibleFields.has("paidAmount") && <span>Amount</span>}
                   <span>Date</span>
-                  <span>Method</span>
+                  {visibleFields.has("paymentMethod") && <span>Method</span>}
                 </div>
 
                 {paymentHistory.map((item, index) => (
@@ -366,9 +420,13 @@ const InvoiceDocument = forwardRef(
                     className="compact-partial-history-row"
                   >
                     <span>Payment {index + 1}</span>
-                    <strong>₹{formatMoney(item.amount)}</strong>
+                    {visibleFields.has("paidAmount") && (
+                      <strong>₹{formatMoney(item.amount)}</strong>
+                    )}
                     <span>{formatDate(item.paymentDate)}</span>
-                    <span>{formatPaymentMethod(item.paymentMethod)}</span>
+                    {visibleFields.has("paymentMethod") && (
+                      <span>{formatPaymentMethod(item.paymentMethod)}</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -411,10 +469,12 @@ const InvoiceDocument = forwardRef(
               )}
             </div>
 
-            <div className="compact-total-box">
-              <span>Amount Payable</span>
-              <strong>₹{formatMoney(invoice.invoiceAmount)}</strong>
-            </div>
+            {visibleFields.has("totalAmount") && (
+              <div className="compact-total-box">
+                <span>Amount Payable</span>
+                <strong>₹{formatMoney(invoice.invoiceAmount)}</strong>
+              </div>
+            )}
           </section>
         ) : (
           <section className="compact-paid-section">
@@ -422,24 +482,27 @@ const InvoiceDocument = forwardRef(
               <FiCheckCircle />
               <div>
                 <span>PAYMENT RECEIVED</span>
-                <strong>₹{formatMoney(invoice.invoiceAmount)}</strong>
+                {visibleFields.has("totalAmount") && (
+                  <strong>₹{formatMoney(invoice.invoiceAmount)}</strong>
+                )}
                 <p>Payment has been recorded successfully.</p>
               </div>
             </div>
 
-            {pendingAmount > 0 ? (
-              <div className="compact-balance-box">
-                <span>Remaining Balance</span>
-                <strong>₹{formatMoney(pendingAmount)}</strong>
-                <p>Continue payments as per the selected fee plan.</p>
-              </div>
-            ) : (
-              <div className="compact-balance-box completed">
-                <span>Fee Status</span>
-                <strong>FULLY PAID</strong>
-                <p>No pending balance for this fee setup.</p>
-              </div>
-            )}
+            {visibleFields.has("pendingAmount") &&
+              (pendingAmount > 0 ? (
+                <div className="compact-balance-box">
+                  <span>Remaining Balance</span>
+                  <strong>₹{formatMoney(pendingAmount)}</strong>
+                  <p>Continue payments as per the selected fee plan.</p>
+                </div>
+              ) : (
+                <div className="compact-balance-box completed">
+                  <span>Fee Status</span>
+                  <strong>FULLY PAID</strong>
+                  <p>No pending balance for this fee setup.</p>
+                </div>
+              ))}
           </section>
         )}
 

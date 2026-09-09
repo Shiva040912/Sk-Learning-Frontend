@@ -63,7 +63,7 @@
 .invoice-summary-card span {
   display: block;
   color: #8a939d;
-  font-size: 5.8px;
+  font-size: 7px;
   font-weight: 760;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1161,7 +1161,7 @@
   border-radius: 7px;
   background: #ffffff;
   color: #596570;
-  font-size: 6.3px;
+  font-size: 7.3px;
   font-weight: 720;
   cursor: pointer;
 }
@@ -1297,7 +1297,7 @@
   display: block;
   margin-bottom: 4px;
   color: #7e8791;
-  font-size: 6.4px;
+  font-size: 7.5px;
   font-weight: 750;
   text-transform: uppercase;
 }
@@ -1342,7 +1342,7 @@
 
 .receipt-list-head span {
   color: #838d97;
-  font-size: 5.7px;
+  font-size: 6.8px;
   font-weight: 800;
   letter-spacing: 0.45px;
   text-transform: uppercase;
@@ -1434,7 +1434,7 @@
 .receipt-row-course span {
   margin-top: 2px;
   color: #969ea6;
-  font-size: 6px;
+  font-size: 7px;
 }
 
 .receipt-row-status {
@@ -1442,7 +1442,7 @@
   margin-top: 3px;
   padding: 2px 5px;
   border-radius: 5px;
-  font-size: 5.6px;
+  font-size: 6.8px;
   font-weight: 780;
   text-transform: uppercase;
 }
@@ -1638,7 +1638,7 @@
 .receipt-board-compact .receipt-row-student span,
 .receipt-board-compact .receipt-row-course span {
   margin-top: 3px !important;
-  font-size: 6.1px !important;
+  font-size: 7px !important;
   line-height: 1.2 !important;
 }
 
