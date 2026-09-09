@@ -7,7 +7,7 @@ const isLocalFrontend =
 const api = axios.create({
   baseURL: isLocalFrontend
     ? "http://localhost:3000"
-    : "https://44-205-140-200.sslip.io",
+    : "https://sk-learnings-backend-production-4b04.up.railway.app/",
 
   headers: {
     "Content-Type": "application/json",
