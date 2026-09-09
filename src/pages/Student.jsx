@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiEdit2,
   FiEye,
@@ -17,12 +17,25 @@ import {
   FiCreditCard,
   FiSettings,
   FiSave,
+  FiUpload,
+  FiDownload,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiXCircle,
+  FiFileText,
+  FiArrowLeft,
 } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 import api from "../services/axios";
 import LoadingLogo from "../components/LoadingLogo";
+import { getCurrentUser } from "../utils/permissions";
+import {
+  hasStudentAction,
+  getVisibleStudentFields,
+  hasAnyRowAction,
+} from "../utils/studentPermissions";
 import "../styles/students.css";
 
 
@@ -42,7 +55,89 @@ const initialForm = {
   address: "",
 };
 
+const MAX_BULK_UPLOAD_FILE_SIZE = 5 * 1024 * 1024;
+
+const BULK_UPLOAD_TEMPLATE_HEADERS = [
+  "Student Name",
+  "Roll No",
+  "Parent Name",
+  "Date of Birth",
+  "Gender",
+  "Phone",
+  "Alternate Phone",
+  "Email",
+  "Course",
+  "Batch",
+  "Aadhaar Number",
+  "School Name",
+  "Address",
+];
+
+const BULK_UPLOAD_TEMPLATE_EXAMPLE = [
+  "Aarav Kumar",
+  "SK-LN-101",
+  "Suresh Kumar",
+  "2007-05-14",
+  "Male",
+  "98789 89789",
+  "",
+  "aarav@example.com",
+  "NEET",
+  "Morning",
+  "1234 5678 9878",
+  "XYZ Public School",
+  "12, Main Street",
+];
+
+const escapeCsvValue = (value) => {
+  const text = String(value ?? "");
+
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+};
+
+const downloadCsv = (filename, rows) => {
+  const csvContent = rows
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+};
+
 const Students = () => {
+  const currentUser = getCurrentUser();
+
+  const canView = hasStudentAction(currentUser, "view");
+  const canAdd = hasStudentAction(currentUser, "add");
+  const canEdit = hasStudentAction(currentUser, "edit");
+  const canDelete = hasStudentAction(currentUser, "delete");
+  const canBulkUpload = hasStudentAction(currentUser, "bulkUpload");
+  const canAddCourse = hasStudentAction(currentUser, "addCourse");
+  const canDeleteCourse = hasStudentAction(currentUser, "deleteCourse");
+  const canAddBatch = hasStudentAction(currentUser, "addBatch");
+  const canDeleteBatch = hasStudentAction(currentUser, "deleteBatch");
+
+  const visibleFields = getVisibleStudentFields(currentUser);
+  const showStudentColumn =
+    visibleFields.has("studentName") || visibleFields.has("parentName");
+  const showActionsColumn = hasAnyRowAction(currentUser);
 
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
@@ -97,6 +192,16 @@ const Students = () => {
   });
   const [isSetupSaving, setIsSetupSaving] = useState(false);
 
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkStep, setBulkStep] = useState("select");
+  const [bulkFile, setBulkFile] = useState(null);
+  const [isBulkPreviewing, setIsBulkPreviewing] = useState(false);
+  const [bulkPreview, setBulkPreview] = useState(null);
+  const [bulkPreviewTab, setBulkPreviewTab] = useState("valid");
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [bulkImportResult, setBulkImportResult] = useState(null);
+  const bulkFileInputRef = useRef(null);
+
   const fetchStudents = async () => {
     try {
       setIsLoading(true);
@@ -133,9 +238,14 @@ const Students = () => {
   };
 
   useEffect(() => {
+    if (!canView) {
+      setIsLoading(false);
+      return;
+    }
+
     fetchStudents();
     fetchAcademicSetup();
-  }, []);
+  }, [canView]);
 
   const studentCourses = useMemo(() => {
     const courseList = students
@@ -228,6 +338,8 @@ const Students = () => {
   }, [students]);
 
   const openAddModal = () => {
+    if (!canAdd) return;
+
     setEditingStudent(null);
     setFormData(initialForm);
     setFormErrors({});
@@ -236,6 +348,8 @@ const Students = () => {
   };
 
   const openEditModal = (student) => {
+    if (!canEdit) return;
+
     setEditingStudent(student);
 
     setFormData({
@@ -267,11 +381,15 @@ const Students = () => {
   };
 
   const openViewModal = (student) => {
+    if (!canView) return;
+
     setSelectedStudent(student);
     setShowViewModal(true);
   };
 
   const openDeleteModal = (student) => {
+    if (!canDelete) return;
+
     setSelectedStudent(student);
     setShowDeleteModal(true);
   };
@@ -642,6 +760,8 @@ const Students = () => {
   };
 
   const handleAddCourse = async () => {
+    if (!canAddCourse) return;
+
     const courseName = newCourseName.trim();
 
     if (!courseName) {
@@ -666,6 +786,8 @@ const Students = () => {
   };
 
   const handleDeleteCourse = async (id) => {
+    if (!canDeleteCourse) return;
+
     try {
       await api.delete(`/academic/courses/${id}`);
       await fetchAcademicSetup();
@@ -688,6 +810,8 @@ const Students = () => {
   };
 
   const handleAddBatch = async () => {
+    if (!canAddBatch) return;
+
     const batchName = newBatch.batchName.trim();
     const startTime = newBatch.startTime.trim().toUpperCase();
     const endTime = newBatch.endTime.trim().toUpperCase();
@@ -741,9 +865,10 @@ const Students = () => {
     const startTime = newBatch.startTime.trim().toUpperCase();
     const endTime = newBatch.endTime.trim().toUpperCase();
 
-    const hasCourse = Boolean(courseName);
+    const hasCourse = Boolean(courseName) && canAddCourse;
     const hasAnyBatchValue = Boolean(batchName || startTime || endTime);
-    const hasCompleteBatch = Boolean(batchName && startTime && endTime);
+    const hasCompleteBatch =
+      Boolean(batchName && startTime && endTime) && canAddBatch;
 
     if (!hasCourse && !hasAnyBatchValue) {
       setShowSetupModal(false);
@@ -810,6 +935,8 @@ const Students = () => {
   };
 
   const handleDeleteBatch = async (id) => {
+    if (!canDeleteBatch) return;
+
     try {
       await api.delete(`/academic/batches/${id}`);
       await fetchAcademicSetup();
@@ -824,6 +951,218 @@ const Students = () => {
 
   const formatBatchLabel = (batch) =>
     `${batch.batchName} — ${batch.startTime} - ${batch.endTime}`;
+
+  const openBulkModal = () => {
+    if (!canBulkUpload) return;
+
+    setShowBulkModal(true);
+    setBulkStep("select");
+    setBulkFile(null);
+    setBulkPreview(null);
+    setBulkPreviewTab("valid");
+    setBulkImportResult(null);
+  };
+
+  const closeBulkModal = () => {
+    if (isBulkPreviewing || isBulkImporting) return;
+
+    setShowBulkModal(false);
+    setBulkStep("select");
+    setBulkFile(null);
+    setBulkPreview(null);
+    setBulkPreviewTab("valid");
+    setBulkImportResult(null);
+
+    if (bulkFileInputRef.current) {
+      bulkFileInputRef.current.value = "";
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadCsv("student-bulk-upload-template.csv", [
+      BULK_UPLOAD_TEMPLATE_HEADERS,
+      BULK_UPLOAD_TEMPLATE_EXAMPLE,
+    ]);
+  };
+
+  const handleBulkFileChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!/\.(xlsx|csv)$/i.test(file.name)) {
+      toast.error("Only .xlsx or .csv files are allowed");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_BULK_UPLOAD_FILE_SIZE) {
+      toast.error("File is too large. Maximum allowed size is 5 MB");
+      event.target.value = "";
+      return;
+    }
+
+    setBulkFile(file);
+  };
+
+  const clearBulkFile = () => {
+    setBulkFile(null);
+
+    if (bulkFileInputRef.current) {
+      bulkFileInputRef.current.value = "";
+    }
+  };
+
+  const handleBulkPreview = async () => {
+    if (!bulkFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+
+    try {
+      setIsBulkPreviewing(true);
+
+      const formData = new FormData();
+      formData.append("file", bulkFile);
+
+      const response = await api.post(
+        "/students/bulk-upload/preview",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const preview = response.data;
+
+      setBulkPreview(preview);
+      setBulkPreviewTab(
+        preview.summary.valid > 0
+          ? "valid"
+          : preview.summary.duplicate > 0
+            ? "duplicate"
+            : "invalid"
+      );
+      setBulkStep("preview");
+    } catch (error) {
+      toast.error(
+        getBackendErrorMessage(error) || "Failed to read the file"
+      );
+    } finally {
+      setIsBulkPreviewing(false);
+    }
+  };
+
+  const handleBulkImport = async () => {
+    if (!bulkPreview) return;
+
+    const validRows = bulkPreview.rows.filter(
+      (row) => row.status === "valid"
+    );
+
+    if (validRows.length === 0) {
+      toast.error("There are no valid rows to import");
+      return;
+    }
+
+    try {
+      setIsBulkImporting(true);
+
+      const payload = {
+        rows: validRows.map((row) => ({
+          rowNumber: row.rowNumber,
+          ...row.data,
+        })),
+      };
+
+      const response = await api.post(
+        "/students/bulk-upload/import",
+        payload
+      );
+
+      setBulkImportResult(response.data);
+      setBulkStep("summary");
+
+      await fetchStudents();
+
+      if (response.data.importedCount > 0) {
+        toast.success(
+          `${response.data.importedCount} student(s) imported successfully`
+        );
+      }
+
+      if (response.data.failedCount > 0) {
+        toast.error(
+          `${response.data.failedCount} row(s) could not be imported`
+        );
+      }
+    } catch (error) {
+      toast.error(
+        getBackendErrorMessage(error) || "Failed to import students"
+      );
+    } finally {
+      setIsBulkImporting(false);
+    }
+  };
+
+  const getBulkErrorRows = () => {
+    const errorRows = [];
+
+    if (bulkPreview) {
+      bulkPreview.rows
+        .filter((row) => row.status !== "valid")
+        .forEach((row) => {
+          errorRows.push({
+            rowNumber: row.rowNumber,
+            studentName: row.data.studentName,
+            rollNo: row.data.rollNo,
+            course: row.data.course,
+            phone: row.data.phone,
+            status: row.status,
+            reason: row.reasons.join("; "),
+          });
+        });
+    }
+
+    if (bulkImportResult) {
+      bulkImportResult.results
+        .filter((result) => result.status === "failed")
+        .forEach((result) => {
+          errorRows.push({
+            rowNumber: result.rowNumber,
+            studentName: result.studentName,
+            rollNo: result.rollNo,
+            course: "",
+            phone: "",
+            status: "failed",
+            reason: result.reason || "",
+          });
+        });
+    }
+
+    return errorRows;
+  };
+
+  const handleDownloadErrorCsv = () => {
+    const errorRows = getBulkErrorRows();
+
+    if (errorRows.length === 0) return;
+
+    downloadCsv("student-bulk-upload-errors.csv", [
+      ["Row", "Student Name", "Roll No", "Course", "Phone", "Status", "Reason"],
+      ...errorRows.map((row) => [
+        row.rowNumber,
+        row.studentName,
+        row.rollNo,
+        row.course,
+        row.phone,
+        row.status,
+        row.reason,
+      ]),
+    ]);
+  };
 
   const formatMoney = (value) =>
     Number(value || 0).toLocaleString(
@@ -862,7 +1201,7 @@ const Students = () => {
 
   return (
     <div className="students-page">
-      
+
 
       <div className="student-payment-summary-grid">
         <article className="student-payment-summary-card">
@@ -1028,14 +1367,28 @@ const Students = () => {
               <span>Setup</span>
             </button>
 
-            <button
-              type="button"
-              className="add-student-btn"
-              onClick={openAddModal}
-            >
-              <FiPlus />
-              <span>Add Student</span>
-            </button>
+            {canBulkUpload && (
+              <button
+                type="button"
+                className="student-bulk-upload-btn"
+                onClick={openBulkModal}
+                title="Bulk upload students from Excel/CSV"
+              >
+                <FiUpload />
+                <span>Bulk Upload</span>
+              </button>
+            )}
+
+            {canAdd && (
+              <button
+                type="button"
+                className="add-student-btn"
+                onClick={openAddModal}
+              >
+                <FiPlus />
+                <span>Add Student</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1067,14 +1420,16 @@ const Students = () => {
               <table className="students-table">
                 <thead>
                   <tr>
-                    <th>S.No</th>
-                    <th>Student</th>
-                    <th>Roll No</th>
-                    <th>Course</th>
-                    <th>Gender</th>
-                    <th>Phone</th>
-                    <th>Aadhaar Number</th>
-                    <th>Actions</th>
+                    <th className="col-serial">S.No</th>
+                    {showStudentColumn && <th className="col-student">Student</th>}
+                    {visibleFields.has("rollNo") && <th className="col-rollno">Roll No</th>}
+                    {visibleFields.has("course") && <th className="col-course">Course</th>}
+                    {visibleFields.has("gender") && <th className="col-gender">Gender</th>}
+                    {visibleFields.has("phone") && <th className="col-phone">Phone</th>}
+                    {visibleFields.has("idproof") && (
+                      <th className="col-aadhaar">Aadhaar Number</th>
+                    )}
+                    {showActionsColumn && <th className="col-actions">Actions</th>}
                   </tr>
                 </thead>
 
@@ -1083,106 +1438,136 @@ const Students = () => {
                     (student, index) => (
                       <tr
                         key={student._id}
-                        className="student-clickable-row"
-                        onClick={() => openViewModal(student)}
+                        className={
+                          canView ? "student-clickable-row" : ""
+                        }
+                        onClick={
+                          canView
+                            ? () => openViewModal(student)
+                            : undefined
+                        }
                       >
-                        <td>
+                        <td className="col-serial">
                           <span className="serial-number">
                             {index + 1}
                           </span>
                         </td>
 
-                        <td>
-                          <div className="student-profile-cell">
-                            <div className="student-avatar">
-                              {student.studentName
-                                ?.charAt(0)
-                                ?.toUpperCase() ||
-                                "S"}
+                        {showStudentColumn && (
+                          <td className="col-student">
+                            <div className="student-profile-cell">
+                              <div className="student-avatar">
+                                {student.studentName
+                                  ?.charAt(0)
+                                  ?.toUpperCase() ||
+                                  "S"}
+                              </div>
+
+                              <div className="student-name-cell">
+                                {visibleFields.has("studentName") && (
+                                  <strong>
+                                    {
+                                      student.studentName
+                                    }
+                                  </strong>
+                                )}
+
+                                {visibleFields.has("parentName") && (
+                                  <span>
+                                    Parent:{" "}
+                                    {
+                                      student.parentName
+                                    }
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                          </td>
+                        )}
 
-                            <div className="student-name-cell">
-                              <strong>
-                                {
-                                  student.studentName
-                                }
-                              </strong>
+                        {visibleFields.has("rollNo") && (
+                          <td className="col-rollno">
+                            <span className="roll-number-badge">
+                              {student.rollNo || "-"}
+                            </span>
+                          </td>
+                        )}
 
-                              <span>
-                                Parent:{" "}
-                                {
-                                  student.parentName
-                                }
-                              </span>
+                        {visibleFields.has("course") && (
+                          <td className="col-course">
+                            <span className="course-badge">
+                              {
+                                student.course
+                              }
+                            </span>
+                          </td>
+                        )}
+
+                        {visibleFields.has("gender") && (
+                          <td className="col-gender">
+                            {student.gender ? student.gender.charAt(0).toUpperCase() + student.gender.slice(1) : "-"}
+                          </td>
+                        )}
+
+                        {visibleFields.has("phone") && (
+                          <td className="col-phone">
+                            {student.phone}
+                          </td>
+                        )}
+
+                        {visibleFields.has("idproof") && (
+                          <td className="col-aadhaar">
+                            <span className="aadhaar-table-value">
+                              {student.idproof || "-"}
+                            </span>
+                          </td>
+                        )}
+
+                        {showActionsColumn && (
+                          <td className="col-actions">
+                            <div className="student-actions">
+                              {canView && (
+                                <button
+                                  type="button"
+                                  title="View Student"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openViewModal(student);
+                                  }}
+                                >
+                                  <FiEye />
+                                </button>
+                              )}
+
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  title="Edit Student"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openEditModal(student);
+                                  }}
+                                >
+                                  <FiEdit2 />
+                                </button>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  title="Delete Student"
+                                  className="delete-btn"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openDeleteModal(student);
+                                  }}
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              )}
                             </div>
-                          </div>
-                        </td>
-
-                        <td>
-                          <span className="roll-number-badge">
-                            {student.rollNo || "-"}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="course-badge">
-                            {
-                              student.course
-                            }
-                          </span>
-                        </td>
-
-                        <td>
-                          {student.gender ? student.gender.charAt(0).toUpperCase() + student.gender.slice(1) : "-"}
-                        </td>
-
-                        <td>
-                          {student.phone}
-                        </td>
-
-                        <td>
-                          <span className="aadhaar-table-value">
-                            {student.idproof || "-"}
-                          </span>
-                        </td>
-
-                        <td>
-                          <div className="student-actions">
-                            <button
-                              type="button"
-                              title="View Student"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openViewModal(student);
-                              }}
-                            >
-                              <FiEye />
-                            </button>
-
-                            <button
-                              type="button"
-                              title="Edit Student"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openEditModal(student);
-                              }}
-                            >
-                              <FiEdit2 />
-                            </button>
-
-                            <button
-                              type="button"
-                              title="Delete Student"
-                              className="delete-btn"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openDeleteModal(student);
-                              }}
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </div>
-                        </td>
+                          </td>
+                        )}
                       </tr>
                     )
                   )}
@@ -1230,31 +1615,33 @@ const Students = () => {
                   </div>
                 </div>
 
-                <div className="setup-add-row">
-                  <input
-                    type="text"
-                    value={newCourseName}
-                    onChange={(event) =>
-                      setNewCourseName(event.target.value)
-                    }
-                    placeholder="Example: NEET"
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        handleAddCourse();
+                {canAddCourse && (
+                  <div className="setup-add-row">
+                    <input
+                      type="text"
+                      value={newCourseName}
+                      onChange={(event) =>
+                        setNewCourseName(event.target.value)
                       }
-                    }}
-                  />
+                      placeholder="Example: NEET"
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          handleAddCourse();
+                        }
+                      }}
+                    />
 
-                  <button
-                    type="button"
-                    className="setup-add-btn"
-                    onClick={handleAddCourse}
-                    disabled={isSetupSaving}
-                  >
-                    <FiPlus /> Add Course
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className="setup-add-btn"
+                      onClick={handleAddCourse}
+                      disabled={isSetupSaving}
+                    >
+                      <FiPlus /> Add Course
+                    </button>
+                  </div>
+                )}
 
                 <div className="setup-items">
                   {academicCourses.length === 0 ? (
@@ -1272,16 +1659,18 @@ const Students = () => {
                           <span>Course</span>
                         </div>
 
-                        <button
-                          type="button"
-                          className="setup-delete-btn"
-                          onClick={() =>
-                            handleDeleteCourse(course._id)
-                          }
-                          title="Delete course"
-                        >
-                          <FiTrash2 />
-                        </button>
+                        {canDeleteCourse && (
+                          <button
+                            type="button"
+                            className="setup-delete-btn"
+                            onClick={() =>
+                              handleDeleteCourse(course._id)
+                            }
+                            title="Delete course"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
                       </div>
                     ))
                   )}
@@ -1298,40 +1687,42 @@ const Students = () => {
                   </div>
                 </div>
 
-                <div className="setup-batch-grid">
-                  <input
-                    type="text"
-                    name="batchName"
-                    value={newBatch.batchName}
-                    onChange={handleBatchChange}
-                    placeholder="Batch name - Morning"
-                  />
+                {canAddBatch && (
+                  <div className="setup-batch-grid">
+                    <input
+                      type="text"
+                      name="batchName"
+                      value={newBatch.batchName}
+                      onChange={handleBatchChange}
+                      placeholder="Batch name - Morning"
+                    />
 
-                  <input
-                    type="text"
-                    name="startTime"
-                    value={newBatch.startTime}
-                    onChange={handleBatchChange}
-                    placeholder="Start - 10:00 AM"
-                  />
+                    <input
+                      type="text"
+                      name="startTime"
+                      value={newBatch.startTime}
+                      onChange={handleBatchChange}
+                      placeholder="Start - 10:00 AM"
+                    />
 
-                  <input
-                    type="text"
-                    name="endTime"
-                    value={newBatch.endTime}
-                    onChange={handleBatchChange}
-                    placeholder="End - 11:00 AM"
-                  />
+                    <input
+                      type="text"
+                      name="endTime"
+                      value={newBatch.endTime}
+                      onChange={handleBatchChange}
+                      placeholder="End - 11:00 AM"
+                    />
 
-                  <button
-                    type="button"
-                    className="setup-add-btn"
-                    onClick={handleAddBatch}
-                    disabled={isSetupSaving}
-                  >
-                    <FiPlus /> Add Batch
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className="setup-add-btn"
+                      onClick={handleAddBatch}
+                      disabled={isSetupSaving}
+                    >
+                      <FiPlus /> Add Batch
+                    </button>
+                  </div>
+                )}
 
                 <div className="setup-items">
                   {academicBatches.length === 0 ? (
@@ -1351,16 +1742,18 @@ const Students = () => {
                           <span>Batch & Timing</span>
                         </div>
 
-                        <button
-                          type="button"
-                          className="setup-delete-btn"
-                          onClick={() =>
-                            handleDeleteBatch(batch._id)
-                          }
-                          title="Delete batch"
-                        >
-                          <FiTrash2 />
-                        </button>
+                        {canDeleteBatch && (
+                          <button
+                            type="button"
+                            className="setup-delete-btn"
+                            onClick={() =>
+                              handleDeleteBatch(batch._id)
+                            }
+                            title="Delete batch"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
                       </div>
                     ))
                   )}
@@ -1388,6 +1781,324 @@ const Students = () => {
                   {isSetupSaving ? "Saving..." : "Save"}
                 </button>
               </div>            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkModal && (
+        <div className="student-modal-overlay">
+          <div className="student-modal bulk-upload-modal">
+            <div className="student-modal-header">
+              <div className="modal-heading-content">
+                <span className="modal-icon">
+                  <FiUpload />
+                </span>
+
+                <div>
+                  <h2>Bulk Upload Students</h2>
+                  <p>
+                    {bulkStep === "select" &&
+                      "Import multiple students from an Excel or CSV file"}
+                    {bulkStep === "preview" &&
+                      "Review the rows found in your file before importing"}
+                    {bulkStep === "summary" && "Import finished"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={closeBulkModal}
+                aria-label="Close bulk upload"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="bulk-upload-body">
+              {bulkStep === "select" && (
+                <div className="bulk-upload-select-step">
+                  <div className="bulk-upload-template-row">
+                    <span>
+                      Use the sample template so your columns match what we
+                      expect (Student Name, Roll No, Parent Name, Date of
+                      Birth, Gender, Phone, Course, Aadhaar Number are
+                      required — Course and Batch must already exist in
+                      Setup).
+                    </span>
+
+                    <button
+                      type="button"
+                      className="secondary-btn bulk-template-btn"
+                      onClick={handleDownloadTemplate}
+                    >
+                      <FiDownload />
+                      Sample Template
+                    </button>
+                  </div>
+
+                  <label className="bulk-upload-dropzone" htmlFor="bulk-upload-file">
+                    <FiUpload />
+                    <strong>
+                      {bulkFile ? bulkFile.name : "Click to select a file"}
+                    </strong>
+                    <span>.xlsx or .csv, up to 5 MB</span>
+                  </label>
+
+                  <input
+                    id="bulk-upload-file"
+                    ref={bulkFileInputRef}
+                    type="file"
+                    accept=".xlsx,.csv"
+                    onChange={handleBulkFileChange}
+                    hidden
+                  />
+
+                  {bulkFile && (
+                    <div className="bulk-upload-file-chip">
+                      <FiFileText />
+                      <span>
+                        {bulkFile.name} (
+                        {(bulkFile.size / (1024 * 1024)).toFixed(2)} MB)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearBulkFile}
+                        aria-label="Remove selected file"
+                      >
+                        <FiX />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {bulkStep === "preview" && bulkPreview && (
+                <div className="bulk-upload-preview-step">
+                  <div className="bulk-upload-summary-row">
+                    <button
+                      type="button"
+                      className={`bulk-summary-pill valid ${
+                        bulkPreviewTab === "valid" ? "active" : ""
+                      }`}
+                      onClick={() => setBulkPreviewTab("valid")}
+                    >
+                      <FiCheckCircle />
+                      <strong>{bulkPreview.summary.valid}</strong>
+                      <span>Valid</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`bulk-summary-pill duplicate ${
+                        bulkPreviewTab === "duplicate" ? "active" : ""
+                      }`}
+                      onClick={() => setBulkPreviewTab("duplicate")}
+                    >
+                      <FiAlertTriangle />
+                      <strong>{bulkPreview.summary.duplicate}</strong>
+                      <span>Duplicate</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`bulk-summary-pill invalid ${
+                        bulkPreviewTab === "invalid" ? "active" : ""
+                      }`}
+                      onClick={() => setBulkPreviewTab("invalid")}
+                    >
+                      <FiXCircle />
+                      <strong>{bulkPreview.summary.invalid}</strong>
+                      <span>Invalid</span>
+                    </button>
+                  </div>
+
+                  <div className="bulk-upload-table-wrapper">
+                    <table className="bulk-upload-table">
+                      <thead>
+                        <tr>
+                          <th>Row</th>
+                          <th>Student</th>
+                          <th>Roll No</th>
+                          <th>Course</th>
+                          <th>Phone</th>
+                          {bulkPreviewTab !== "valid" && <th>Reason</th>}
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {bulkPreview.rows.filter(
+                          (row) => row.status === bulkPreviewTab
+                        ).length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={bulkPreviewTab !== "valid" ? 6 : 5}
+                              className="bulk-upload-empty-cell"
+                            >
+                              No {bulkPreviewTab} rows
+                            </td>
+                          </tr>
+                        ) : (
+                          bulkPreview.rows
+                            .filter((row) => row.status === bulkPreviewTab)
+                            .map((row) => (
+                              <tr key={row.rowNumber}>
+                                <td>{row.rowNumber}</td>
+                                <td>{row.data.studentName || "-"}</td>
+                                <td>{row.data.rollNo || "-"}</td>
+                                <td>{row.data.course || "-"}</td>
+                                <td>{row.data.phone || "-"}</td>
+                                {bulkPreviewTab !== "valid" && (
+                                  <td className="bulk-upload-reason-cell">
+                                    {row.reasons.join("; ")}
+                                  </td>
+                                )}
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {bulkStep === "summary" && bulkImportResult && (
+                <div className="bulk-upload-summary-step">
+                  <div className="bulk-upload-summary-row">
+                    <div className="bulk-summary-pill valid static">
+                      <FiCheckCircle />
+                      <strong>{bulkImportResult.importedCount}</strong>
+                      <span>Imported</span>
+                    </div>
+
+                    <div className="bulk-summary-pill invalid static">
+                      <FiXCircle />
+                      <strong>{bulkImportResult.failedCount}</strong>
+                      <span>Failed</span>
+                    </div>
+                  </div>
+
+                  {bulkImportResult.failedCount > 0 && (
+                    <div className="bulk-upload-table-wrapper">
+                      <table className="bulk-upload-table">
+                        <thead>
+                          <tr>
+                            <th>Row</th>
+                            <th>Student</th>
+                            <th>Roll No</th>
+                            <th>Reason</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {bulkImportResult.results
+                            .filter((result) => result.status === "failed")
+                            .map((result, index) => (
+                              <tr key={`${result.rowNumber}-${index}`}>
+                                <td>{result.rowNumber ?? "-"}</td>
+                                <td>{result.studentName || "-"}</td>
+                                <td>{result.rollNo || "-"}</td>
+                                <td className="bulk-upload-reason-cell">
+                                  {result.reason || "-"}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="bulk-upload-actions">
+              {bulkStep === "select" && (
+                <>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={closeBulkModal}
+                    disabled={isBulkPreviewing}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="primary-btn"
+                    onClick={handleBulkPreview}
+                    disabled={!bulkFile || isBulkPreviewing}
+                  >
+                    {isBulkPreviewing ? "Reading file..." : "Upload & Preview"}
+                  </button>
+                </>
+              )}
+
+              {bulkStep === "preview" && (
+                <>
+                  <button
+                    type="button"
+                    className="secondary-btn bulk-back-btn"
+                    onClick={() => setBulkStep("select")}
+                    disabled={isBulkImporting}
+                  >
+                    <FiArrowLeft />
+                    Back
+                  </button>
+
+                  {getBulkErrorRows().length > 0 && (
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      onClick={handleDownloadErrorCsv}
+                      disabled={isBulkImporting}
+                    >
+                      <FiDownload />
+                      Download Error CSV
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="primary-btn"
+                    onClick={handleBulkImport}
+                    disabled={
+                      isBulkImporting ||
+                      !bulkPreview ||
+                      bulkPreview.summary.valid === 0
+                    }
+                  >
+                    {isBulkImporting
+                      ? "Importing..."
+                      : `Import Valid Students (${bulkPreview?.summary.valid || 0})`}
+                  </button>
+                </>
+              )}
+
+              {bulkStep === "summary" && (
+                <>
+                  {getBulkErrorRows().length > 0 && (
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      onClick={handleDownloadErrorCsv}
+                    >
+                      <FiDownload />
+                      Download Error CSV
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="primary-btn"
+                    onClick={closeBulkModal}
+                  >
+                    Done
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1884,128 +2595,174 @@ const Students = () => {
                 </div>
 
                 <div className="student-profile-identity">
-                  <small>STUDENT NAME</small>
-                  <h2>{selectedStudent.studentName}</h2>
+                  {visibleFields.has("studentName") ? (
+                    <>
+                      <small>STUDENT NAME</small>
+                      <h2>{selectedStudent.studentName}</h2>
+                    </>
+                  ) : (
+                    <h2>Student Profile</h2>
+                  )}
 
                   <div className="student-profile-chip-row">
-                    <span>
-                      <FiBookOpen />
-                      {selectedStudent.course || "No Course"}
-                    </span>
+                    {visibleFields.has("course") && (
+                      <span>
+                        <FiBookOpen />
+                        {selectedStudent.course || "No Course"}
+                      </span>
+                    )}
 
-                    <span>
-                      <FiUsers />
-                      {selectedStudent.batch || "No Batch"}
-                    </span>
+                    {visibleFields.has("batch") && (
+                      <span>
+                        <FiUsers />
+                        {selectedStudent.batch || "No Batch"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div className="student-profile-roll-card">
-                  <small>ROLL NO</small>
-                  <strong>{selectedStudent.rollNo || "-"}</strong>
-                </div>
+                {visibleFields.has("rollNo") && (
+                  <div className="student-profile-roll-card">
+                    <small>ROLL NO</small>
+                    <strong>{selectedStudent.rollNo || "-"}</strong>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="student-profile-content">
-              <section className="student-profile-section">
-                <div className="student-profile-section-title">
-                  <span className="student-profile-section-icon">
-                    <FiUser />
-                  </span>
+              {(visibleFields.has("parentName") ||
+                visibleFields.has("dateOfBirth") ||
+                visibleFields.has("gender") ||
+                visibleFields.has("phone") ||
+                visibleFields.has("alternatePhone") ||
+                visibleFields.has("email")) && (
+                <section className="student-profile-section">
+                  <div className="student-profile-section-title">
+                    <span className="student-profile-section-icon">
+                      <FiUser />
+                    </span>
+
+                    <div>
+                      <h3>Parent & Contact</h3>
+                      <p>Primary student contact information</p>
+                    </div>
+                  </div>
+
+                  <div className="student-profile-info-grid">
+                    {visibleFields.has("parentName") && (
+                      <ProfileDetail
+                        label="Parent Name"
+                        value={selectedStudent.parentName || "-"}
+                      />
+                    )}
+
+                    {visibleFields.has("dateOfBirth") && (
+                      <ProfileDetail
+                        label="Date of Birth"
+                        value={formatDate(selectedStudent.dateOfBirth)}
+                        icon={<FiCalendar />}
+                      />
+                    )}
+
+                    {visibleFields.has("gender") && (
+                      <ProfileDetail
+                        label="Gender"
+                        value={selectedStudent.gender ? selectedStudent.gender.charAt(0).toUpperCase() + selectedStudent.gender.slice(1) : "-"}
+                        icon={<FiUser />}
+                      />
+                    )}
+
+                    {visibleFields.has("phone") && (
+                      <ProfileDetail
+                        label="Parent Phone"
+                        value={selectedStudent.phone || "-"}
+                        icon={<FiPhone />}
+                      />
+                    )}
+
+                    {visibleFields.has("alternatePhone") && (
+                      <ProfileDetail
+                        label="Alternate Number"
+                        value={selectedStudent.alternatePhone || "-"}
+                        icon={<FiPhone />}
+                      />
+                    )}
+
+                    {visibleFields.has("email") && (
+                      <ProfileDetail
+                        label="Email Address"
+                        value={selectedStudent.email || "-"}
+                        icon={<FiMail />}
+                      />
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {(visibleFields.has("course") ||
+                visibleFields.has("batch") ||
+                visibleFields.has("schoolName") ||
+                visibleFields.has("idproof")) && (
+                <section className="student-profile-section">
+                  <div className="student-profile-section-title">
+                    <span className="student-profile-section-icon">
+                      <FaGraduationCap />
+                    </span>
+
+                    <div>
+                      <h3>Academic & Identity</h3>
+                      <p>Education and identification details</p>
+                    </div>
+                  </div>
+
+                  <div className="student-profile-info-grid">
+                    {visibleFields.has("course") && (
+                      <ProfileDetail
+                        label="Course"
+                        value={selectedStudent.course || "-"}
+                        icon={<FiBookOpen />}
+                      />
+                    )}
+
+                    {visibleFields.has("batch") && (
+                      <ProfileDetail
+                        label="Batch"
+                        value={selectedStudent.batch || "-"}
+                        icon={<FiUsers />}
+                      />
+                    )}
+
+                    {visibleFields.has("schoolName") && (
+                      <ProfileDetail
+                        label="School Name"
+                        value={selectedStudent.schoolName || "-"}
+                      />
+                    )}
+
+                    {visibleFields.has("idproof") && (
+                      <ProfileDetail
+                        label="Aadhaar Number"
+                        value={selectedStudent.idproof || "-"}
+                        icon={<FiCreditCard />}
+                      />
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {visibleFields.has("address") && (
+                <section className="student-profile-address-card">
+                  <div className="student-profile-address-icon">
+                    <FiMapPin />
+                  </div>
 
                   <div>
-                    <h3>Parent & Contact</h3>
-                    <p>Primary student contact information</p>
+                    <span>RESIDENTIAL ADDRESS</span>
+                    <p>{selectedStudent.address || "-"}</p>
                   </div>
-                </div>
-
-                <div className="student-profile-info-grid">
-                  <ProfileDetail
-                    label="Parent Name"
-                    value={selectedStudent.parentName || "-"}
-                  />
-
-                  <ProfileDetail
-                    label="Date of Birth"
-                    value={formatDate(selectedStudent.dateOfBirth)}
-                    icon={<FiCalendar />}
-                  />
-
-                  <ProfileDetail
-                    label="Gender"
-                    value={selectedStudent.gender ? selectedStudent.gender.charAt(0).toUpperCase() + selectedStudent.gender.slice(1) : "-"}
-                    icon={<FiUser />}
-                  />
-
-                  <ProfileDetail
-                    label="Parent Phone"
-                    value={selectedStudent.phone || "-"}
-                    icon={<FiPhone />}
-                  />
-
-                  <ProfileDetail
-                    label="Alternate Number"
-                    value={selectedStudent.alternatePhone || "-"}
-                    icon={<FiPhone />}
-                  />
-
-                  <ProfileDetail
-                    label="Email Address"
-                    value={selectedStudent.email || "-"}
-                    icon={<FiMail />}
-                  />
-                </div>
-              </section>
-
-              <section className="student-profile-section">
-                <div className="student-profile-section-title">
-                  <span className="student-profile-section-icon">
-                    <FaGraduationCap />
-                  </span>
-
-                  <div>
-                    <h3>Academic & Identity</h3>
-                    <p>Education and identification details</p>
-                  </div>
-                </div>
-
-                <div className="student-profile-info-grid">
-                  <ProfileDetail
-                    label="Course"
-                    value={selectedStudent.course || "-"}
-                    icon={<FiBookOpen />}
-                  />
-
-                  <ProfileDetail
-                    label="Batch"
-                    value={selectedStudent.batch || "-"}
-                    icon={<FiUsers />}
-                  />
-
-                  <ProfileDetail
-                    label="School Name"
-                    value={selectedStudent.schoolName || "-"}
-                  />
-
-                  <ProfileDetail
-                    label="Aadhaar Number"
-                    value={selectedStudent.idproof || "-"}
-                    icon={<FiCreditCard />}
-                  />
-                </div>
-              </section>
-
-              <section className="student-profile-address-card">
-                <div className="student-profile-address-icon">
-                  <FiMapPin />
-                </div>
-
-                <div>
-                  <span>RESIDENTIAL ADDRESS</span>
-                  <p>{selectedStudent.address || "-"}</p>
-                </div>
-              </section>
+                </section>
+              )}
             </div>
 
             <div className="student-profile-footer">
@@ -2035,7 +2792,7 @@ const Students = () => {
                 to delete{" "}
                 <strong>
                   {
-                    selectedStudent.studentName
+                    selectedStudent.studentName || "this student"
                   }
                 </strong>
                 ? This student record

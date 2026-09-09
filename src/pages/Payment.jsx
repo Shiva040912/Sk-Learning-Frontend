@@ -22,26 +22,62 @@ import toast from "react-hot-toast";
 
 import api from "../services/axios";
 import LoadingLogo from "../components/LoadingLogo";
+import { getCurrentUser } from "../utils/permissions";
+import {
+  hasPaymentAction,
+  getVisiblePaymentFields,
+  getVisiblePaymentUpiFields,
+} from "../utils/paymentPermissions";
 import "../styles/payments.css";
 
-const getTodayDateString = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
+const FEE_DUE_DAY_OPTIONS = Array.from({ length: 31 }, (_, index) => index + 1);
 
 const initialFeeForm = {
   totalFee: "",
-  feeType: "",
-  feeStartingDate: "",
-  feeEndingDate: "",
+  feeDueDay: "",
   selectedMonths: "",
 };
 
 const Payments = () => {
+  const currentUser = getCurrentUser();
+
+  const canSearch = hasPaymentAction(currentUser, "search");
+  const canFilter = hasPaymentAction(currentUser, "filter");
+  const canUpiSettings = hasPaymentAction(currentUser, "upiSettings");
+  const canFeeSetupIndividual = hasPaymentAction(
+    currentUser,
+    "feeSetupIndividual"
+  );
+  const canFeeSetupCommon = hasPaymentAction(currentUser, "feeSetupCommon");
+  const canFeeSetupCourseWise = hasPaymentAction(
+    currentUser,
+    "feeSetupCourseWise"
+  );
+  const canCollectPayment = hasPaymentAction(currentUser, "collectPayment");
+  const canReverseResetFeeSetup = hasPaymentAction(
+    currentUser,
+    "reverseResetFeeSetup"
+  );
+  const canViewStudentPaymentDetails = hasPaymentAction(
+    currentUser,
+    "viewStudentPaymentDetails"
+  );
+  const canEditFee = hasPaymentAction(currentUser, "editFee");
+  const canAddPartPayment = hasPaymentAction(currentUser, "addPartPayment");
+  const canViewPaymentHistory = hasPaymentAction(
+    currentUser,
+    "viewPaymentHistory"
+  );
+  const canClearPaymentHistory = hasPaymentAction(
+    currentUser,
+    "clearPaymentHistory"
+  );
+  const canAssignNextFee = hasPaymentAction(currentUser, "assignNextFee");
+
+  const visibleFields = getVisiblePaymentFields(currentUser);
+  const visibleUpiFields = getVisiblePaymentUpiFields(currentUser);
+  const showSetupColumn = canFeeSetupIndividual || canAssignNextFee;
+
   const [students, setStudents] = useState([]);
   const [paymentRecords, setPaymentRecords] = useState([]);
 
@@ -62,7 +98,6 @@ const Payments = () => {
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [feeTypeFilter, setFeeTypeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -96,18 +131,16 @@ const Payments = () => {
   const [partialAmount, setPartialAmount] = useState("");
   const [partialAmountError, setPartialAmountError] = useState("");
 
-  const [detailsPaymentMethod, setDetailsPaymentMethod] = useState("");
   const [monthlyPaymentMethod, setMonthlyPaymentMethod] = useState("");
-  const [detailsPartialAmount, setDetailsPartialAmount] = useState("");
-  const [detailsPartialAmountError, setDetailsPartialAmountError] = useState("");
   const [isDetailsPaymentSaving, setIsDetailsPaymentSaving] = useState(false);
+  const [pendingProofs, setPendingProofs] = useState([]);
+  const [selectedProof, setSelectedProof] = useState(null);
+  const [isProofLoading, setIsProofLoading] = useState(false);
   const [isEditingFee, setIsEditingFee] = useState(false);
   const [isFeeEditSaving, setIsFeeEditSaving] = useState(false);
   const [editFeeForm, setEditFeeForm] = useState({
     totalFee: "",
-    feeType: "partial",
-    feeStartingDate: "",
-    feeEndingDate: "",
+    feeDueDay: "",
   });
   const [isHistoryClearing, setIsHistoryClearing] = useState(false);
 
@@ -153,15 +186,19 @@ const Payments = () => {
     try {
       setIsLoading(true);
 
-      const [studentsResponse, paymentsResponse, settingsResponse] =
+      const [studentsResponse, paymentsResponse, settingsResponse, proofsResponse] =
         await Promise.all([
-          api.get("/students"),
+          api.get("/students", { params: { context: "payments" } }),
           api.get("/payments"),
           api.get("/settings/fees"),
+          canCollectPayment || canAddPartPayment
+            ? api.get("/payments/proofs/pending")
+            : Promise.resolve({ data: [] }),
         ]);
 
       setStudents(studentsResponse.data || []);
       setPaymentRecords(paymentsResponse.data || []);
+      setPendingProofs(proofsResponse.data || []);
 
       setFeeSettings((current) => ({
         ...current,
@@ -176,9 +213,33 @@ const Payments = () => {
     }
   };
 
+  const refreshPendingProofs = async () => {
+    if (!canCollectPayment && !canAddPartPayment) return;
+
+    try {
+      const response = await api.get("/payments/proofs/pending");
+      setPendingProofs(response.data || []);
+    } catch (error) {
+      console.error(
+        "Pending payment proofs refresh error:",
+        error?.response?.data || error,
+      );
+    }
+  };
+
   useEffect(() => {
     fetchPaymentPageData();
   }, []);
+
+  const pendingProofByStudent = useMemo(() => {
+    const map = new Map();
+
+    pendingProofs.forEach((proof) => {
+      map.set(String(proof.studentId), proof);
+    });
+
+    return map;
+  }, [pendingProofs]);
 
   const paymentRows = useMemo(() => {
     const recordsByStudent = new Map();
@@ -208,9 +269,12 @@ const Payments = () => {
     return students.map((student) => {
       const records = recordsByStudent.get(String(student._id)) || [];
       const latestPayment = records[0];
+      const pendingProof = pendingProofByStudent.get(String(student._id));
 
       return {
         ...student,
+        hasPendingProof: Boolean(pendingProof),
+        pendingProofId: pendingProof?.proofId || null,
         studentName: student.studentName || "-",
         rollNo: student.rollNo || "-",
         course: student.course || "-",
@@ -219,8 +283,8 @@ const Payments = () => {
         paidAmount: Number(student.paidAmount || 0),
         pendingAmount: Number(student.pendingAmount || 0),
         feeType: student.feeType || "",
-        feeStartingDate: student.feeStartingDate || null,
-        feeEndingDate: student.feeEndingDate || null,
+        feeDueDay: student.feeDueDay || null,
+        feeDueDate: student.feeDueDate || null,
         feeSetupCompleted: Boolean(student.feeSetupCompleted),
         selectedMonths: Number(student.selectedMonths || 0),
         monthlyAmount: Number(student.monthlyAmount || 0),
@@ -251,7 +315,7 @@ const Payments = () => {
         paymentRecords: records,
       };
     });
-  }, [students, paymentRecords]);
+  }, [students, paymentRecords, pendingProofByStudent]);
 
   const summary = useMemo(() => {
     return paymentRows.reduce(
@@ -317,11 +381,8 @@ const Payments = () => {
         const matchesStatus =
           statusFilter === "all" || student.paymentStatus === statusFilter;
 
-        const matchesFeeType =
-          feeTypeFilter === "all" || student.feeType === feeTypeFilter;
-
         return (
-          matchesSearch && matchesCourse && matchesStatus && matchesFeeType
+          matchesSearch && matchesCourse && matchesStatus
         );
       })
       .sort((a, b) =>
@@ -334,12 +395,11 @@ const Payments = () => {
           },
         ),
       );
-  }, [paymentRows, search, courseFilter, statusFilter, feeTypeFilter]);
+  }, [paymentRows, search, courseFilter, statusFilter]);
 
   const activeFilterCount =
     Number(courseFilter !== "all") +
-    Number(statusFilter !== "all") +
-    Number(feeTypeFilter !== "all");
+    Number(statusFilter !== "all");
 
   const formatMoney = (value) =>
     Number(value || 0).toLocaleString("en-IN", {
@@ -360,16 +420,6 @@ const Payments = () => {
     });
   };
 
-  const formatFeeType = (value) => {
-    const values = {
-      monthly: "Monthly",
-      partial: "Part Payment",
-      yearly: "One-Time Payment",
-    };
-
-    return values[value] || "-";
-  };
-
   const formatPaymentMethod = (value) => {
     const values = {
       cash: "Cash",
@@ -387,16 +437,8 @@ const Payments = () => {
     return "Unpaid";
   };
 
-  const getFeeTypeEnabled = (type) => {
-    if (type === "monthly") return feeSettings.monthlyFeeEnabled;
-    if (type === "partial") return feeSettings.partialFeeEnabled;
-    if (type === "yearly") return feeSettings.yearlyFeeEnabled;
-    return false;
-  };
-
   const getEmptyFeeForm = () => ({
     ...initialFeeForm,
-    feeStartingDate: getTodayDateString(),
     selectedMonths: String(feeSettings.defaultMonths || 12),
   });
 
@@ -405,13 +447,7 @@ const Payments = () => {
       student?.feeSetupCompleted && student?.totalFee
         ? String(student.totalFee)
         : "",
-    feeType: student?.feeType || "",
-    feeStartingDate: student?.feeStartingDate
-      ? new Date(student.feeStartingDate).toISOString().split("T")[0]
-      : getTodayDateString(),
-    feeEndingDate: student?.feeEndingDate
-      ? new Date(student.feeEndingDate).toISOString().split("T")[0]
-      : "",
+    feeDueDay: student?.feeDueDay ? String(student.feeDueDay) : "",
     selectedMonths:
       student?.feeType === "monthly" && student?.selectedMonths
         ? String(student.selectedMonths)
@@ -419,6 +455,16 @@ const Payments = () => {
   });
 
   const openFeeSetupModal = (student, { startNewCycle = false } = {}) => {
+    if (startNewCycle && !canAssignNextFee) {
+      toast.error("You do not have permission to assign the next fee");
+      return;
+    }
+
+    if (!startNewCycle && !canFeeSetupIndividual) {
+      toast.error("You do not have permission to setup student fee");
+      return;
+    }
+
     setFeeSetupMode("individual");
     setBulkCourse("");
     setSelectedStudent(student);
@@ -427,7 +473,12 @@ const Payments = () => {
   };
 
   const openFeeSetupManager = () => {
-    setFeeSetupMode("common");
+    if (!canFeeSetupCommon && !canFeeSetupCourseWise) {
+      toast.error("You do not have permission to setup fees");
+      return;
+    }
+
+    setFeeSetupMode(canFeeSetupCommon ? "common" : "course");
     setBulkCourse("");
     setSelectedStudent(null);
     setFeeForm(getEmptyFeeForm());
@@ -446,6 +497,21 @@ const Payments = () => {
 
   const handleFeeSetupModeChange = (mode) => {
     if (isFeeSaving) return;
+
+    if (mode === "individual" && !canFeeSetupIndividual) {
+      toast.error("You do not have permission to setup individual fee");
+      return;
+    }
+
+    if (mode === "common" && !canFeeSetupCommon) {
+      toast.error("You do not have permission to setup common fee");
+      return;
+    }
+
+    if (mode === "course" && !canFeeSetupCourseWise) {
+      toast.error("You do not have permission to setup course wise fee");
+      return;
+    }
 
     if (
       mode === "common" &&
@@ -469,14 +535,7 @@ const Payments = () => {
       setSelectedStudent(null);
     }
 
-    const nextForm = getEmptyFeeForm();
-
-    if (mode === "common" || mode === "course") {
-      nextForm.feeType = "yearly";
-      nextForm.selectedMonths = "";
-    }
-
-    setFeeForm(nextForm);
+    setFeeForm(getEmptyFeeForm());
   };
 
   const handleIndividualStudentChange = (event) => {
@@ -495,30 +554,10 @@ const Payments = () => {
   const handleFeeFormChange = (event) => {
     const { name, value } = event.target;
 
-    setFeeForm((current) => {
-      const next = {
-        ...current,
-        [name]: value,
-      };
-
-      if (name === "feeType" && value === "monthly") {
-        next.selectedMonths = String(feeSettings.defaultMonths || 12);
-      }
-
-      if (name === "feeType" && value !== "monthly") {
-        next.selectedMonths = "";
-      }
-
-      if (
-        name === "feeStartingDate" &&
-        next.feeEndingDate &&
-        value > next.feeEndingDate
-      ) {
-        next.feeEndingDate = "";
-      }
-
-      return next;
-    });
+    setFeeForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
   };
 
   const monthlyPreview = useMemo(() => {
@@ -532,7 +571,7 @@ const Payments = () => {
     }
 
     return Math.floor(totalFee / months);
-  }, [feeForm.totalFee, feeForm.feeType, feeForm.selectedMonths]);
+  }, [feeForm.totalFee, feeForm.selectedMonths]);
 
   const monthlySetupPreview = useMemo(() => {
     if (true) return [];
@@ -558,7 +597,7 @@ const Payments = () => {
       installmentNumber: index + 1,
       amount: index === months - 1 ? finalAmount : baseAmount,
     }));
-  }, [feeForm.totalFee, feeForm.feeType, feeForm.selectedMonths]);
+  }, [feeForm.totalFee, feeForm.selectedMonths]);
 
   const getCurrentMonthlyInstallment = (student) => {
     if (student?.feeType !== "monthly") return null;
@@ -691,60 +730,6 @@ const Payments = () => {
     }
   };
 
-  const handlePartialPaymentFromDetails = async () => {
-    if (!selectedStudent || selectedStudent.feeType !== "partial") return;
-
-    const amount = Number(detailsPartialAmount);
-    const pendingAmount = Number(selectedStudent.pendingAmount || 0);
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error("Enter a valid paid amount");
-      return;
-    }
-
-    if (amount > pendingAmount) {
-      toast.error(
-        `Payment cannot be greater than balance ₹${formatMoney(pendingAmount)}`,
-      );
-      return;
-    }
-
-    if (!detailsPaymentMethod) {
-      toast.error("Select payment method");
-      return;
-    }
-
-    try {
-      setIsDetailsPaymentSaving(true);
-
-      const response = await api.post(
-        `/payments/student/${selectedStudent._id}/collect`,
-        {
-          paymentMethod: detailsPaymentMethod,
-          amount,
-        },
-      );
-
-      toast.success(response.data?.message || "Payment added successfully");
-
-      syncSelectedStudentFromPaymentResult(response.data || {});
-      setDetailsPartialAmount("");
-      setDetailsPaymentMethod("");
-      setShowDetailsModal(false);
-      setSelectedStudent(null);
-
-    } catch (error) {
-      console.error(
-        "Part payment error:",
-        error?.response?.data || error,
-      );
-
-      toast.error(getErrorMessage(error, "Failed to add part payment"));
-    } finally {
-      setIsDetailsPaymentSaving(false);
-    }
-  };
-
   const handleFeeSetup = async (event) => {
     event.preventDefault();
 
@@ -765,64 +750,23 @@ const Payments = () => {
       return;
     }
 
-    if (!feeForm.feeType) {
-      toast.error("Select fee type");
-      return;
-    }
-
-    if (feeSetupMode !== "individual" && feeForm.feeType !== "yearly") {
-      toast.error("Common and Course Wise fee setup use One-Time Payment only");
-      return;
-    }
-
-    if (false && !Number.isInteger(totalFee)) {
-      toast.error("Monthly total fee must be a whole rupee amount");
-      return;
-    }
-
-    if (!getFeeTypeEnabled(feeForm.feeType)) {
-      toast.error(
-        `${formatFeeType(feeForm.feeType)} payment is disabled in Settings`,
-      );
+    if (!feeSettings.yearlyFeeEnabled) {
+      toast.error("Fee setup is disabled in Settings");
       return;
     }
 
     const payload = {
       totalFee,
-      feeType: feeForm.feeType,
     };
 
-    if (feeForm.feeType === "yearly") {
-      if (!feeForm.feeStartingDate) {
-        toast.error("Select fees starting date");
-        return;
-      }
+    const feeDueDay = Number(feeForm.feeDueDay);
 
-      if (!feeForm.feeEndingDate) {
-        toast.error("Select fees ending date");
-        return;
-      }
-
-      const todayDate = getTodayDateString();
-
-      if (feeForm.feeStartingDate < todayDate) {
-        toast.error("Fees starting date cannot be in the past");
-        return;
-      }
-
-      if (feeForm.feeEndingDate < todayDate) {
-        toast.error("Fees ending date cannot be in the past");
-        return;
-      }
-
-      if (feeForm.feeEndingDate < feeForm.feeStartingDate) {
-        toast.error("Fees ending date cannot be before the starting date");
-        return;
-      }
-
-      payload.feeStartingDate = feeForm.feeStartingDate;
-      payload.feeEndingDate = feeForm.feeEndingDate;
+    if (!Number.isInteger(feeDueDay) || feeDueDay < 1 || feeDueDay > 31) {
+      toast.error("Select a due day");
+      return;
     }
+
+    payload.feeDueDay = feeDueDay;
 
     if (false) {
       const months = Number(feeForm.selectedMonths);
@@ -908,26 +852,46 @@ const Payments = () => {
   };
 
   const openPaymentModal = (student) => {
+    if (!canCollectPayment && !canAddPartPayment) {
+      toast.error("You do not have permission to collect payment");
+      return;
+    }
+
     if (!student.feeSetupCompleted) {
       toast.error("Setup the student fee before collecting payment");
       return;
     }
 
-    if (student.paymentStatus === "paid" || student.pendingAmount <= 0) {
+    if (
+      (student.paymentStatus === "paid" || student.pendingAmount <= 0) &&
+      !student.hasPendingProof
+    ) {
       toast.success("This student fee is already fully paid");
       return;
     }
 
     setSelectedStudent(student);
     setSelectedPaymentMethod("");
-
-    if (student.feeType === "partial") {
-      setPartialAmount("");
-    } else {
-      setPartialAmount("");
-    }
+    setPartialAmount("");
+    setSelectedProof(null);
 
     setShowPaymentModal(true);
+
+    if (student.hasPendingProof) {
+      setIsProofLoading(true);
+
+      api
+        .get(`/payments/student/${student._id}/proof`)
+        .then((response) => setSelectedProof(response.data || null))
+        .catch((error) => {
+          console.error(
+            "Load payment proof error:",
+            error?.response?.data || error,
+          );
+          toast.error(getErrorMessage(error, "Failed to load payment proof"));
+        })
+        .finally(() => setIsProofLoading(false));
+    }
   };
 
   const closePaymentModal = () => {
@@ -937,6 +901,8 @@ const Payments = () => {
     setSelectedStudent(null);
     setSelectedPaymentMethod("");
     setPartialAmount("");
+    setSelectedProof(null);
+    setIsProofLoading(false);
   };
 
   const paymentPreviewAmount = useMemo(() => {
@@ -956,15 +922,7 @@ const Payments = () => {
           );
     }
 
-    if (selectedStudent.feeType === "partial") {
-      return Number(partialAmount || 0);
-    }
-
-    if (selectedStudent.feeType === "yearly") {
-      return Number(selectedStudent.pendingAmount || 0);
-    }
-
-    return 0;
+    return Number(partialAmount || 0);
   }, [selectedStudent, partialAmount]);
 
   const handleConfirmPayment = async () => {
@@ -979,25 +937,27 @@ const Payments = () => {
       paymentMethod: selectedPaymentMethod,
     };
 
-    if (selectedStudent.feeType === "partial") {
-      const amount = Number(partialAmount);
-      const pendingAmount = Number(selectedStudent.pendingAmount || 0);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        toast.error("Enter a valid part payment amount");
-        return;
-      }
+    const amount = Number(partialAmount);
+    const pendingAmount = Number(selectedStudent.pendingAmount || 0);
 
-      if (amount > pendingAmount) {
-        toast.error(
-          `Payment cannot be greater than pending amount ₹${formatMoney(
-            pendingAmount,
-          )}`,
-        );
-        return;
-      }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a valid payment amount");
+      return;
+    }
 
+    if (amount > pendingAmount) {
+      toast.error(
+        `Payment cannot be greater than pending amount ₹${formatMoney(
+          pendingAmount,
+        )}`,
+      );
+      return;
+    }
 
-      payload.amount = amount;
+    payload.amount = amount;
+
+    if (selectedProof?.proofId) {
+      payload.proofId = selectedProof.proofId;
     }
 
     try {
@@ -1015,6 +975,9 @@ const Payments = () => {
       setSelectedStudent(null);
       setSelectedPaymentMethod("");
       setPartialAmount("");
+      setSelectedProof(null);
+
+      await refreshPendingProofs();
 
     } catch (error) {
       console.error("Collect payment error:", error?.response?.data || error);
@@ -1025,7 +988,39 @@ const Payments = () => {
     }
   };
 
+  const handleDismissProof = async () => {
+    if (!selectedStudent || !selectedProof) return;
+
+    try {
+      setIsPaymentSaving(true);
+
+      const response = await api.post(
+        `/payments/student/${selectedStudent._id}/proof/${selectedProof.proofId}/dismiss`,
+      );
+
+      toast.success(response.data?.message || "Payment proof dismissed");
+
+      setShowPaymentModal(false);
+      setSelectedStudent(null);
+      setSelectedProof(null);
+
+      await refreshPendingProofs();
+
+    } catch (error) {
+      console.error("Dismiss payment proof error:", error?.response?.data || error);
+
+      toast.error(getErrorMessage(error, "Failed to dismiss payment proof"));
+    } finally {
+      setIsPaymentSaving(false);
+    }
+  };
+
   const openReverseModal = (student) => {
+    if (!canReverseResetFeeSetup) {
+      toast.error("You do not have permission to reset fee setup");
+      return;
+    }
+
     if (!student.feeSetupCompleted) {
       toast.error("Fee setup is not completed for this student");
       return;
@@ -1101,6 +1096,11 @@ const Payments = () => {
   };
 
   const openUpiSettings = async () => {
+    if (!canUpiSettings) {
+      toast.error("You do not have permission to access UPI settings");
+      return;
+    }
+
     setShowUpiSettingsModal(true);
     await loadUpiSettings();
   };
@@ -1282,15 +1282,16 @@ const Payments = () => {
   };
 
   const startFeeEdit = () => {
+    if (!canEditFee) {
+      toast.error("You do not have permission to edit fee");
+      return;
+    }
+
     if (!selectedStudent?.feeSetupCompleted) return;
     setEditFeeForm({
       totalFee: String(selectedStudent.totalFee || ""),
-      feeType: selectedStudent.feeType === "yearly" ? "yearly" : "partial",
-      feeStartingDate: selectedStudent.feeStartingDate
-        ? String(selectedStudent.feeStartingDate).slice(0, 10)
-        : getTodayDateString(),
-      feeEndingDate: selectedStudent.feeEndingDate
-        ? String(selectedStudent.feeEndingDate).slice(0, 10)
+      feeDueDay: selectedStudent.feeDueDay
+        ? String(selectedStudent.feeDueDay)
         : "",
     });
     setIsEditingFee(true);
@@ -1307,11 +1308,9 @@ const Payments = () => {
       toast.error("Total fee cannot be less than the already paid amount");
       return;
     }
-    if (
-      editFeeForm.feeType === "yearly" &&
-      (!editFeeForm.feeStartingDate || !editFeeForm.feeEndingDate)
-    ) {
-      toast.error("Select fee starting and ending dates");
+    const feeDueDay = Number(editFeeForm.feeDueDay);
+    if (!Number.isInteger(feeDueDay) || feeDueDay < 1 || feeDueDay > 31) {
+      toast.error("Select a due day");
       return;
     }
 
@@ -1321,9 +1320,7 @@ const Payments = () => {
         `/payments/student/${selectedStudent._id}/fee-edit`,
         {
           totalFee,
-          feeType: editFeeForm.feeType,
-          feeStartingDate: editFeeForm.feeStartingDate || undefined,
-          feeEndingDate: editFeeForm.feeEndingDate || undefined,
+          feeDueDay,
         },
       );
       const updated = response.data?.student;
@@ -1346,12 +1343,11 @@ const Payments = () => {
     }
   };
   const openStudentDetails = (student) => {
+    if (!canViewStudentPaymentDetails) return;
+
     setSelectedStudent(student);
     setShowDetailsModal(true);
     setShowHistoryModal(false);
-    setDetailsPaymentMethod("");
-    setDetailsPartialAmount("");
-    setDetailsPartialAmountError("");
   };
 
   const closeStudentDetails = () => {
@@ -1360,13 +1356,15 @@ const Payments = () => {
     setShowDetailsModal(false);
     setShowHistoryModal(false);
     setSelectedStudent(null);
-    setDetailsPaymentMethod("");
     setMonthlyPaymentMethod("");
-    setDetailsPartialAmount("");
-    setDetailsPartialAmountError("");
   };
 
   const openPaymentHistory = () => {
+    if (!canViewPaymentHistory) {
+      toast.error("You do not have permission to view payment history");
+      return;
+    }
+
     if (!selectedStudent?.feeSetupCompleted) {
       toast.error("Fee setup is not completed for this student");
       return;
@@ -1374,10 +1372,7 @@ const Payments = () => {
 
     setShowDetailsModal(false);
     setShowHistoryModal(true);
-    setDetailsPaymentMethod("");
     setMonthlyPaymentMethod("");
-    setDetailsPartialAmount("");
-    setDetailsPartialAmountError("");
   };
 
   const closePaymentHistory = () => {
@@ -1385,13 +1380,15 @@ const Payments = () => {
 
     setShowHistoryModal(false);
     setShowDetailsModal(true);
-    setDetailsPaymentMethod("");
     setMonthlyPaymentMethod("");
-    setDetailsPartialAmount("");
-    setDetailsPartialAmountError("");
   };
 
   const handleClearPaymentHistory = async () => {
+    if (!canClearPaymentHistory) {
+      toast.error("You do not have permission to clear payment history");
+      return;
+    }
+
     if (!selectedStudent) return;
 
     if ((selectedStudent.paymentRecords || []).length === 0) {
@@ -1496,16 +1493,19 @@ const Payments = () => {
 
       <section className="payment-history-section">
         <div className="payment-toolbar">
-          <div className="payment-search">
-            <FiSearch />
-            <input
-              type="text"
-              placeholder="Search student, roll no, course or batch..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
+          {canSearch && (
+            <div className="payment-search">
+              <FiSearch />
+              <input
+                type="text"
+                placeholder="Search student, roll no, course or batch..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </div>
+          )}
 
+          {canFilter && (
           <div className="payment-filter-wrapper">
             <button
               type="button"
@@ -1527,7 +1527,6 @@ const Payments = () => {
                     <button type="button" disabled={activeFilterCount === 0} onClick={() => {
                       setCourseFilter("all");
                       setStatusFilter("all");
-                      setFeeTypeFilter("all");
                     }}>Clear</button>
                     <button type="button" className="filter-close-btn" onClick={() => setShowFilters(false)} aria-label="Close filters">
                       <FiX />
@@ -1562,22 +1561,12 @@ const Payments = () => {
                     <option value="paid">Paid</option>
                   </select>
                 </div>
-
-                <div className="payment-filter-field">
-                  <label>Fee Type</label>
-                  <select
-                    value={feeTypeFilter}
-                    onChange={(event) => setFeeTypeFilter(event.target.value)}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="partial">Part Payment</option>
-                    <option value="yearly">One-Time Payment</option>
-                  </select>
-                </div>
               </div>
             )}
           </div>
+          )}
 
+          {canUpiSettings && (
           <button
             type="button"
             className="payment-upi-setup-btn"
@@ -1587,7 +1576,9 @@ const Payments = () => {
             <FiSettings />
             <span>UPI Settings</span>
           </button>
+          )}
 
+          {(canFeeSetupCommon || canFeeSetupCourseWise) && (
           <button
             type="button"
             className="payment-main-setup-btn"
@@ -1597,6 +1588,7 @@ const Payments = () => {
             <FiPlus />
             <span>Fee Setup</span>
           </button>
+          )}
         </div>
 
         <div className="payment-table-card">
@@ -1617,13 +1609,13 @@ const Payments = () => {
                 <thead>
                   <tr>
                     <th>S.No</th>
-                    <th>Student</th>
-                    <th>Roll No</th>
-                    <th>Course</th>
-                    <th>Total Fees</th>
-                    <th>Status</th>
-                    <th>Reverse</th>
-                    <th>Setup</th>
+                    {visibleFields.has("studentName") && <th>Student</th>}
+                    {visibleFields.has("rollNo") && <th>Roll No</th>}
+                    {visibleFields.has("course") && <th>Course</th>}
+                    {visibleFields.has("totalFee") && <th>Total Fees</th>}
+                    {visibleFields.has("paymentStatus") && <th>Status</th>}
+                    {canReverseResetFeeSetup && <th>Reverse</th>}
+                    {showSetupColumn && <th>Setup</th>}
                   </tr>
                 </thead>
 
@@ -1631,13 +1623,18 @@ const Payments = () => {
                   {filteredStudents.map((student, index) => (
                     <tr
                       key={student._id}
-                      className="payment-clickable-row"
+                      className={
+                        canViewStudentPaymentDetails
+                          ? "payment-clickable-row"
+                          : ""
+                      }
                       onClick={() => openStudentDetails(student)}
                     >
                       <td data-label="S.No">
                         <span className="payment-serial">{index + 1}</span>
                       </td>
 
+                      {visibleFields.has("studentName") && (
                       <td data-label="Name">
                         <div className="payment-student">
                           <div className="payment-avatar">
@@ -1646,26 +1643,30 @@ const Payments = () => {
                           </div>
                           <div>
                             <strong>{student.studentName}</strong>
-                            {student.feeSetupCompleted && (
-                              <span>{formatFeeType(student.feeType)}</span>
-                            )}
                           </div>
                         </div>
                       </td>
+                      )}
 
+                      {visibleFields.has("rollNo") && (
                       <td data-label="Roll No">
                         <span className="payment-roll">{student.rollNo}</span>
                       </td>
+                      )}
 
+                      {visibleFields.has("course") && (
                       <td data-label="Course">
                         <span className="payment-course">{student.course}</span>
                       </td>
+                      )}
 
+                      {visibleFields.has("totalFee") && (
                       <td data-label="Total Fees">
                         {student.feeSetupCompleted ? (
                           <div className="payment-fee-cell">
                             <strong>₹{formatMoney(student.totalFee)}</strong>
-                            {student.pendingAmount > 0 && (
+                            {student.pendingAmount > 0 &&
+                              visibleFields.has("pendingAmount") && (
                               <span>
                                 Pending ₹{formatMoney(student.pendingAmount)}
                               </span>
@@ -1675,11 +1676,14 @@ const Payments = () => {
                           <span className="payment-not-set">Not Set</span>
                         )}
                       </td>
+                      )}
 
+                      {visibleFields.has("paymentStatus") && (
                       <td data-label="Status">
                         <div className="payment-status-cell">
-                        {student.feeType === "yearly" &&
-                        student.paymentStatus !== "paid" ? (
+                        {student.feeSetupCompleted &&
+                        (student.paymentStatus !== "paid" || student.hasPendingProof) &&
+                        (canCollectPayment || canAddPartPayment) ? (
                           <button
                             type="button"
                             className={`payment-status-control ${student.paymentStatus}`}
@@ -1687,10 +1691,7 @@ const Payments = () => {
                               event.stopPropagation();
                               openPaymentModal(student);
                             }}
-                            disabled={
-                              !student.feeSetupCompleted ||
-                              student.paymentStatus === "paid"
-                            }
+                            disabled={!student.feeSetupCompleted}
                           >
                             <span className="payment-switch-track">
                               <span className="payment-switch-thumb" />
@@ -1705,30 +1706,29 @@ const Payments = () => {
                               student.paymentStatus === "paid"
                                 ? "paid"
                                 : student.feeSetupCompleted
-                                  ? student.feeType || "unpaid"
+                                  ? student.paymentStatus
                                   : "not-set"
                             }`}
-                            title={
-                              student.feeType === "monthly"
-                                ? "Open student details to manage monthly installments"
-                                : student.feeType === "partial"
-                                  ? "Open student details to add part payments"
-                                  : ""
-                            }
                           >
                             <span className="payment-status-dot" />
                             <span>
-                              {student.paymentStatus === "paid"
-                                ? "Paid"
-                                : student.feeSetupCompleted
-                                  ? formatFeeType(student.feeType)
-                                  : "Not Set"}
+                              {student.feeSetupCompleted
+                                ? getStatusLabel(student.paymentStatus)
+                                : "Not Set"}
                             </span>
                           </div>
                         )}
+                        {student.hasPendingProof && (
+                          <span
+                            className="payment-proof-indicator"
+                            title="Payment proof uploaded — pending admin verification"
+                          />
+                        )}
                         </div>
                       </td>
+                      )}
 
+                      {canReverseResetFeeSetup && (
                       <td data-label="Reverse">
                         <button
                           type="button"
@@ -1747,10 +1747,13 @@ const Payments = () => {
                           <FiRotateCcw />
                         </button>
                       </td>
+                      )}
 
+                      {showSetupColumn && (
                       <td data-label="Setup">
                         {student.feeSetupCompleted ? (
                           <div className="fee-setup-actions">
+                            {visibleFields.has("feeSetupCompleted") && (
                             <span
                               className="fee-setup-completed"
                               title="Fee setup completed"
@@ -1758,8 +1761,10 @@ const Payments = () => {
                             >
                               <FiCheckCircle />
                             </span>
+                            )}
 
-                            {student.paymentStatus === "paid" && (
+                            {student.paymentStatus === "paid" &&
+                              canAssignNextFee && (
                               <button
                                 type="button"
                                 className="fee-setup-add fee-setup-next"
@@ -1775,6 +1780,7 @@ const Payments = () => {
                             )}
                           </div>
                         ) : (
+                          canFeeSetupIndividual && (
                           <button
                             type="button"
                             className="fee-setup-add"
@@ -1786,8 +1792,10 @@ const Payments = () => {
                           >
                             <FiPlus />
                           </button>
+                          )
                         )}
                       </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -1828,7 +1836,7 @@ const Payments = () => {
                     feeSetupMode === "individual" ? "active" : ""
                   }`}
                   onClick={() => handleFeeSetupModeChange("individual")}
-                  disabled={isFeeSaving}
+                  disabled={isFeeSaving || !canFeeSetupIndividual}
                 >
                   <span>01</span>
                   <div>
@@ -1837,7 +1845,7 @@ const Payments = () => {
                   </div>
                 </button>) }
 
-                {!selectedStudent && (
+                {!selectedStudent && canFeeSetupCommon && (
                 <button
                   type="button"
                   className={`fee-setup-mode-card ${
@@ -1860,7 +1868,7 @@ const Payments = () => {
                   </div>
                 </button>) }
 
-                {!selectedStudent && (
+                {!selectedStudent && canFeeSetupCourseWise && (
                 <button
                   type="button"
                   className={`fee-setup-mode-card ${
@@ -1991,39 +1999,6 @@ const Payments = () => {
                   />
                 </div>
 
-                <div className="payment-form-group">
-                  <label>Fee Type *</label>
-
-                  {feeSetupMode === "individual" ? (
-                    <select
-                      name="feeType"
-                      value={feeForm.feeType}
-                      onChange={handleFeeFormChange}
-                    >
-                      <option value="">Select fee type</option>
-                      <option
-                        value="partial"
-                        disabled={!feeSettings.partialFeeEnabled}
-                      >
-                        Part Payment
-                      </option>
-                      <option
-                        value="yearly"
-                        disabled={!feeSettings.yearlyFeeEnabled}
-                      >
-                        One-Time Payment
-                      </option>
-                    </select>
-                  ) : (
-                    <div className="bulk-yearly-fixed-field">
-                      <strong>One-Time Payment</strong>
-                      <span>
-                        Common and Course Wise setup always use One-Time Payment.
-                      </span>
-                    </div>
-                  )}
-                </div>
-
                 {false && (
                   <div className="payment-form-group">
                     <label>Number of Months *</label>
@@ -2046,57 +2021,28 @@ const Payments = () => {
                   </div>
                 )}
 
-                {feeForm.feeType === "yearly" && (
-                  <>
-                    <div className="payment-form-group">
-                      <label>Fees Starting Date *</label>
+                <div className="payment-form-group">
+                  <label>Due Date *</label>
 
-                      <input
-                        type="date"
-                        name="feeStartingDate"
-                        value={feeForm.feeStartingDate}
-                        min={getTodayDateString()}
-                        onChange={handleFeeFormChange}
-                      />
-                    </div>
+                  <select
+                    name="feeDueDay"
+                    value={feeForm.feeDueDay}
+                    onChange={handleFeeFormChange}
+                  >
+                    <option value="">Select due day</option>
+                    {FEE_DUE_DAY_OPTIONS.map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
 
-                    <div className="payment-form-group">
-                      <label>Fees Ending Date *</label>
-
-                      <input
-                        type="date"
-                        name="feeEndingDate"
-                        value={feeForm.feeEndingDate}
-                        min={feeForm.feeStartingDate || getTodayDateString()}
-                        onChange={handleFeeFormChange}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {(false ||
-                  feeForm.feeType === "partial") && (
-                  <div className="payment-form-group settings-cycle-info-field">
-                    <label>Part Payment Fee Cycle</label>
-
-                    <div className="payment-common-cycle-box">
-                      <div>
-                        <span>Start Day</span>
-                        <strong>{feeSettings.recurringFeeStartDay}</strong>
-                      </div>
-
-                      <div>
-                        <span>Due / End Day</span>
-                        <strong>{feeSettings.recurringFeeDueDay}</strong>
-                      </div>
-                    </div>
-
-                    <small className="payment-field-hint">
-                      This recurring cycle comes from Settings and repeats every
-                      month for Part-payment students.
-                    </small>
-                  </div>
-                )}
+                  <small className="payment-field-hint">
+                    The student's fee is due on this day every month. Months
+                    without this day (e.g. day 31 in February) use that
+                    month's last day instead.
+                  </small>
+                </div>
               </div>
 
               {false && (
@@ -2141,18 +2087,10 @@ const Payments = () => {
                 </>
               )}
 
-              {feeForm.feeType === "partial" && (
-                <div className="fee-rule-note">
-                  Part Payment mode has no fixed installment count. The admin can add
-                  any received amount until the student's balance becomes ₹0.
-                </div>
-              )}
-
-              {feeForm.feeType === "yearly" && (
-                <div className="fee-rule-note">
-                  One-Time Payment mode collects the complete configured fee in one payment.
-                </div>
-              )}
+              <div className="fee-rule-note">
+                Any amount can be collected, in any number of payments, until the
+                total fee is fully paid.
+              </div>
 
               <div className="payment-modal-actions">
                 <button
@@ -2195,8 +2133,7 @@ const Payments = () => {
                 <span>COLLECT PAYMENT</span>
                 <h2>{selectedStudent.studentName}</h2>
                 <p>
-                  {formatFeeType(selectedStudent.feeType)} • Pending ₹
-                  {formatMoney(selectedStudent.pendingAmount)}
+                  Pending ₹{formatMoney(selectedStudent.pendingAmount)}
                 </p>
               </div>
               <button
@@ -2210,6 +2147,38 @@ const Payments = () => {
             </div>
 
             <div className="payment-collect-body">
+              {(isProofLoading || selectedProof) && (
+                <div className="payment-proof-panel">
+                  <div className="payment-proof-panel-heading">
+                    <FiImage />
+                    <div>
+                      <span>PAYMENT PROOF</span>
+                      <strong>Uploaded by student</strong>
+                    </div>
+                  </div>
+
+                  {isProofLoading ? (
+                    <div className="payment-proof-loading">
+                      <LoadingLogo />
+                    </div>
+                  ) : (
+                    <>
+                      <img
+                        src={selectedProof.imageData}
+                        alt="Payment proof screenshot"
+                        className="payment-proof-image"
+                      />
+                      {selectedProof.amountClaimed != null && (
+                        <small className="payment-field-hint">
+                          Student claimed to have paid ₹
+                          {formatMoney(selectedProof.amountClaimed)}
+                        </small>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="collect-summary">
                 <div>
                   <span>Total Fee</span>
@@ -2225,109 +2194,122 @@ const Payments = () => {
                 </div>
               </div>
 
-              {false && (
-                <div className="payment-rule-box">
-                  <span>Monthly Payment</span>
-                  <strong>₹{formatMoney(paymentPreviewAmount)}</strong>
-                  <small>
-                    Month{" "}
-                    {Math.min(
-                      Number(selectedStudent.paidMonths || 0) + 1,
-                      Number(selectedStudent.selectedMonths || 0),
-                    )}{" "}
-                    of {selectedStudent.selectedMonths}
-                  </small>
-                </div>
-              )}
+              {selectedStudent.pendingAmount <= 0 ? (
+                <>
+                  <div className="details-fee-complete-banner">
+                    <FiCheckCircle />
+                    <div>
+                      <strong>Fee Already Fully Paid</strong>
+                      <span>
+                        This proof appears to be outdated. You can mark it
+                        reviewed.
+                      </span>
+                    </div>
+                  </div>
 
-              {selectedStudent.feeType === "partial" && (
-                <div className="payment-form-group">
-                  <label>Part Payment Amount *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    max={selectedStudent.pendingAmount}
-                    value={partialAmount}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      setPartialAmount(value);
+                  <div className="payment-modal-actions">
+                    <button
+                      type="button"
+                      className="payment-secondary-btn"
+                      onClick={closePaymentModal}
+                      disabled={isPaymentSaving}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="payment-primary-btn"
+                      onClick={handleDismissProof}
+                      disabled={isPaymentSaving || !selectedProof}
+                    >
+                      <FiCheckCircle />
+                      {isPaymentSaving ? "Saving..." : "Mark Proof Reviewed"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="payment-form-group">
+                    <label>Amount Received *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      max={selectedStudent.pendingAmount}
+                      value={partialAmount}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setPartialAmount(value);
 
-                      const amount = Number(value);
-                      const balance = Number(selectedStudent.pendingAmount || 0);
+                        const amount = Number(value);
+                        const balance = Number(selectedStudent.pendingAmount || 0);
 
-                      if (value !== "" && amount > balance) {
-                        setPartialAmountError(
-                          `Payment amount exceeds the remaining balance of ₹${formatMoney(balance)}.`
-                        );
-                      } else if (value !== "" && (!Number.isFinite(amount) || amount <= 0)) {
-                        setPartialAmountError("Enter a valid payment amount.");
-                      } else {
-                        setPartialAmountError("");
-                      }
-                    }}
-                    placeholder="Enter received amount"
-                    className={partialAmountError ? "payment-input-error" : ""}
-                  />
-                  {partialAmountError && (
-                    <small className="payment-validation-error">
-                      {partialAmountError}
+                        if (value !== "" && amount > balance) {
+                          setPartialAmountError(
+                            `Payment amount exceeds the remaining balance of ₹${formatMoney(balance)}.`
+                          );
+                        } else if (value !== "" && (!Number.isFinite(amount) || amount <= 0)) {
+                          setPartialAmountError("Enter a valid payment amount.");
+                        } else {
+                          setPartialAmountError("");
+                        }
+                      }}
+                      placeholder="Enter received amount"
+                      className={partialAmountError ? "payment-input-error" : ""}
+                    />
+                    {partialAmountError && (
+                      <small className="payment-validation-error">
+                        {partialAmountError}
+                      </small>
+                    )}
+                    <small className="payment-field-hint">
+                      Enter any received amount up to the current remaining balance.
+                      Status updates automatically once the total paid amount reaches the total fee.
                     </small>
-                  )}
-                  <small className="payment-field-hint">
-                    Enter any received amount up to the current remaining balance.
-                  </small>
-                </div>
+                  </div>
+
+                  <div className="payment-form-group">
+                    <label>Payment Method *</label>
+                    <select
+                      value={selectedPaymentMethod}
+                      onChange={(event) =>
+                        setSelectedPaymentMethod(event.target.value)
+                      }
+                    >
+                      <option value="">Select payment method</option>
+                      <option value="cash">Cash</option>
+                      <option value="bank">Bank</option>
+                      <option value="upi">UPI</option>
+                      <option value="qr">QR</option>
+                    </select>
+                  </div>
+
+                  <div className="payment-collect-total">
+                    <span>Collect Now</span>
+                    <strong>₹{formatMoney(paymentPreviewAmount)}</strong>
+                  </div>
+
+                  <div className="payment-modal-actions">
+                    <button
+                      type="button"
+                      className="payment-secondary-btn"
+                      onClick={closePaymentModal}
+                      disabled={isPaymentSaving}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="payment-primary-btn"
+                      onClick={handleConfirmPayment}
+                      disabled={isPaymentSaving}
+                    >
+                      <FiCheckCircle />
+                      {isPaymentSaving ? "Collecting..." : "Confirm Payment"}
+                    </button>
+                  </div>
+                </>
               )}
-
-              {selectedStudent.feeType === "yearly" && (
-                <div className="payment-rule-box">
-                  <span>Full Payment</span>
-                  <strong>₹{formatMoney(paymentPreviewAmount)}</strong>
-                  <small>One-Time Payment fee will be closed with this payment.</small>
-                </div>
-              )}
-
-              <div className="payment-form-group">
-                <label>Payment Method *</label>
-                <select
-                  value={selectedPaymentMethod}
-                  onChange={(event) =>
-                    setSelectedPaymentMethod(event.target.value)
-                  }
-                >
-                  <option value="">Select payment method</option>
-                  <option value="cash">Cash</option>
-                  <option value="bank">Bank</option>
-                  <option value="upi">UPI</option>
-                  <option value="qr">QR</option>
-                </select>
-              </div>
-
-              <div className="payment-collect-total">
-                <span>Collect Now</span>
-                <strong>₹{formatMoney(paymentPreviewAmount)}</strong>
-              </div>
-
-              <div className="payment-modal-actions">
-                <button
-                  type="button"
-                  className="payment-secondary-btn"
-                  onClick={closePaymentModal}
-                  disabled={isPaymentSaving}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="payment-primary-btn"
-                  onClick={handleConfirmPayment}
-                  disabled={isPaymentSaving}
-                >
-                  <FiCheckCircle />
-                  {isPaymentSaving ? "Collecting..." : "Confirm Payment"}
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -2367,6 +2349,7 @@ const Payments = () => {
                 onSubmit={handleSavePaymentSettings}
               >
                 <div className="upi-settings-grid">
+                  {visibleUpiFields.has("upiId") && (
                   <div className="payment-form-group">
                     <label>UPI ID *</label>
 
@@ -2383,7 +2366,9 @@ const Payments = () => {
                       This UPI ID is used for GPay, PhonePe and Paytm.
                     </small>
                   </div>
+                  )}
 
+                  {visibleUpiFields.has("receiverName") && (
                   <div className="payment-form-group">
                     <label>Receiver Name *</label>
 
@@ -2400,7 +2385,9 @@ const Payments = () => {
                       Students will see this receiver name before payment.
                     </small>
                   </div>
+                  )}
 
+                  {visibleUpiFields.has("paymentPhone") && (
                   <div className="payment-form-group">
                     <label>Payment Phone Number *</label>
 
@@ -2419,8 +2406,10 @@ const Payments = () => {
                       Enter the mobile number connected with the payment account.
                     </small>
                   </div>
+                  )}
                 </div>
 
+                {visibleUpiFields.has("upiQrImage") && (
                 <div className="upi-qr-settings">
                   <div className="upi-qr-settings-heading">
                     <div>
@@ -2482,6 +2471,7 @@ const Payments = () => {
                     </div>
                   </div>
                 </div>
+                )}
 
                 <div className="upi-settings-note">
                   <FiShield />
@@ -2553,23 +2543,28 @@ const Payments = () => {
               </p>
 
               <div className="reverse-payment-summary">
+                {visibleFields.has("totalFee") && (
                 <div>
                   <span>Total Fee</span>
                   <strong>₹{formatMoney(selectedStudent.totalFee)}</strong>
                 </div>
+                )}
 
-                <div>
-                  <span>Fee Type</span>
-                  <strong>{formatFeeType(selectedStudent.feeType)}</strong>
-                </div>
-
+                {(visibleFields.has("paidAmount") ||
+                  visibleFields.has("pendingAmount")) && (
                 <div>
                   <span>Paid / Pending</span>
                   <strong>
-                    ₹{formatMoney(selectedStudent.paidAmount)} / ₹
-                    {formatMoney(selectedStudent.pendingAmount)}
+                    {visibleFields.has("paidAmount") &&
+                      `₹${formatMoney(selectedStudent.paidAmount)}`}
+                    {visibleFields.has("paidAmount") &&
+                      visibleFields.has("pendingAmount") &&
+                      " / "}
+                    {visibleFields.has("pendingAmount") &&
+                      `₹${formatMoney(selectedStudent.pendingAmount)}`}
                   </strong>
                 </div>
+                )}
               </div>
 
               <div className="reverse-reset-list">
@@ -2591,8 +2586,8 @@ const Payments = () => {
 
               <div className="reverse-warning">
                 After reset, the Setup column will show the + button again. You
-                can then enter the correct total fee, fee type, duration and
-                ending date from the beginning.
+                can then enter the correct total fee and fee dates from the
+                beginning.
               </div>
 
               <div className="payment-modal-actions">
@@ -2634,7 +2629,7 @@ const Payments = () => {
               </div>
               <div className="payment-details-header-actions">
 
-                {selectedStudent.feeSetupCompleted && (
+                {selectedStudent.feeSetupCompleted && canViewPaymentHistory && (
                   <button
                     type="button"
                     className="payment-view-history-btn"
@@ -2660,27 +2655,47 @@ const Payments = () => {
               <section className="management-student-panel">
                 <div className="management-section-label">STUDENT INFORMATION</div>
                 <dl className="management-info-list">
+                  {visibleFields.has("studentName") && (
                   <div><dt>Student</dt><dd>{selectedStudent.studentName}</dd></div>
+                  )}
+                  {visibleFields.has("rollNo") && (
                   <div><dt>Roll Number</dt><dd>{selectedStudent.rollNo}</dd></div>
+                  )}
+                  {visibleFields.has("course") && (
                   <div><dt>Course</dt><dd>{selectedStudent.course}</dd></div>
+                  )}
+                  {visibleFields.has("batch") && (
                   <div><dt>Batch</dt><dd>{selectedStudent.batch || "-"}</dd></div>
-                  <div><dt>Fee Method</dt><dd>{formatFeeType(selectedStudent.feeType)}</dd></div>
+                  )}
                 </dl>
               </section>
 
               <section className="management-fee-panel">
                 <div className="management-section-label">FEE ACCOUNT</div>
                 <div className="management-amount-summary">
+                  {visibleFields.has("totalFee") && (
                   <div><span>Total Fee</span><strong>{selectedStudent.feeSetupCompleted ? `₹${formatMoney(selectedStudent.totalFee)}` : "-"}</strong></div>
+                  )}
+                  {visibleFields.has("paidAmount") && (
                   <div><span>Paid</span><strong>₹{formatMoney(selectedStudent.paidAmount)}</strong></div>
+                  )}
+                  {visibleFields.has("pendingAmount") && (
                   <div><span>Balance</span><strong>₹{formatMoney(selectedStudent.pendingAmount)}</strong></div>
+                  )}
+                  {visibleFields.has("paymentStatus") && (
                   <div className="management-status-cell"><span>Status</span><strong className={`detail-status ${selectedStudent.paymentStatus}`}>{getStatusLabel(selectedStudent.paymentStatus)}</strong></div>
+                  )}
                 </div>
                 <dl className="management-meta-list">
+                  {visibleFields.has("paymentMethod") && (
                   <div><dt>Last Payment Method</dt><dd>{formatPaymentMethod(selectedStudent.paymentMethod)}</dd></div>
+                  )}
+                  {visibleFields.has("paymentDate") && (
                   <div><dt>Last Payment Date</dt><dd>{formatDate(selectedStudent.paymentDate)}</dd></div>
-                  <div><dt>Fee Start</dt><dd>{formatDate(selectedStudent.feeStartingDate)}</dd></div>
-                  <div><dt>Fee End</dt><dd>{formatDate(selectedStudent.feeEndingDate)}</dd></div>
+                  )}
+                  {visibleFields.has("feeEndingDate") && (
+                  <div><dt>Due Date</dt><dd>{formatDate(selectedStudent.feeDueDate)}</dd></div>
+                  )}
                 </dl>
               </section>
             </div>
@@ -2688,13 +2703,20 @@ const Payments = () => {
             {isEditingFee && (
               <section className="details-fee-edit-section">
                 <div className="details-section-heading">
-                  <div><span>CORRECT FEE ENTRY</span><strong>Edit amount and fee method</strong></div>
+                  <div><span>CORRECT FEE ENTRY</span><strong>Edit fee amount and due day</strong></div>
                   <small>A corrected fee-generated message will be sent.</small>
                 </div>
                 <div className="details-fee-edit-form">
                   <div className="payment-form-group"><label>Total Fee *</label><input type="number" min={Math.max(1, Number(selectedStudent.paidAmount || 0))} step="0.01" value={editFeeForm.totalFee} onChange={(event) => setEditFeeForm((current) => ({ ...current, totalFee: event.target.value }))} disabled={isFeeEditSaving} /></div>
-                  <div className="payment-form-group"><label>Fee Method *</label><select value={editFeeForm.feeType} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeType: event.target.value }))} disabled={isFeeEditSaving}><option value="partial">Part Payment</option><option value="yearly">One-Time Payment</option></select></div>
-                  {editFeeForm.feeType === "yearly" && <><div className="payment-form-group"><label>Starting Date *</label><input type="date" value={editFeeForm.feeStartingDate} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeStartingDate: event.target.value }))} disabled={isFeeEditSaving} /></div><div className="payment-form-group"><label>Ending Date *</label><input type="date" min={editFeeForm.feeStartingDate} value={editFeeForm.feeEndingDate} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeEndingDate: event.target.value }))} disabled={isFeeEditSaving} /></div></>}
+                  <div className="payment-form-group">
+                    <label>Due Date *</label>
+                    <select value={editFeeForm.feeDueDay} onChange={(event) => setEditFeeForm((current) => ({ ...current, feeDueDay: event.target.value }))} disabled={isFeeEditSaving}>
+                      <option value="">Select due day</option>
+                      {FEE_DUE_DAY_OPTIONS.map((day) => (
+                        <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="details-fee-edit-actions"><button type="button" className="payment-secondary-btn" onClick={() => setIsEditingFee(false)} disabled={isFeeEditSaving}>Cancel</button><button type="button" className="payment-primary-btn" onClick={handleEditFeeSave} disabled={isFeeEditSaving}><FiSave />{isFeeEditSaving ? "Updating..." : "Update & Send"}</button></div>
               </section>
@@ -2781,102 +2803,35 @@ const Payments = () => {
                 </div>
               )}
 
-            {selectedStudent.feeType === "partial" &&
-              selectedStudent.paymentStatus !== "paid" && (
+            {selectedStudent.feeSetupCompleted &&
+              selectedStudent.paymentStatus !== "paid" &&
+              canEditFee && (
                 <div className="details-payment-actions-section">
                   <div className="details-payment-actions-title">
                     <div>
-                      <span>PART PAYMENT</span>
-                      <strong>Add Received Amount</strong>
+                      <span>FEE ACCOUNT</span>
+                      <strong>
+                        Balance ₹{formatMoney(selectedStudent.pendingAmount)}
+                      </strong>
                     </div>
                     <div className="details-entry-side-actions">
-                      <small>Balance: ₹{formatMoney(selectedStudent.pendingAmount)}</small>
                       <button type="button" className="details-inline-edit-btn" onClick={startFeeEdit} aria-label="Edit fee amount and method" title="Edit fee">
                         <FiEdit2 /><span>Edit Fee</span>
                       </button>
                     </div>
                   </div>
-
-                  <div className="details-partial-payment-form">
-                    <div className="payment-form-group">
-                      <label>Paid Amount *</label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        max={selectedStudent.pendingAmount}
-                        value={detailsPartialAmount}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          setDetailsPartialAmount(value);
-
-                          const amount = Number(value);
-                          const balance = Number(selectedStudent.pendingAmount || 0);
-
-                          if (value === "") {
-                            setDetailsPartialAmountError("");
-                          } else if (!Number.isFinite(amount) || amount <= 0) {
-                            setDetailsPartialAmountError("Enter a valid payment amount.");
-                          } else if (amount > balance) {
-                            setDetailsPartialAmountError(
-                              `Payment amount exceeds the remaining balance of ₹${formatMoney(balance)}.`
-                            );
-                          } else {
-                            setDetailsPartialAmountError("");
-                          }
-                        }}
-                        placeholder="Example: 5000"
-                        disabled={isDetailsPaymentSaving}
-                        className={detailsPartialAmountError ? "payment-input-error" : ""}
-                      />
-                      {detailsPartialAmountError && (
-                        <small className="payment-validation-error">
-                          {detailsPartialAmountError}
-                        </small>
-                      )}
-                    </div>
-
-                    <div className="payment-form-group">
-                      <label>Payment Method *</label>
-                      <select
-                        value={detailsPaymentMethod}
-                        onChange={(event) =>
-                          setDetailsPaymentMethod(event.target.value)
-                        }
-                        disabled={isDetailsPaymentSaving}
-                      >
-                        <option value="">Select payment method</option>
-                        <option value="cash">Cash</option>
-                        <option value="bank">Bank</option>
-                        <option value="upi">UPI</option>
-                        <option value="qr">QR</option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="partial-add-payment-btn"
-                      onClick={handlePartialPaymentFromDetails}
-                      disabled={isDetailsPaymentSaving}
-                    >
-                      <FiCheckCircle />
-                      {isDetailsPaymentSaving ? "Collecting..." : "Collected"}
-                    </button>
-                  </div>
                 </div>
               )}
 
-            {selectedStudent.paymentStatus === "paid" &&
-              (false ||
-                selectedStudent.feeType === "partial") && (
-                <div className="details-fee-complete-banner">
-                  <FiCheckCircle />
-                  <div>
-                    <strong>Fee Fully Paid</strong>
-                    <span>Remaining balance is ₹0.</span>
-                  </div>
+            {selectedStudent.paymentStatus === "paid" && (
+              <div className="details-fee-complete-banner">
+                <FiCheckCircle />
+                <div>
+                  <strong>Fee Fully Paid</strong>
+                  <span>Remaining balance is ₹0.</span>
                 </div>
-              )}
+              </div>
+            )}
 
           </div>
         </div>
@@ -2890,12 +2845,13 @@ const Payments = () => {
                 <span>PAYMENT HISTORY</span>
                 <h2>{selectedStudent.studentName}</h2>
                 <p>
-                  {selectedStudent.rollNo} • {formatFeeType(selectedStudent.feeType)}
+                  {selectedStudent.rollNo} • {selectedStudent.course}
                 </p>
               </div>
 
               <div className="payment-history-header-actions">
-                {(selectedStudent.paymentRecords || []).length > 0 && (
+                {(selectedStudent.paymentRecords || []).length > 0 &&
+                  canClearPaymentHistory && (
                   <button
                     type="button"
                     className="payment-clear-history-btn"
@@ -2922,27 +2878,35 @@ const Payments = () => {
             </div>
 
             <div className="payment-history-modal-summary">
+              {visibleFields.has("totalFee") && (
               <div>
                 <span>Total Fee</span>
                 <strong>₹{formatMoney(selectedStudent.totalFee)}</strong>
               </div>
+              )}
 
+              {visibleFields.has("paidAmount") && (
               <div>
                 <span>Total Paid</span>
                 <strong>₹{formatMoney(selectedStudent.paidAmount)}</strong>
               </div>
+              )}
 
+              {visibleFields.has("pendingAmount") && (
               <div>
                 <span>Balance</span>
                 <strong>₹{formatMoney(selectedStudent.pendingAmount)}</strong>
               </div>
+              )}
 
+              {visibleFields.has("paymentStatus") && (
               <div>
                 <span>Status</span>
                 <strong className={`detail-status ${selectedStudent.paymentStatus}`}>
                   {getStatusLabel(selectedStudent.paymentStatus)}
                 </strong>
               </div>
+              )}
             </div>
 
             <div className="payment-history-list payment-history-modal-list">
@@ -2965,17 +2929,21 @@ const Payments = () => {
                     </div>
 
                     <div className="history-only-meta">
+                      {visibleFields.has("paymentDate") && (
                       <div>
                         <span>Paid Date</span>
                         <strong>
                           {formatDate(record.paymentDate || record.createdAt)}
                         </strong>
                       </div>
+                      )}
 
+                      {visibleFields.has("paymentMethod") && (
                       <div>
                         <span>Method</span>
                         <strong>{formatPaymentMethod(record.paymentMethod)}</strong>
                       </div>
+                      )}
 
                       <div>
                         <span>Status</span>

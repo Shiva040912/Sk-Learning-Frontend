@@ -17,6 +17,30 @@ import toast from "react-hot-toast";
 
 import api from "../services/axios";
 import LoadingLogo from "../components/LoadingLogo";
+import {
+  PAGE_DEFINITIONS,
+  createEmptyPagePermissions,
+} from "../utils/permissions";
+import {
+  STUDENT_ACTION_DEFINITIONS,
+  COURSE_SETUP_ACTION_DEFINITIONS,
+  BATCH_SETUP_ACTION_DEFINITIONS,
+  STUDENT_FIELD_DEFINITIONS,
+  createDefaultStudentPermissions,
+  deriveStudentActions,
+} from "../utils/studentPermissions";
+import {
+  PAYMENT_ACTION_DEFINITIONS,
+  PAYMENT_FIELD_DEFINITIONS,
+  PAYMENT_UPI_FIELD_DEFINITIONS,
+  createDefaultPaymentPermissions,
+} from "../utils/paymentPermissions";
+import {
+  NOTIFICATION_ACTION_DEFINITIONS,
+  SEND_NOTIFICATION_SUB_ACTION_DEFINITIONS,
+  NOTIFICATION_FIELD_DEFINITIONS,
+  createDefaultNotificationPermissions,
+} from "../utils/notificationPermissions";
 import "../styles/users.css";
 
 const initialForm = {
@@ -24,7 +48,28 @@ const initialForm = {
   email: "",
   password: "",
   role: "trainer",
+  pagePermissions: createEmptyPagePermissions(),
+  granularPermissions: {
+    students: createDefaultStudentPermissions(),
+    payments: createDefaultPaymentPermissions(),
+    notifications: createDefaultNotificationPermissions(),
+  },
 };
+
+const ALL_STUDENT_ACTION_KEYS = [
+  ...STUDENT_ACTION_DEFINITIONS,
+  ...COURSE_SETUP_ACTION_DEFINITIONS,
+  ...BATCH_SETUP_ACTION_DEFINITIONS,
+].map((item) => item.key);
+
+const ALL_PAYMENT_ACTION_KEYS = PAYMENT_ACTION_DEFINITIONS.map(
+  (item) => item.key
+);
+
+const ALL_NOTIFICATION_ACTION_KEYS = [
+  ...NOTIFICATION_ACTION_DEFINITIONS,
+  ...SEND_NOTIFICATION_SUB_ACTION_DEFINITIONS,
+].map((item) => item.key);
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -90,11 +135,61 @@ const Users = () => {
   const openEditModal = (user) => {
     setEditingUser(user);
 
+    const defaultStudentPermissions = createDefaultStudentPermissions();
+    const savedStudentPermissions = user.granularPermissions?.students || {};
+
+    const defaultPaymentPermissions = createDefaultPaymentPermissions();
+    const savedPaymentPermissions = user.granularPermissions?.payments || {};
+
+    const defaultNotificationPermissions = createDefaultNotificationPermissions();
+    const savedNotificationPermissions =
+      user.granularPermissions?.notifications || {};
+
     setFormData({
       name: user.name || "",
       email: user.email || "",
       password: "",
       role: user.role || "trainer",
+      pagePermissions: {
+        ...createEmptyPagePermissions(),
+        ...(user.pagePermissions || {}),
+      },
+      granularPermissions: {
+        students: {
+          actions: deriveStudentActions({
+            ...defaultStudentPermissions.actions,
+            ...(savedStudentPermissions.actions || {}),
+          }),
+          fields: {
+            ...defaultStudentPermissions.fields,
+            ...(savedStudentPermissions.fields || {}),
+          },
+        },
+        payments: {
+          actions: {
+            ...defaultPaymentPermissions.actions,
+            ...(savedPaymentPermissions.actions || {}),
+          },
+          fields: {
+            ...defaultPaymentPermissions.fields,
+            ...(savedPaymentPermissions.fields || {}),
+          },
+          upiSettings: {
+            ...defaultPaymentPermissions.upiSettings,
+            ...(savedPaymentPermissions.upiSettings || {}),
+          },
+        },
+        notifications: {
+          actions: {
+            ...defaultNotificationPermissions.actions,
+            ...(savedNotificationPermissions.actions || {}),
+          },
+          fields: {
+            ...defaultNotificationPermissions.fields,
+            ...(savedNotificationPermissions.fields || {}),
+          },
+        },
+      },
     });
 
     setShowPassword(false);
@@ -129,6 +224,366 @@ const Users = () => {
     setFormData((current) => ({
       ...current,
       [name]: value,
+    }));
+  };
+
+  const handlePermissionToggle = (pageKey) => {
+    setFormData((current) => ({
+      ...current,
+      pagePermissions: {
+        ...current.pagePermissions,
+        [pageKey]: !current.pagePermissions[pageKey],
+      },
+    }));
+  };
+
+  const handleStudentActionToggle = (actionKey) => {
+    setFormData((current) => {
+      const nextActions = deriveStudentActions({
+        ...current.granularPermissions.students.actions,
+        [actionKey]: !current.granularPermissions.students.actions[actionKey],
+      });
+
+      return {
+        ...current,
+        granularPermissions: {
+          students: {
+            ...current.granularPermissions.students,
+            actions: nextActions,
+          },
+        },
+      };
+    });
+  };
+
+  const handleStudentFieldToggle = (fieldKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        students: {
+          ...current.granularPermissions.students,
+          fields: {
+            ...current.granularPermissions.students.fields,
+            [fieldKey]: !current.granularPermissions.students.fields[
+              fieldKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const selectAllStudentActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        students: {
+          ...current.granularPermissions.students,
+          actions: deriveStudentActions(
+            ALL_STUDENT_ACTION_KEYS.reduce((actions, key) => {
+              actions[key] = true;
+              return actions;
+            }, {})
+          ),
+        },
+      },
+    }));
+  };
+
+  const clearAllStudentActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        students: {
+          ...current.granularPermissions.students,
+          actions: deriveStudentActions(
+            ALL_STUDENT_ACTION_KEYS.reduce((actions, key) => {
+              actions[key] = false;
+              return actions;
+            }, {})
+          ),
+        },
+      },
+    }));
+  };
+
+  const selectAllStudentFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        students: {
+          ...current.granularPermissions.students,
+          fields: STUDENT_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = true;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllStudentFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        students: {
+          ...current.granularPermissions.students,
+          fields: STUDENT_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = false;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const handlePaymentActionToggle = (actionKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          actions: {
+            ...current.granularPermissions.payments.actions,
+            [actionKey]: !current.granularPermissions.payments.actions[
+              actionKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const handlePaymentFieldToggle = (fieldKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          fields: {
+            ...current.granularPermissions.payments.fields,
+            [fieldKey]: !current.granularPermissions.payments.fields[
+              fieldKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const handlePaymentUpiFieldToggle = (fieldKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          upiSettings: {
+            ...current.granularPermissions.payments.upiSettings,
+            [fieldKey]: !current.granularPermissions.payments.upiSettings[
+              fieldKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const selectAllPaymentActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          actions: ALL_PAYMENT_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = true;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllPaymentActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          actions: ALL_PAYMENT_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = false;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const selectAllPaymentFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          fields: PAYMENT_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = true;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllPaymentFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          fields: PAYMENT_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = false;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const selectAllPaymentUpiFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          upiSettings: PAYMENT_UPI_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = true;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllPaymentUpiFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        payments: {
+          ...current.granularPermissions.payments,
+          upiSettings: PAYMENT_UPI_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = false;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const handleNotificationActionToggle = (actionKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        notifications: {
+          ...current.granularPermissions.notifications,
+          actions: {
+            ...current.granularPermissions.notifications.actions,
+            [actionKey]: !current.granularPermissions.notifications.actions[
+              actionKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const handleNotificationFieldToggle = (fieldKey) => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        notifications: {
+          ...current.granularPermissions.notifications,
+          fields: {
+            ...current.granularPermissions.notifications.fields,
+            [fieldKey]: !current.granularPermissions.notifications.fields[
+              fieldKey
+            ],
+          },
+        },
+      },
+    }));
+  };
+
+  const selectAllNotificationActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        notifications: {
+          ...current.granularPermissions.notifications,
+          actions: ALL_NOTIFICATION_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = true;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllNotificationActions = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        notifications: {
+          ...current.granularPermissions.notifications,
+          actions: ALL_NOTIFICATION_ACTION_KEYS.reduce((actions, key) => {
+            actions[key] = false;
+            return actions;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const selectAllNotificationFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        notifications: {
+          ...current.granularPermissions.notifications,
+          fields: NOTIFICATION_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = true;
+            return fields;
+          }, {}),
+        },
+      },
+    }));
+  };
+
+  const clearAllNotificationFields = () => {
+    setFormData((current) => ({
+      ...current,
+      granularPermissions: {
+        ...current.granularPermissions,
+        notifications: {
+          ...current.granularPermissions.notifications,
+          fields: NOTIFICATION_FIELD_DEFINITIONS.reduce((fields, item) => {
+            fields[item.key] = false;
+            return fields;
+          }, {}),
+        },
+      },
     }));
   };
 
@@ -186,6 +641,8 @@ const Users = () => {
           name: formData.name.trim(),
           email: formData.email.trim(),
           role: formData.role,
+          pagePermissions: formData.pagePermissions,
+          granularPermissions: formData.granularPermissions,
         };
 
         if (formData.password.trim()) {
@@ -204,6 +661,8 @@ const Users = () => {
           email: formData.email.trim(),
           password: formData.password,
           role: formData.role,
+          pagePermissions: formData.pagePermissions,
+          granularPermissions: formData.granularPermissions,
         });
 
         toast.success("User created successfully");
@@ -524,6 +983,448 @@ const Users = () => {
                   </select>
                 </div>
               </div>
+
+              <div className="user-form-group">
+                <label>Page Access</label>
+
+                {formData.role === "admin" ? (
+                  <p className="user-permission-admin-note">
+                    Administrators automatically have access to every page.
+                  </p>
+                ) : (
+                  <div className="user-permission-grid">
+                    {PAGE_DEFINITIONS.map((page) => (
+                      <label
+                        key={page.key}
+                        className="user-permission-checkbox"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(
+                            formData.pagePermissions[page.key]
+                          )}
+                          onChange={() =>
+                            handlePermissionToggle(page.key)
+                          }
+                        />
+                        <span>{page.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {formData.role !== "admin" &&
+                formData.pagePermissions.students && (
+                  <div className="user-form-group student-permissions-panel">
+                    <label>Students — Granular Permissions</label>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Actions</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllStudentActions}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllStudentActions}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {STUDENT_ACTION_DEFINITIONS.map((action) => {
+                          const isBulkUpload = action.key === "bulkUpload";
+
+                          return (
+                            <label
+                              key={action.key}
+                              className={`user-permission-checkbox${
+                                isBulkUpload ? " locked" : ""
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={Boolean(
+                                  formData.granularPermissions.students
+                                    .actions[action.key]
+                                )}
+                                disabled={isBulkUpload}
+                                onChange={() =>
+                                  handleStudentActionToggle(action.key)
+                                }
+                              />
+                              <span>
+                                {action.label}
+                                {isBulkUpload && (
+                                  <small> (follows Add Student)</small>
+                                )}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <div className="student-permission-subsection">
+                        <span className="student-permission-subsection-title">
+                          Course Setup
+                        </span>
+
+                        <div className="user-permission-grid">
+                          {COURSE_SETUP_ACTION_DEFINITIONS.map((action) => (
+                            <label
+                              key={action.key}
+                              className="user-permission-checkbox"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={Boolean(
+                                  formData.granularPermissions.students
+                                    .actions[action.key]
+                                )}
+                                onChange={() =>
+                                  handleStudentActionToggle(action.key)
+                                }
+                              />
+                              <span>{action.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="student-permission-subsection">
+                        <span className="student-permission-subsection-title">
+                          Batch Setup
+                        </span>
+
+                        <div className="user-permission-grid">
+                          {BATCH_SETUP_ACTION_DEFINITIONS.map((action) => (
+                            <label
+                              key={action.key}
+                              className="user-permission-checkbox"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={Boolean(
+                                  formData.granularPermissions.students
+                                    .actions[action.key]
+                                )}
+                                onChange={() =>
+                                  handleStudentActionToggle(action.key)
+                                }
+                              />
+                              <span>{action.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Fields</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllStudentFields}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllStudentFields}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {STUDENT_FIELD_DEFINITIONS.map((field) => (
+                          <label
+                            key={field.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.students.fields[
+                                  field.key
+                                ]
+                              )}
+                              onChange={() =>
+                                handleStudentFieldToggle(field.key)
+                              }
+                            />
+                            <span>{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {formData.role !== "admin" &&
+                formData.pagePermissions.payments && (
+                  <div className="user-form-group student-permissions-panel">
+                    <label>Payments — Granular Permissions</label>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Actions</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllPaymentActions}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllPaymentActions}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {PAYMENT_ACTION_DEFINITIONS.map((action) => (
+                          <label
+                            key={action.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.payments
+                                  .actions[action.key]
+                              )}
+                              onChange={() =>
+                                handlePaymentActionToggle(action.key)
+                              }
+                            />
+                            <span>{action.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Fields</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllPaymentFields}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllPaymentFields}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {PAYMENT_FIELD_DEFINITIONS.map((field) => (
+                          <label
+                            key={field.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.payments.fields[
+                                  field.key
+                                ]
+                              )}
+                              onChange={() =>
+                                handlePaymentFieldToggle(field.key)
+                              }
+                            />
+                            <span>{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>UPI Settings</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllPaymentUpiFields}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllPaymentUpiFields}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {PAYMENT_UPI_FIELD_DEFINITIONS.map((field) => (
+                          <label
+                            key={field.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.payments
+                                  .upiSettings[field.key]
+                              )}
+                              onChange={() =>
+                                handlePaymentUpiFieldToggle(field.key)
+                              }
+                            />
+                            <span>{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {formData.role !== "admin" &&
+                formData.pagePermissions.notifications && (
+                  <div className="user-form-group student-permissions-panel">
+                    <label>Notifications — Granular Permissions</label>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Actions</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllNotificationActions}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllNotificationActions}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {NOTIFICATION_ACTION_DEFINITIONS.map((action) => (
+                          <label
+                            key={action.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.notifications
+                                  .actions[action.key]
+                              )}
+                              onChange={() =>
+                                handleNotificationActionToggle(action.key)
+                              }
+                            />
+                            <span>{action.label}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="student-permission-subsection">
+                        <span className="student-permission-subsection-title">
+                          Send Notification — Sub-actions
+                        </span>
+
+                        <div className="user-permission-grid">
+                          {SEND_NOTIFICATION_SUB_ACTION_DEFINITIONS.map(
+                            (action) => (
+                              <label
+                                key={action.key}
+                                className="user-permission-checkbox"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(
+                                    formData.granularPermissions.notifications
+                                      .actions[action.key]
+                                  )}
+                                  onChange={() =>
+                                    handleNotificationActionToggle(action.key)
+                                  }
+                                />
+                                <span>{action.label}</span>
+                              </label>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="student-permission-section">
+                      <div className="student-permission-section-header">
+                        <strong>Fields</strong>
+
+                        <div className="student-permission-bulk-actions">
+                          <button
+                            type="button"
+                            onClick={selectAllNotificationFields}
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllNotificationFields}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="user-permission-grid">
+                        {NOTIFICATION_FIELD_DEFINITIONS.map((field) => (
+                          <label
+                            key={field.key}
+                            className="user-permission-checkbox"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={Boolean(
+                                formData.granularPermissions.notifications
+                                  .fields[field.key]
+                              )}
+                              onChange={() =>
+                                handleNotificationFieldToggle(field.key)
+                              }
+                            />
+                            <span>{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               <div className="user-form-actions">
                 <button

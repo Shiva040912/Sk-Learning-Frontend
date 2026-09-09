@@ -14,6 +14,27 @@ import {
 } from "react-icons/fi";
 
 import logo from "../assets/sk-logo.png";
+import { getCurrentUser, hasPageAccess } from "../utils/permissions";
+
+const PAGE_ICONS = {
+  dashboard: <FiGrid />,
+  students: <FiUsers />,
+  payments: <FiCreditCard />,
+  invoices: <FiFileText />,
+  notifications: <FiBell />,
+  users: <FiUser />,
+  settings: <FiSettings />,
+};
+
+const ALL_NAV_ITEMS = [
+  { to: "/dashboard", page: "dashboard", label: "Dashboard" },
+  { to: "/students", page: "students", label: "Students" },
+  { to: "/payments", page: "payments", label: "Payments" },
+  { to: "/invoices", page: "invoices", label: "Invoices" },
+  { to: "/notifications", page: "notifications", label: "Notifications" },
+  { to: "/users", page: "users", label: "Users" },
+  { to: "/settings", page: "settings", label: "Settings" },
+];
 
 const Sidebar = ({
   isOpen,
@@ -24,54 +45,17 @@ const Sidebar = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = JSON.parse(
-    localStorage.getItem("user") || "{}"
-  );
+  const user = getCurrentUser();
 
-  const isAdministrator =
-    user.role === "admin";
-
-  const navItems = [
-    {
-      to: "/dashboard",
-      label: "Dashboard",
-      icon: <FiGrid />,
-    },
-    {
-      to: "/students",
-      label: "Students",
-      icon: <FiUsers />,
-    },
-    {
-      to: "/payments",
-      label: "Payments",
-      icon: <FiCreditCard />,
-    },
-    {
-      to: "/invoices",
-      label: "Invoices",
-      icon: <FiFileText />,
-    },
-    {
-      to: "/notifications",
-      label: "Notifications",
-      icon: <FiBell />,
-    },
-    ...(isAdministrator
-      ? [
-          {
-            to: "/users",
-            label: "Users",
-            icon: <FiUser />,
-          },
-        ]
-      : []),
-    {
-      to: "/settings",
-      label: "Settings",
-      icon: <FiSettings />,
-    },
-  ];
+  // Every item is shown only if the logged-in user's own saved permissions
+  // (or the admin bypass) allow that specific page — no item is hardcoded
+  // to a role, and no item's visibility depends on any other item.
+  const navItems = ALL_NAV_ITEMS.filter((item) =>
+    hasPageAccess(user, item.page)
+  ).map((item) => ({
+    ...item,
+    icon: PAGE_ICONS[item.page],
+  }));
 
   const handleNavClick = (event, destination) => {
     if (

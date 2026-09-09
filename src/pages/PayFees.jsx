@@ -10,6 +10,8 @@ import {
   FiBookOpen,
   FiClock,
   FiHash,
+  FiCamera,
+  FiUploadCloud,
 } from "react-icons/fi";
 
 import api from "../services/axios";
@@ -43,6 +45,11 @@ const PayFees = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openingApp, setOpeningApp] = useState("");
+
+  const [proofPreview, setProofPreview] = useState("");
+  const [proofError, setProofError] = useState("");
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [proofSubmitted, setProofSubmitted] = useState(false);
 
   useEffect(() => {
     const loadPaymentDetails = async () => {
@@ -107,6 +114,74 @@ const PayFees = () => {
       year: "numeric",
     });
   }, [payment.feeDueDate]);
+
+  const hasPendingProof = proofSubmitted || Boolean(student.hasPendingProof);
+
+  const MAX_PROOF_FILE_SIZE = 4 * 1024 * 1024;
+
+  const handleProofFileChange = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+      setProofError("Upload a valid image (PNG, JPG or WEBP)");
+      return;
+    }
+
+    if (file.size > MAX_PROOF_FILE_SIZE) {
+      setProofError("Image is too large. Please upload a smaller screenshot (max 4MB)");
+      return;
+    }
+
+    setProofError("");
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setProofPreview(String(reader.result || ""));
+    };
+
+    reader.onerror = () => {
+      setProofError("Failed to read the selected image. Please try again.");
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmitProof = async () => {
+    if (!proofPreview) {
+      setProofError("Select a payment screenshot to upload");
+      return;
+    }
+
+    try {
+      setIsUploadingProof(true);
+      setProofError("");
+
+      const enteredAmount = Number(amount);
+
+      await api.post(`/payments/public/student/${cleanStudentId}/proof`, {
+        imageData: proofPreview,
+        ...(Number.isFinite(enteredAmount) && enteredAmount > 0
+          ? { amountClaimed: enteredAmount }
+          : {}),
+      });
+
+      setProofSubmitted(true);
+      setProofPreview("");
+    } catch (err) {
+      console.error("Payment proof upload error:", err?.response?.data || err);
+
+      setProofError(
+        err?.response?.data?.message ||
+          "Failed to submit payment proof. Please try again.",
+      );
+    } finally {
+      setIsUploadingProof(false);
+    }
+  };
 
   const handleAmountChange = (event) => {
     const value = event.target.value;
@@ -560,6 +635,76 @@ const PayFees = () => {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* PAYMENT PROOF */}
+
+            <section className="proof-card">
+              <div className="payment-card-title">
+                <div>
+                  <span className="section-tag">PAYMENT PROOF</span>
+
+                  <h2>Upload Screenshot</h2>
+                </div>
+
+                <FiCamera />
+              </div>
+
+              {hasPendingProof ? (
+                <div className="proof-submitted-banner">
+                  <FiCheckCircle />
+
+                  <div>
+                    <strong>Payment proof submitted</strong>
+
+                    <span>
+                      Please wait while The SK Learnings verifies and records
+                      your payment.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="proof-instructions">
+                    After completing your payment, upload a screenshot here so
+                    we can verify and record it.
+                  </p>
+
+                  {proofPreview && (
+                    <div className="proof-preview-box">
+                      <img src={proofPreview} alt="Selected payment proof" />
+                    </div>
+                  )}
+
+                  <label className="proof-upload-btn">
+                    <FiUploadCloud />
+                    <span>
+                      {proofPreview ? "Change Screenshot" : "Select Screenshot"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleProofFileChange}
+                      hidden
+                    />
+                  </label>
+
+                  {proofError && (
+                    <div className="payment-error">{proofError}</div>
+                  )}
+
+                  <button
+                    type="button"
+                    className="proof-submit-btn"
+                    onClick={handleSubmitProof}
+                    disabled={!proofPreview || isUploadingProof}
+                  >
+                    {isUploadingProof
+                      ? "Submitting..."
+                      : "Submit Payment Proof"}
+                  </button>
+                </>
+              )}
             </section>
 
             {/* RECEIVER */}

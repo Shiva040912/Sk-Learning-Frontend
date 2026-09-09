@@ -13,6 +13,11 @@ import {
 import toast from "react-hot-toast";
 import api from "../services/axios";
 import LoadingLogo from "../components/LoadingLogo";
+import { getCurrentUser } from "../utils/permissions";
+import {
+  hasNotificationAction,
+  getVisibleNotificationFields,
+} from "../utils/notificationPermissions";
 import "../styles/notification.css";
 
 const initialSummary = {
@@ -21,6 +26,29 @@ const initialSummary = {
 };
 
 const Notification = () => {
+  const currentUser = getCurrentUser();
+
+  const canSearch = hasNotificationAction(currentUser, "search");
+  const canFilter = hasNotificationAction(currentUser, "filter");
+  const canRefresh = hasNotificationAction(currentUser, "refresh");
+  const canSendNotification = hasNotificationAction(
+    currentUser,
+    "sendNotification"
+  );
+  const canSendToAll = hasNotificationAction(currentUser, "sendToAll");
+  const canSendIndividualSelected = hasNotificationAction(
+    currentUser,
+    "sendIndividualSelected"
+  );
+  const canSendReminder = hasNotificationAction(currentUser, "sendReminder");
+  const canNotificationPreferences = hasNotificationAction(
+    currentUser,
+    "notificationPreferences"
+  );
+
+  const visibleFields = getVisibleNotificationFields(currentUser);
+  const showActionColumn = canSendReminder || canNotificationPreferences;
+
   const [notifications, setNotifications] = useState([]);
   const [summary, setSummary] = useState(initialSummary);
   const [search, setSearch] = useState("");
@@ -123,10 +151,12 @@ const Notification = () => {
   };
 
   const handleRefresh = async () => {
+    if (!canRefresh) return toast.error("You do not have permission to refresh notifications");
     try { setIsRefreshing(true); await fetchNotifications(true); }
     finally { setIsRefreshing(false); }
   };
   const handleSendReminder = async (item) => {
+    if (!canSendReminder) return toast.error("You do not have permission to send reminders");
     try {
       setSendingStudentId(item.studentId);
       const response = await api.post(`/notifications/student/${item.studentId}/send-reminder`);
@@ -137,6 +167,7 @@ const Notification = () => {
     } finally { setSendingStudentId(null); }
   };
   const handleSendAll = async () => {
+    if (!canSendToAll) return toast.error("You do not have permission to send to all students");
     if (Number(summary.unpaid || 0) === 0) return toast.error("No unpaid students available");
     if (!window.confirm(`Send fee reminder to all ${summary.unpaid} unpaid/part-payment students?`)) return;
     try {
@@ -155,6 +186,7 @@ const Notification = () => {
   };
 
   const openSendModal = () => {
+    if (!canSendNotification) return toast.error("You do not have permission to send notifications");
     if (eligibleNotifications.length === 0) return toast.error("No unpaid students available");
     setSendMode(null);
     setSelectedStudentIds([]);
@@ -175,6 +207,7 @@ const Notification = () => {
   };
 
   const handleSendSelected = async () => {
+    if (!canSendIndividualSelected) return toast.error("You do not have permission to send to selected students");
     if (selectedStudentIds.length === 0) return toast.error("Select at least one student");
     try {
       setIsSendingSelected(true);
@@ -190,6 +223,7 @@ const Notification = () => {
   };
 
   const handlePreferenceChange = async (item, key, value) => {
+    if (!canNotificationPreferences) return toast.error("You do not have permission to update notification preferences");
     const previous = item.notificationPreferences || {};
     const next = { ...previous, [key]: value };
     setNotifications((current) => current.map((entry) => entry.studentId === item.studentId ? { ...entry, notificationPreferences: next } : entry));
@@ -221,8 +255,8 @@ const Notification = () => {
 
       <section className="notification-section">
         <div className="notification-toolbar">
-          <div className="notification-search"><FiSearch /><input type="text" placeholder="Search student, roll no, course or batch..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
-          <div className="notification-filter-wrapper">
+          {canSearch && <div className="notification-search"><FiSearch /><input type="text" placeholder="Search student, roll no, course or batch..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>}
+          {canFilter && <div className="notification-filter-wrapper">
             <button type="button" className={`notification-toolbar-btn ${showFilters ? "active" : ""}`} onClick={() => setShowFilters((value) => !value)}><FiFilter />Filter{activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}</button>
             {showFilters && <div className="notification-filter-dropdown">
               <div className="notification-filter-head"><strong>Filter</strong><div className="filter-header-actions"><button type="button" disabled={!activeFilterCount} onClick={clearFilters}>Clear</button><button type="button" className="filter-close-btn" onClick={() => setShowFilters(false)}><FiX /></button></div></div>
@@ -230,33 +264,42 @@ const Notification = () => {
               <label>Course<select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)}><option value="all">All Courses</option>{courseOptions.map((course) => <option key={course} value={course}>{course}</option>)}</select></label>
               <label>Reminder<select value={reminderFilter} onChange={(e) => setReminderFilter(e.target.value)}><option value="all">All</option><option value="sent">Sent</option><option value="not_sent">Not Sent</option><option value="paid_after">Paid After Reminder</option></select></label>
             </div>}
-          </div>
-          <button type="button" className="notification-toolbar-btn" onClick={handleRefresh} disabled={isRefreshing}><FiRefreshCw />{isRefreshing ? "Refreshing..." : "Refresh"}</button>
-          <button type="button" className="notification-send-all-btn" onClick={openSendModal} disabled={!eligibleNotifications.length}><FiSend />Send Notification</button>
+          </div>}
+          {canRefresh && <button type="button" className="notification-toolbar-btn" onClick={handleRefresh} disabled={isRefreshing}><FiRefreshCw />{isRefreshing ? "Refreshing..." : "Refresh"}</button>}
+          {canSendNotification && <button type="button" className="notification-send-all-btn" onClick={openSendModal} disabled={!eligibleNotifications.length}><FiSend />Send Notification</button>}
         </div>
 
         <div className="notification-table-card">
           {isLoading ? <div className="notification-empty"><LoadingLogo />Loading notifications...</div> : filteredNotifications.length === 0 ? <div className="notification-empty">No notifications found</div> :
             <div className="notification-table-wrap"><table className="notification-table">
-              <thead><tr><th>Student</th><th>Course</th><th>Pending</th><th>Due Date</th><th>Status</th><th>Reminder</th><th>Next Alert</th><th>Action</th></tr></thead>
+              <thead><tr>
+                {visibleFields.has("studentName") && <th>Student</th>}
+                {visibleFields.has("course") && <th>Course</th>}
+                {visibleFields.has("pendingAmount") && <th>Pending</th>}
+                {visibleFields.has("feeEndingDate") && <th>Due Date</th>}
+                {visibleFields.has("alertType") && <th>Status</th>}
+                {visibleFields.has("reminderCount") && <th>Reminder</th>}
+                {visibleFields.has("nextReminderDate") && <th>Next Alert</th>}
+                {showActionColumn && <th>Action</th>}
+              </tr></thead>
               <tbody>{filteredNotifications.map((item) => <tr key={item.studentId}>
-                <td><div className="notification-student-cell"><div className="notification-avatar">{item.studentName?.charAt(0)?.toUpperCase() || "S"}</div><div><strong>{item.studentName}</strong><span>{item.rollNo}</span></div></div></td>
-                <td><strong>{item.course}</strong><span className="notification-subtext">{item.batch || "-"}</span></td>
-                <td><strong>₹{formatMoney(item.pendingAmount)}</strong><span className="notification-subtext">Paid ₹{formatMoney(item.paidAmount)}</span></td>
-                <td>{formatDate(item.feeEndingDate)}</td>
-                <td><span className={`notification-status ${item.alertType}`}>{getAlertLabel(item)}</span></td>
-                <td><strong>{Number(item.reminderCount || 0)} Sent</strong><span className="notification-subtext">{item.lastReminderSentAt ? formatDateTime(item.lastReminderSentAt) : "Not sent"}</span></td>
-                <td>{item.paymentStatus === "paid" ? <span className="notification-completed">Completed</span> : <><strong>{formatDate(item.nextReminderDate)}</strong><span className="notification-subtext">Auto re-alert</span></>}</td>
-                <td><div className="notification-action-cell">
-                  {item.paymentStatus !== "paid" && Number(item.pendingAmount || 0) > 0 ? <button type="button" className="notification-row-send" disabled={sendingStudentId === item.studentId || item.notificationPreferences?.muteAll || item.notificationPreferences?.muteReminder} onClick={() => handleSendReminder(item)}><FiSend />{sendingStudentId === item.studentId ? "Sending" : "Send"}</button> : <span className="notification-paid"><FiCheckCircle />Paid</span>}
-                  <button type="button" className="notification-more-btn" aria-label={`Notification settings for ${item.studentName}`} aria-expanded={openPreferenceId === item.studentId} onClick={() => setOpenPreferenceId((current) => current === item.studentId ? null : item.studentId)}><FiMoreVertical /></button>
-                  {openPreferenceId === item.studentId && <div className="notification-preference-menu">
+                {visibleFields.has("studentName") && <td><div className="notification-student-cell"><div className="notification-avatar">{item.studentName?.charAt(0)?.toUpperCase() || "S"}</div><div><strong>{item.studentName}</strong>{visibleFields.has("rollNo") && <span>{item.rollNo}</span>}</div></div></td>}
+                {visibleFields.has("course") && <td><strong>{item.course}</strong>{visibleFields.has("batch") && <span className="notification-subtext">{item.batch || "-"}</span>}</td>}
+                {visibleFields.has("pendingAmount") && <td><strong>₹{formatMoney(item.pendingAmount)}</strong>{visibleFields.has("paidAmount") && <span className="notification-subtext">Paid ₹{formatMoney(item.paidAmount)}</span>}</td>}
+                {visibleFields.has("feeEndingDate") && <td>{formatDate(item.feeEndingDate)}</td>}
+                {visibleFields.has("alertType") && <td><span className={`notification-status ${item.alertType}`}>{getAlertLabel(item)}</span></td>}
+                {visibleFields.has("reminderCount") && <td><strong>{Number(item.reminderCount || 0)} Sent</strong>{visibleFields.has("lastReminderSentAt") && <span className="notification-subtext">{item.lastReminderSentAt ? formatDateTime(item.lastReminderSentAt) : "Not sent"}</span>}</td>}
+                {visibleFields.has("nextReminderDate") && <td>{item.paymentStatus === "paid" ? <span className="notification-completed">Completed</span> : <><strong>{formatDate(item.nextReminderDate)}</strong><span className="notification-subtext">Auto re-alert</span></>}</td>}
+                {showActionColumn && <td><div className="notification-action-cell">
+                  {item.paymentStatus === "paid" ? <span className="notification-paid"><FiCheckCircle />Paid</span> : canSendReminder ? <button type="button" className="notification-row-send" disabled={sendingStudentId === item.studentId || item.notificationPreferences?.muteAll || item.notificationPreferences?.muteReminder} onClick={() => handleSendReminder(item)}><FiSend />{sendingStudentId === item.studentId ? "Sending" : "Send"}</button> : null}
+                  {canNotificationPreferences && <button type="button" className="notification-more-btn" aria-label={`Notification settings for ${item.studentName}`} aria-expanded={openPreferenceId === item.studentId} onClick={() => setOpenPreferenceId((current) => current === item.studentId ? null : item.studentId)}><FiMoreVertical /></button>}
+                  {canNotificationPreferences && openPreferenceId === item.studentId && <div className="notification-preference-menu">
                     <div className="notification-preference-pointer" />
                     <div className="notification-preference-title"><strong>Notification settings</strong><span>{item.studentName}</span></div>
-                    <PreferenceToggle item={item} preferenceKey="muteAll" label="Mute all messages" description="No fee messages will be sent" savingPreference={savingPreference} onChange={handlePreferenceChange} />
-                    <PreferenceToggle item={item} preferenceKey="muteReminder" label="Mute reminder messages" description="Fee reminders will not be sent" savingPreference={savingPreference} onChange={handlePreferenceChange} />
+                    {visibleFields.has("muteAll") && <PreferenceToggle item={item} preferenceKey="muteAll" label="Mute all messages" description="No fee messages will be sent" savingPreference={savingPreference} onChange={handlePreferenceChange} />}
+                    {visibleFields.has("muteReminder") && <PreferenceToggle item={item} preferenceKey="muteReminder" label="Mute reminder messages" description="Fee reminders will not be sent" savingPreference={savingPreference} onChange={handlePreferenceChange} />}
                   </div>}
-                </div></td>
+                </div></td>}
               </tr>)}</tbody>
             </table></div>}
         </div>
@@ -265,11 +308,11 @@ const Notification = () => {
         <div className="notification-send-modal" role="dialog" aria-modal="true" aria-labelledby="notification-send-title">
           <div className="notification-send-modal-head"><div><span>SEND NOTIFICATION</span><h2 id="notification-send-title">Choose recipients</h2><p>Send a fee reminder to all unpaid students or only selected students.</p></div><button type="button" onClick={closeSendModal} aria-label="Close"><FiX /></button></div>
           {!sendMode ? <div className="notification-send-mode-grid">
-            <button type="button" onClick={() => setSendMode("all")}><FiSend /><strong>Send to All</strong><small>Send to all {eligibleNotifications.length} unpaid students</small></button>
-            <button type="button" onClick={() => setSendMode("individual")}><FiBell /><strong>Individual</strong><small>Select one or more students</small></button>
+            {canSendToAll && <button type="button" onClick={() => setSendMode("all")}><FiSend /><strong>Send to All</strong><small>Send to all {eligibleNotifications.length} unpaid students</small></button>}
+            {canSendIndividualSelected && <button type="button" onClick={() => setSendMode("individual")}><FiBell /><strong>Individual</strong><small>Select one or more students</small></button>}
           </div> : sendMode === "all" ? <div className="notification-send-confirm"><strong>Send to all {eligibleNotifications.length} unpaid students?</strong><p>This will send the reminder to every eligible student.</p><div><button type="button" onClick={() => setSendMode(null)} disabled={isSendingAll}>Back</button><button type="button" className="notification-send-all-btn" onClick={handleSendAll} disabled={isSendingAll}><FiSend />{isSendingAll ? "Sending..." : "Send to All"}</button></div></div> : <div className="notification-individual-picker">
             <div className="notification-picker-actions"><strong>Select students</strong><button type="button" onClick={() => setSelectedStudentIds(selectedStudentIds.length === eligibleNotifications.length ? [] : eligibleNotifications.map((item) => item.studentId))}>{selectedStudentIds.length === eligibleNotifications.length ? "Clear all" : "Select all"}</button></div>
-            <div className="notification-picker-list">{eligibleNotifications.map((item) => <label key={item.studentId}><input type="checkbox" checked={selectedStudentIds.includes(item.studentId)} onChange={() => toggleStudentSelection(item.studentId)} /><span><strong>{item.studentName}</strong><small>{item.rollNo} · {item.course} · Pending ₹{formatMoney(item.pendingAmount)}</small></span></label>)}</div>
+            <div className="notification-picker-list">{eligibleNotifications.map((item) => <label key={item.studentId}><input type="checkbox" checked={selectedStudentIds.includes(item.studentId)} onChange={() => toggleStudentSelection(item.studentId)} /><span><strong>{item.studentName}</strong><small>{[visibleFields.has("rollNo") && item.rollNo, visibleFields.has("course") && item.course, visibleFields.has("pendingAmount") && `Pending ₹${formatMoney(item.pendingAmount)}`].filter(Boolean).join(" · ")}</small></span></label>)}</div>
             <div className="notification-send-confirm"><div><button type="button" onClick={() => setSendMode(null)} disabled={isSendingSelected}>Back</button><button type="button" className="notification-send-all-btn" onClick={handleSendSelected} disabled={isSendingSelected || selectedStudentIds.length === 0}><FiSend />{isSendingSelected ? "Sending..." : `Send to ${selectedStudentIds.length} Student${selectedStudentIds.length === 1 ? "" : "s"}`}</button></div></div>
           </div>}
         </div>

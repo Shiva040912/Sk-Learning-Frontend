@@ -1,25 +1,19 @@
 import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({
-  allowedRoles,
-  children,
-}) => {
-  const accessToken =
-    localStorage.getItem("accessToken");
+import { getCurrentUser, hasPageAccess } from "../utils/permissions";
+import Unauthorized from "./Unauthorized";
 
-  const user = JSON.parse(
-    localStorage.getItem("user") || "{}"
-  );
+const ProtectedRoute = ({ page, children }) => {
+  const accessToken = localStorage.getItem("accessToken");
 
   if (!accessToken) {
     return <Navigate to="/" replace />;
   }
 
-  if (
-    allowedRoles?.length &&
-    !allowedRoles.includes(user.role)
-  ) {
-    return <Navigate to="/students" replace />;
+  const user = getCurrentUser();
+
+  if (page && !hasPageAccess(user, page)) {
+    return <Unauthorized />;
   }
 
   return children || <Outlet />;

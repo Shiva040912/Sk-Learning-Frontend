@@ -3174,6 +3174,7 @@
 
 .student-filter-button,
 .student-setup-btn,
+.student-bulk-upload-btn,
 .add-student-btn {
   height: 36px !important;
   min-height: 36px !important;
@@ -4033,4 +4034,379 @@
   .student-payment-summary-grid { gap: 7px; }
   .student-payment-summary-card { min-height: 68px; gap: 8px; padding: 8px 9px; }
   .student-payment-summary-icon { width: 31px; height: 31px; flex-basis: 31px; font-size: 13px; }
+}
+
+/* Bulk Upload (Students page) */
+
+.student-bulk-upload-btn {
+  height: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0;
+  padding: 0 13px;
+  border: 1px solid #dce1e7;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #55616d;
+  font-size: 8.5px;
+  font-weight: 720;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.student-bulk-upload-btn svg {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.student-bulk-upload-btn:hover {
+  border-color: #e0ad24;
+  background: #fffaf0;
+  color: #9b720b;
+}
+
+.bulk-upload-modal {
+  max-width: 820px;
+}
+
+.bulk-upload-body {
+  padding: 16px 18px;
+}
+
+.bulk-upload-template-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 11px 12px;
+  border: 1px solid #eef1f4;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.bulk-upload-template-row span {
+  flex: 1;
+  min-width: 0;
+  color: #6c7580;
+  font-size: 8.5px;
+  line-height: 1.55;
+}
+
+.bulk-template-btn {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.bulk-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 34px 16px;
+  border: 1.5px dashed #dce1e7;
+  border-radius: 12px;
+  background: #fbfcfd;
+  color: #6c7580;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.bulk-upload-dropzone:hover {
+  border-color: #e0ad24;
+  background: #fffaf0;
+}
+
+.bulk-upload-dropzone svg {
+  font-size: 22px;
+  color: #b98300;
+}
+
+.bulk-upload-dropzone strong {
+  color: #2c3743;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.bulk-upload-dropzone span {
+  color: #939ca6;
+  font-size: 8px;
+}
+
+.bulk-upload-file-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 11px;
+  border: 1px solid #e5e9ed;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.bulk-upload-file-chip svg:first-child {
+  flex-shrink: 0;
+  color: #a97800;
+}
+
+.bulk-upload-file-chip span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #3b4651;
+  font-size: 8.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bulk-upload-file-chip button {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #efd6d6;
+  border-radius: 6px;
+  background: #fff7f7;
+  color: #cf4d4d;
+  cursor: pointer;
+}
+
+.bulk-upload-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.bulk-summary-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border: 1.5px solid #e5e9ed;
+  border-radius: 11px;
+  background: #fafbfc;
+  color: #6c7580;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.15s ease;
+}
+
+.bulk-summary-pill.static {
+  cursor: default;
+}
+
+.bulk-summary-pill svg {
+  font-size: 15px;
+}
+
+.bulk-summary-pill strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: #24303c;
+}
+
+.bulk-summary-pill span {
+  font-size: 7px;
+  font-weight: 750;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.bulk-summary-pill.valid svg,
+.bulk-summary-pill.valid strong {
+  color: #1e8e5a;
+}
+
+.bulk-summary-pill.duplicate svg,
+.bulk-summary-pill.duplicate strong {
+  color: #b98300;
+}
+
+.bulk-summary-pill.invalid svg,
+.bulk-summary-pill.invalid strong {
+  color: #d14a4a;
+}
+
+.bulk-summary-pill.valid.active,
+.bulk-summary-pill.valid.static {
+  border-color: #a9dcc0;
+  background: #f2fbf6;
+}
+
+.bulk-summary-pill.duplicate.active {
+  border-color: #efd18a;
+  background: #fffaf0;
+}
+
+.bulk-summary-pill.invalid.active,
+.bulk-summary-pill.invalid.static {
+  border-color: #efb7b7;
+  background: #fff6f6;
+}
+
+.bulk-upload-table-wrapper {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid #e4e9ee;
+  border-radius: 10px;
+}
+
+.bulk-upload-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.bulk-upload-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bulk-upload-table th {
+  height: 34px;
+  padding: 0 10px;
+  background: #f6f8fa;
+  color: #78828e;
+  text-align: left;
+  font-size: 7px;
+  font-weight: 750;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.bulk-upload-table td {
+  padding: 8px 10px;
+  border-top: 1px solid #edf0f2;
+  color: #485360;
+  font-size: 8.5px;
+  vertical-align: top;
+}
+
+.bulk-upload-reason-cell {
+  min-width: 220px;
+  color: #b03a3a;
+}
+
+.bulk-upload-empty-cell {
+  padding: 24px 10px;
+  color: #a0a7ae;
+  font-size: 8.5px;
+  text-align: center;
+}
+
+.bulk-upload-summary-step .bulk-upload-summary-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bulk-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid #eceef1;
+}
+
+.bulk-back-btn {
+  margin-right: auto;
+}
+
+.bulk-back-btn svg {
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .bulk-upload-template-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-upload-summary-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .bulk-summary-pill {
+    padding: 9px 6px;
+  }
+
+  .bulk-summary-pill strong {
+    font-size: 13px;
+  }
+
+  .bulk-upload-actions {
+    flex-wrap: wrap;
+  }
+
+  .bulk-back-btn {
+    margin-right: 0;
+    order: 2;
+  }
+}
+
+/* ======================================================
+   STUDENTS TABLE COLUMN WIDTHS — permission-safe
+   ======================================================
+   Column visibility now depends on each user's Fields/Actions
+   permissions, so a column's position among th/td siblings is no longer
+   fixed (e.g. hiding Aadhaar shifts Actions from the 8th child to the
+   7th). The width/alignment rules above key off :nth-child(), which
+   silently applies the WRONG column's rule once anything upstream is
+   hidden — this is what made the Actions button look off-center. These
+   class-based rules identify each column by what it actually is, so they
+   stay correct regardless of which other columns are present. Placed last
+   so they win the cascade over the older positional rules (same
+   specificity + !important, later source order takes precedence). */
+.students-table th.col-serial,
+.students-table td.col-serial {
+  width: 5% !important;
+}
+
+.students-table th.col-student,
+.students-table td.col-student {
+  width: 23% !important;
+}
+
+.students-table th.col-rollno,
+.students-table td.col-rollno {
+  width: 12% !important;
+}
+
+.students-table th.col-course,
+.students-table td.col-course {
+  width: 12% !important;
+}
+
+.students-table th.col-gender,
+.students-table td.col-gender {
+  width: 9% !important;
+}
+
+.students-table th.col-phone,
+.students-table td.col-phone {
+  width: 15% !important;
+}
+
+.students-table th.col-aadhaar,
+.students-table td.col-aadhaar {
+  width: 16% !important;
+  text-align: left !important;
+}
+
+.students-table th.col-actions,
+.students-table td.col-actions {
+  width: 8% !important;
+  min-width: 92px !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 10px !important;
 }

@@ -62,37 +62,53 @@ const App = () => {
           <Route element={<DashboardLayout />}>
             <Route
               path="/dashboard"
-              element={<Dashboard />}
+              element={
+                <ProtectedRoute page="dashboard">
+                  <Dashboard />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/students"
-              element={<Students />}
+              element={
+                <ProtectedRoute page="students">
+                  <Students />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/payments"
-              element={<Payments />}
+              element={
+                <ProtectedRoute page="payments">
+                  <Payments />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/invoices"
-              element={<Invoices />}
+              element={
+                <ProtectedRoute page="invoices">
+                  <Invoices />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/notifications"
-              element={<Notification />}
+              element={
+                <ProtectedRoute page="notifications">
+                  <Notification />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/users"
               element={
-                <ProtectedRoute
-                  allowedRoles={[
-                    "admin",
-                  ]}
-                >
+                <ProtectedRoute page="users">
                   <Users />
                 </ProtectedRoute>
               }
@@ -100,7 +116,11 @@ const App = () => {
 
             <Route
               path="/settings"
-              element={<Settings />}
+              element={
+                <ProtectedRoute page="settings">
+                  <Settings />
+                </ProtectedRoute>
+              }
             />
           </Route>
         </Route>
