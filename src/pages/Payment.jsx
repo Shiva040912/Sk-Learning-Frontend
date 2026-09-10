@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   FiCheckCircle,
   FiClock,
@@ -18,6 +18,7 @@ import {
   FiShield,
   FiX,
 } from "react-icons/fi";
+import { MdHistory } from "react-icons/md";
 import toast from "react-hot-toast";
 
 import api from "../services/axios";
@@ -151,6 +152,7 @@ const Payments = () => {
     feeDueDay: "",
   });
   const [isHistoryClearing, setIsHistoryClearing] = useState(false);
+  const [expandedFeeCyclesId, setExpandedFeeCyclesId] = useState("");
 
   const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -455,6 +457,72 @@ const Payments = () => {
     else if (remainder10 === 3 && remainder100 !== 13) suffix = "rd";
 
     return `${position}${suffix} Due`;
+  };
+
+  // Due numbering restarts at 1st Due for every new fee cycle instead of
+  // continuing across cycles. Each payment is stamped at collection time
+  // with the fee cycle it belongs to (feeCycleStartedAt); records sharing
+  // that same marker are numbered together, and a fresh cycle (Assign Next
+  // Fee) always gets a new marker, so its first payment is 1st Due again.
+  // Records with no marker (collected before this field existed) fall back
+  // to one shared legacy group, numbered continuously exactly as before.
+  const getHistoryRowsWithDueLabels = (paymentRecords) => {
+    let previousCycleKey;
+    let position = 0;
+
+    return [...paymentRecords].reverse().map((record) => {
+      const cycleKey = record.feeCycleStartedAt || null;
+
+      position = cycleKey === previousCycleKey ? position + 1 : 1;
+      previousCycleKey = cycleKey;
+
+      return { record, dueLabel: getOrdinalDueLabel(position) };
+    });
+  };
+
+  // Groups a student's payment history into fee cycles for the "Fee Details"
+  // cards on the details view — one card per feeCycleStartedAt marker, reusing
+  // the same due-label numbering as the History modal so both stay consistent.
+  // The most recent cycle mirrors the student's live totalFee/paymentStatus
+  // (it's still open); earlier cycles show what was actually collected, since
+  // a new cycle only starts once the previous one is fully paid.
+  const getFeeCycles = (student) => {
+    const rows = getHistoryRowsWithDueLabels(student?.paymentRecords || []);
+    const cycles = [];
+
+    rows.forEach(({ record, dueLabel }) => {
+      const cycleKey = record.feeCycleStartedAt || null;
+      const activeCycle = cycles[cycles.length - 1];
+
+      if (!activeCycle || activeCycle.cycleKey !== cycleKey) {
+        cycles.push({ cycleKey, rows: [] });
+      }
+
+      cycles[cycles.length - 1].rows.push({ record, dueLabel });
+    });
+
+    const currentCycleKey = student?.feeCycleStartedAt || null;
+
+    return cycles.map((cycle, index) => {
+      const isCurrentCycle =
+        index === cycles.length - 1 && cycle.cycleKey === currentCycleKey;
+
+      const collectedTotal = cycle.rows.reduce(
+        (sum, { record }) => sum + Number(record.amount || 0),
+        0,
+      );
+
+      return {
+        cycleNumber: index + 1,
+        totalFee: isCurrentCycle
+          ? Number(student?.totalFee || 0)
+          : collectedTotal,
+        isCompleted: isCurrentCycle
+          ? student?.paymentStatus === "paid"
+          : true,
+        rows: cycle.rows,
+      };
+    });
   };
 
   const getEmptyFeeForm = () => ({
@@ -1362,6 +1430,14 @@ const Payments = () => {
       setIsFeeEditSaving(false);
     }
   };
+  const toggleFeeCyclesRow = (event, studentId) => {
+    event.stopPropagation();
+
+    setExpandedFeeCyclesId((current) =>
+      current === studentId ? "" : studentId,
+    );
+  };
+
   const openStudentDetails = (student) => {
     if (!canViewStudentPaymentDetails) return;
 
@@ -1702,6 +1778,9 @@ const Payments = () => {
                     {visibleFields.has("totalFee") && (
                       <th className="pay-col-fee">Total Fees</th>
                     )}
+                    {canViewPaymentHistory && (
+                      <th className="pay-col-cycles">Pay History</th>
+                    )}
                     {visibleFields.has("paymentStatus") && (
                       <th className="pay-col-status">Status</th>
                     )}
@@ -1715,9 +1794,16 @@ const Payments = () => {
                 </thead>
 
                 <tbody>
-                  {filteredStudents.map((student, index) => (
+                  {filteredStudents.map((student, index) => {
+                    const feeCycles = student.feeSetupCompleted
+                      ? getFeeCycles(student)
+                      : [];
+                    const isFeeCyclesExpanded =
+                      expandedFeeCyclesId === student._id;
+
+                    return (
+                    <Fragment key={student._id}>
                     <tr
-                      key={student._id}
                       className={
                         canViewStudentPaymentDetails
                           ? "payment-clickable-row"
@@ -1769,6 +1855,34 @@ const Payments = () => {
                           </div>
                         ) : (
                           <span className="payment-not-set">Not Set</span>
+                        )}
+                      </td>
+                      )}
+
+                      {canViewPaymentHistory && (
+                      <td className="pay-col-cycles" data-label="Pay History">
+                        {student.feeSetupCompleted ? (
+                          <button
+                            type="button"
+                            className={`fee-cycles-toggle-btn ${
+                              isFeeCyclesExpanded ? "active" : ""
+                            }`}
+                            onClick={(event) =>
+                              toggleFeeCyclesRow(event, student._id)
+                            }
+                            aria-label="View Payment History"
+                            title="View Payment History"
+                          >
+                            <MdHistory
+                              key={isFeeCyclesExpanded ? "open" : "closed"}
+                              className="fee-cycles-toggle-icon"
+                            />
+                            <span className="fee-cycles-toggle-label">
+                              History
+                            </span>
+                          </button>
+                        ) : (
+                          <span className="payment-not-set">-</span>
                         )}
                       </td>
                       )}
@@ -1892,7 +2006,127 @@ const Payments = () => {
                       </td>
                       )}
                     </tr>
-                  ))}
+
+                    {isFeeCyclesExpanded && (
+                      <tr className="fee-cycles-expanded-row">
+                        <td colSpan="100%">
+                          <div className="fee-cycles-panel">
+                            {feeCycles.length === 0 ? (
+                              <div className="fee-cycles-empty">
+                                No payments collected yet.
+                              </div>
+                            ) : (
+                              <div className="fee-cycles-list">
+                                {feeCycles.map((cycle) => (
+                                  <article
+                                    key={cycle.cycleNumber}
+                                    className={`fee-cycle-card ${
+                                      cycle.isCompleted ? "completed" : ""
+                                    }`}
+                                  >
+                                    <div className="fee-cycle-card-top">
+                                      <span className="fee-cycle-badge">
+                                        Fee {cycle.cycleNumber}
+                                      </span>
+                                      {showFeeDetails && (
+                                        <strong className="fee-cycle-total">
+                                          ₹{formatMoney(cycle.totalFee)}
+                                        </strong>
+                                      )}
+                                    </div>
+
+                                    <div className="fee-cycle-rows">
+                                      {cycle.rows.map(({ record, dueLabel }) => (
+                                        <div
+                                          key={record._id}
+                                          className="fee-cycle-row"
+                                        >
+                                          <span className="fee-cycle-row-due">
+                                            {dueLabel}
+                                          </span>
+
+                                          {showFeeDetails && (
+                                            <span className="fee-cycle-row-amount">
+                                              ₹{formatMoney(record.amount)}
+                                            </span>
+                                          )}
+
+                                          {record.screenshotImage ? (
+                                            <button
+                                              type="button"
+                                              className="fee-cycle-row-image"
+                                              onClick={(event) => {
+                                                event.stopPropagation();
+                                                setPreviewImage(
+                                                  record.screenshotImage,
+                                                );
+                                              }}
+                                              aria-label="View payment screenshot"
+                                              title="View screenshot"
+                                            >
+                                              <FiImage />
+                                              <span>Image</span>
+                                            </button>
+                                          ) : (
+                                            <span
+                                              className="fee-cycle-row-image empty"
+                                              aria-hidden="true"
+                                            >
+                                              —
+                                            </span>
+                                          )}
+
+                                          {visibleFields.has("paymentMethod") && (
+                                            <span className="fee-cycle-row-method">
+                                              {formatPaymentMethod(
+                                                record.paymentMethod,
+                                              )}
+                                            </span>
+                                          )}
+
+                                          {canClearPaymentHistory && (
+                                            <button
+                                              type="button"
+                                              className="fee-cycle-row-delete"
+                                              onClick={(event) => {
+                                                event.stopPropagation();
+                                                handleDeleteHistoryRecord(record);
+                                              }}
+                                              disabled={
+                                                deletingHistoryId === record._id
+                                              }
+                                              title="Delete this payment record"
+                                            >
+                                              <FiTrash2 />
+                                              <span>
+                                                {deletingHistoryId ===
+                                                record._id
+                                                  ? "Deleting..."
+                                                  : "Delete"}
+                                              </span>
+                                            </button>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {cycle.isCompleted && (
+                                      <div className="fee-cycle-completed-footer">
+                                        <FiCheckCircle />
+                                        <span>Fee Completed</span>
+                                      </div>
+                                    )}
+                                  </article>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -3052,12 +3286,12 @@ const Payments = () => {
                     {canClearPaymentHistory && <span>Action</span>}
                   </div>
 
-                  {[...selectedStudent.paymentRecords]
-                    .reverse()
-                    .map((record, index) => (
+                  {getHistoryRowsWithDueLabels(
+                    selectedStudent.paymentRecords,
+                  ).map(({ record, dueLabel }) => (
                       <div key={record._id} className="history-only-row">
                         <span className="history-due-label">
-                          {getOrdinalDueLabel(index + 1)}
+                          {dueLabel}
                         </span>
 
                         {record.screenshotImage ? (
