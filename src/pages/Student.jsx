@@ -1082,7 +1082,36 @@ const Students = () => {
         payload
       );
 
-      setBulkImportResult(response.data);
+      // Rows that were already invalid/duplicate at preview time are never
+      // submitted here at all, so the import response alone only ever
+      // reports failures found during this commit step — on a normal file
+      // with bad rows, that made the final "Failed" count and row list
+      // under-report (often showing 0) even though rows genuinely never
+      // made it in. Merge the two so the summary reflects the whole file.
+      const skippedAtPreview = bulkPreview.rows
+        .filter((row) => row.status !== "valid")
+        .map((row) => ({
+          rowNumber: row.rowNumber,
+          status: "failed",
+          studentName: row.data.studentName,
+          rollNo: row.data.rollNo,
+          reason: row.reasons.join("; "),
+        }));
+
+      const mergedResults = [...skippedAtPreview, ...response.data.results].sort(
+        (a, b) => (a.rowNumber ?? 0) - (b.rowNumber ?? 0)
+      );
+
+      const totalFailedCount = skippedAtPreview.length + response.data.failedCount;
+
+      const enrichedResult = {
+        totalSubmitted: bulkPreview.totalRows,
+        importedCount: response.data.importedCount,
+        failedCount: totalFailedCount,
+        results: mergedResults,
+      };
+
+      setBulkImportResult(enrichedResult);
       setBulkStep("summary");
 
       await fetchStudents();
@@ -1093,9 +1122,9 @@ const Students = () => {
         );
       }
 
-      if (response.data.failedCount > 0) {
+      if (totalFailedCount > 0) {
         toast.error(
-          `${response.data.failedCount} row(s) could not be imported`
+          `${totalFailedCount} row(s) could not be imported`
         );
       }
     } catch (error) {
@@ -1108,41 +1137,40 @@ const Students = () => {
   };
 
   const getBulkErrorRows = () => {
-    const errorRows = [];
+    // After import, bulkImportResult.results already merges preview-time
+    // skips with import-time failures (see handleBulkImport) — reading
+    // bulkPreview here too would double-count the same rows. Before
+    // import (still on the preview step), bulkImportResult is null, so
+    // bulkPreview.rows is the only source available.
+    if (bulkImportResult) {
+      return bulkImportResult.results
+        .filter((result) => result.status === "failed")
+        .map((result) => ({
+          rowNumber: result.rowNumber,
+          studentName: result.studentName,
+          rollNo: result.rollNo,
+          course: "",
+          phone: "",
+          status: "failed",
+          reason: result.reason || "",
+        }));
+    }
 
     if (bulkPreview) {
-      bulkPreview.rows
+      return bulkPreview.rows
         .filter((row) => row.status !== "valid")
-        .forEach((row) => {
-          errorRows.push({
-            rowNumber: row.rowNumber,
-            studentName: row.data.studentName,
-            rollNo: row.data.rollNo,
-            course: row.data.course,
-            phone: row.data.phone,
-            status: row.status,
-            reason: row.reasons.join("; "),
-          });
-        });
+        .map((row) => ({
+          rowNumber: row.rowNumber,
+          studentName: row.data.studentName,
+          rollNo: row.data.rollNo,
+          course: row.data.course,
+          phone: row.data.phone,
+          status: row.status,
+          reason: row.reasons.join("; "),
+        }));
     }
 
-    if (bulkImportResult) {
-      bulkImportResult.results
-        .filter((result) => result.status === "failed")
-        .forEach((result) => {
-          errorRows.push({
-            rowNumber: result.rowNumber,
-            studentName: result.studentName,
-            rollNo: result.rollNo,
-            course: "",
-            phone: "",
-            status: "failed",
-            reason: result.reason || "",
-          });
-        });
-    }
-
-    return errorRows;
+    return [];
   };
 
   const handleDownloadErrorCsv = () => {

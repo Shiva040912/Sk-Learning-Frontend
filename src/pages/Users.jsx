@@ -20,6 +20,7 @@ import LoadingLogo from "../components/LoadingLogo";
 import {
   PAGE_DEFINITIONS,
   createEmptyPagePermissions,
+  getCurrentUser,
 } from "../utils/permissions";
 import {
   STUDENT_ACTION_DEFINITIONS,
@@ -91,6 +92,12 @@ const ALL_SETTINGS_ACTION_KEYS = SETTINGS_ACTION_DEFINITIONS.map(
 );
 
 const Users = () => {
+  // Frontend gating only — defense-in-depth. The backend independently
+  // rejects any role/pagePermissions/granularPermissions change (and any
+  // account creation) from a non-admin regardless of what this UI allows.
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === "admin";
+
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -831,10 +838,15 @@ const Users = () => {
         const payload = {
           name: formData.name.trim(),
           email: formData.email.trim(),
-          role: formData.role,
-          pagePermissions: formData.pagePermissions,
-          granularPermissions: formData.granularPermissions,
         };
+
+        // Only an admin's request may include these — the backend rejects
+        // them outright from anyone else, so a non-admin never sends them.
+        if (isAdmin) {
+          payload.role = formData.role;
+          payload.pagePermissions = formData.pagePermissions;
+          payload.granularPermissions = formData.granularPermissions;
+        }
 
         if (formData.password.trim()) {
           payload.password = formData.password;
@@ -846,7 +858,7 @@ const Users = () => {
         );
 
         toast.success("User updated successfully");
-      } else {
+      } else if (isAdmin) {
         await api.post("/users/create-admin", {
           name: formData.name.trim(),
           email: formData.email.trim(),
@@ -920,14 +932,16 @@ const Users = () => {
             />
           </div>
 
-          <button
-            type="button"
-            className="add-user-btn"
-            onClick={openAddModal}
-          >
-            <FiPlus />
-            <span>Add User</span>
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              className="add-user-btn"
+              onClick={openAddModal}
+            >
+              <FiPlus />
+              <span>Add User</span>
+            </button>
+          )}
         </div>
 
         <div className="users-table-card">
@@ -1153,6 +1167,8 @@ const Users = () => {
                 )}
               </div>
 
+              {isAdmin && (
+              <>
               <div className="user-form-group">
                 <label>Role *</label>
 
@@ -1764,6 +1780,8 @@ const Users = () => {
                     </div>
                   </div>
                 )}
+              </>
+              )}
 
               <div className="user-form-actions">
                 <button

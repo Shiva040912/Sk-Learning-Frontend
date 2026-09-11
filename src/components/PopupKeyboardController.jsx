@@ -37,8 +37,16 @@ const PopupKeyboardController = () => {
       // Form fields already receive native Enter-to-submit behaviour.
       if (isFormField && overlay.contains(target)) return;
 
+      // Deliberately excludes destructive confirm controls (delete /
+      // reverse-reset) — those must only ever activate via a real click,
+      // or via native Enter/Space on that exact button while it holds
+      // focus (which needs no help from this listener at all). Without
+      // this exclusion, pressing Enter anywhere in the modal while focus
+      // isn't on a form field — e.g. it landed on the overlay backdrop —
+      // would fire the destructive action even though the user never
+      // interacted with the confirm control itself.
       const primaryButton = overlay.querySelector(
-        ".confirm-delete-btn, .user-confirm-delete, .payment-reverse-confirm-btn, .payment-primary-btn, .primary-btn, button[type='submit']",
+        ".payment-primary-btn, .primary-btn, button[type='submit']",
       );
 
       if (primaryButton && !primaryButton.disabled) {
