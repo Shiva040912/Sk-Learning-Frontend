@@ -6,11 +6,11 @@ const isLocalFrontend =
 
 // Railway is the active production backend (used on Vercel).
 // EC2 backend (kept for future use, not currently active):
-// "https://44-205-140-200.sslip.io"
+// 
 const api = axios.create({
   baseURL: isLocalFrontend
     ? "http://localhost:3000"
-    : "https://sk-learnings-backend-production-4b04.up.railway.app/",
+    : "https://44-205-140-200.sslip.io",
 
   headers: {
     "Content-Type": "application/json",
